@@ -6,14 +6,12 @@ from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
 
-# Set DATABASE_URL in your .env (local) or Render env vars (production).
-# Falls back to a local SQLite file if the variable is missing.
+
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "sqlite:///./group_maker.db",   # safe local fallback
+    "sqlite:///./group_maker.db",
 )
 
-# Render's Postgres URLs start with "postgres://" — SQLAlchemy needs "postgresql://"
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 

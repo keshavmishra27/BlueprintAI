@@ -1,10 +1,3 @@
-"""
-solara_app/pages/members.py
-----------------------------
-Members page — browse members by domain, or see all members grouped by domain.
-Also supports adding and deleting members.
-"""
-
 import solara
 import requests
 import os
@@ -12,7 +5,7 @@ from typing import List
 
 API = os.getenv("API_URL", "http://localhost:8000")
 
-# ── Reactive state ─────────────────────────────────────────────────────────
+# Reactive state
 domains           = solara.reactive([])         # [{id, name}, ...]
 selected_domain   = solara.reactive(None)       # None = all; or {id, name}
 
@@ -27,7 +20,7 @@ status_msg        = solara.reactive("")
 loading           = solara.reactive(False)
 
 
-# ── Data fetchers ──────────────────────────────────────────────────────────
+# Data fetchers
 def fetch_domains():
     try:
         r = requests.get(f"{API}/members/domains", timeout=5)
@@ -123,7 +116,7 @@ def delete_member(member_id: int, member_name: str):
         status_msg.set(f"❌ {e}")
 
 
-# ── Sub-components ─────────────────────────────────────────────────────────
+# Sub components
 
 CATEGORY_COLOR = {
     "senior":       "#7c3aed",
@@ -205,7 +198,7 @@ def DomainChips():
             )
 
 
-# ── Main Page ──────────────────────────────────────────────────────────────
+# Main Page
 
 @solara.component
 def Page():
@@ -220,10 +213,10 @@ def Page():
     with solara.Column(style="max-width:860px; margin:0 auto; padding:24px;"):
         solara.Markdown("# 👥 Members")
 
-        # ── Domain filter chips ────────────────────────────────────────
+        # Domain filter chips
         DomainChips()
 
-        # ── Add Member Form ────────────────────────────────────────────
+        # Add Member Form
         with solara.Card("➕ Add New Member"):
             with solara.Row():
                 solara.InputText("Name", value=name_input, style="flex:1;")
@@ -267,7 +260,7 @@ def Page():
         if status_msg.value:
             solara.Text(status_msg.value, style="margin:6px 0;")
 
-        # ── Refresh button ─────────────────────────────────────────────
+        # Refresh button
         with solara.Row(justify="space-between", style="margin-top:8px;"):
             if selected_domain.value:
                 solara.Markdown(
@@ -283,7 +276,7 @@ def Page():
             solara.Text("Loading…", style="color:#888;")
             return
 
-        # ── Single domain view ─────────────────────────────────────────
+        # Single domain view
         if selected_domain.value:
             if not members_in_domain.value:
                 solara.Text(
@@ -294,7 +287,7 @@ def Page():
                 for m in members_in_domain.value:
                     MemberRow(m)
 
-        # ── All domains view ───────────────────────────────────────────
+        # All domains view
         else:
             if not all_by_domain.value:
                 solara.Text(

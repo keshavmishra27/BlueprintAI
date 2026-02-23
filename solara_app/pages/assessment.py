@@ -12,10 +12,10 @@ all_domains     = solara.reactive([])
 setup_error     = solara.reactive("")
 
 session_id         = solara.reactive(None)
-messages           = solara.reactive([])   # [{role, content}, ...]
+messages           = solara.reactive([])   # [{role, content}
 chat_loading       = solara.reactive(False)
 session_start_time = solara.reactive(0.0)  # time.time() when chat started
-SESSION_DURATION   = 300                   # seconds (5 min)
+SESSION_DURATION   = 300
 
 # Results screen
 scores          = solara.reactive(None)
@@ -141,7 +141,7 @@ def restart():
 
 
 
-# ── Sub-components ─────────────────────────────────────────────────────────
+# Sub components
 
 SCORE_COLORS = {
     "domain_knowledge": "#6366f1",
@@ -223,7 +223,7 @@ def TimerBadge():
     )
 
 
-# ── Pages ──────────────────────────────────────────────────────────────────
+# Pages
 
 @solara.component
 def SetupScreen():
@@ -276,7 +276,7 @@ def SetupScreen():
 
 @solara.component
 def ChatScreen():
-    # ── Local state for the input — survives timer re-renders ──
+    # Local state for the input
     input_text, set_input_text = solara.use_state("")
 
     def handle_send():
@@ -302,7 +302,7 @@ def ChatScreen():
             if chat_loading.value:
                 solara.Text("🤖 Agent is thinking…", style="color:#888; font-size:13px;")
 
-        # Input row — use_state keeps text stable across timer re-renders
+        # Input row
         with solara.Row(style="margin-top:12px; gap:8px;"):
             solara.InputText(
                 "Type your answer and press Send…",
@@ -397,7 +397,7 @@ def ResultsScreen():
         )
 
 
-# ── Main Page component ────────────────────────────────────────────────────
+# Main Page component
 
 @solara.component
 def Page():

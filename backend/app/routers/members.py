@@ -68,7 +68,7 @@ def create_member(payload: MemberCreateWithDomains, db: Session = Depends(get_db
     """
     member = Member(name=payload.name, category=payload.category)
     db.add(member)
-    db.flush()  # get member.id before commit
+    db.flush()
 
     # Assign to domains
     if payload.domain_ids:

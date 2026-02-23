@@ -23,8 +23,7 @@ AVAILABLE_DOMAINS = [
 ]
 
 
-# ── Schemas ────────────────────────────────────────────────────────────────
-
+# Schemas
 class StartSessionRequest(BaseModel):
     student_name: str
     domains: List[str]
@@ -34,7 +33,7 @@ class StartSessionResponse(BaseModel):
     session_id: int
     student_name: str
     domains: List[str]
-    message: str      # opening message from the agent
+    message: str 
 
 
 class ChatRequest(BaseModel):
@@ -64,7 +63,7 @@ class SessionSummary(BaseModel):
     created_at: str
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────
+# Helpers
 
 def _check_ollama():
     """Verify Ollama is running and the configured model is available."""
@@ -73,7 +72,6 @@ def _check_ollama():
     try:
         r = http_requests.get(f"{base_url}/api/tags", timeout=3)
         models = [m["name"] for m in r.json().get("models", [])]
-        # Accept both "llama3.2" and "llama3.2:latest" style names
         if not any(m.startswith(model.split(":")[0]) for m in models):
             raise HTTPException(
                 status_code=503,
@@ -98,7 +96,7 @@ def _get_session(session_id: int, db: Session) -> AssessmentSession:
     return session
 
 
-# ── Routes ─────────────────────────────────────────────────────────────────
+# Routes
 
 @router.get(
     "/domains",
@@ -126,7 +124,6 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
 
     from backend.app.services.crew_service import get_interviewer_response
 
-    # Get the opening message from the agent
     opening = get_interviewer_response(
         student_name=req.student_name.strip(),
         domains=req.domains,
@@ -174,7 +171,6 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
 
     from backend.app.services.crew_service import get_interviewer_response
 
-    # Get agent reply
     reply = get_interviewer_response(
         student_name=session.student_name,
         domains=session.domains,
@@ -182,7 +178,7 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
         student_message=req.student_message.strip(),
     )
 
-    # Append to transcript
+    # Append to transcript``
     updated = list(session.transcript)
     updated.append({"role": "student", "content": req.student_message.strip()})
     updated.append({"role": "agent",   "content": reply})

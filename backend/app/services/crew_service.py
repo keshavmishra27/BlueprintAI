@@ -30,8 +30,7 @@ def _get_llm():
     )
 
 
-# ── Interviewer ────────────────────────────────────────────────────────────
-
+# Interviewer
 def get_interviewer_response(
     student_name: str,
     domains: list[str],
@@ -84,8 +83,7 @@ Start by introducing yourself briefly and asking the first domain-specific quest
     return response.content
 
 
-# ── Scorer (direct Ollama call — much faster than CrewAI crew) ─────────────
-
+# Scorer note:(direct Ollama call — much faster than CrewAI crew) 
 def score_session(
     student_name: str,
     domains: list[str],

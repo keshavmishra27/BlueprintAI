@@ -1,3 +1,3 @@
 """
-solara_app/pages/__init__.py
+file needed for modules
 """
