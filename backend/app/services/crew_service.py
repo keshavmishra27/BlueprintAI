@@ -133,7 +133,6 @@ Return ONLY this JSON object (no other text, no markdown):
         scores = json.loads(raw)
         required = ["domain_knowledge", "creativity", "communication", "engagement", "total", "summary"]
         if all(k in scores for k in required):
-            # Ensure total is correct
             scores["total"] = (
                 scores["domain_knowledge"] +
                 scores["creativity"] +

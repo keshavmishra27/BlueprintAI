@@ -1,10 +1,3 @@
-"""
-github_judge_service.py
------------------------
-Scrapes a public GitHub repository using the GitHub Contents API (no auth token needed),
-aggregates the code files, and asks the local Ollama LLM to act as a hackathon judge.
-"""
-
 import os
 import json
 import base64
@@ -18,7 +11,6 @@ load_dotenv()
 OLLAMA_MODEL    = os.getenv("OLLAMA_MODEL",    "llama3.2")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
-# Only real code files — skip docs/config to reduce LLM input size
 CODE_EXTENSIONS = {
     ".py", ".js", ".ts", ".jsx", ".tsx",
     ".html", ".css", ".scss",
@@ -26,9 +18,8 @@ CODE_EXTENSIONS = {
     ".rs", ".rb", ".php", ".swift", ".kt", ".sh",
 }
 
-# Limits — keep input small for faster CPU inference
-MAX_FILE_SIZE_BYTES = 30_000      # skip individual files larger than 30 KB
-MAX_TOTAL_CHARS     = 30_000      # stop accumulating after 30 K chars
+MAX_FILE_SIZE_BYTES = 30_000      
+MAX_TOTAL_CHARS     = 30_000      
 
 
 def _parse_github_url(url: str) -> tuple[str, str]:
@@ -110,12 +101,10 @@ def analyze_repo(github_url: str, student_name: str) -> dict:
     """
     owner, repo = _parse_github_url(github_url)
 
-    # --- Gather code ---
     code_dump = _gather_code(owner, repo)
     if not code_dump.strip():
         raise ValueError("No readable code files found in this repository.")
 
-    # --- Build LLM prompt ---
     system_prompt = """You are a STRICT judge panel member at Smart India Hackathon (SIH) — India's largest national-level hackathon run by the Government of India. You have judged 500+ teams. You are known for being rigorous, honest, and impossible to impress with surface-level work.
 
 Your core philosophy:
@@ -189,7 +178,6 @@ Return ONLY this JSON object (absolutely no other text):
   "problem_areas": ["<path or area that is most problematic>", "<another problem area>"]
 }}"""
 
-    # --- Call Ollama ---
     from langchain_ollama import ChatOllama
     from langchain_core.messages import SystemMessage, HumanMessage
 
@@ -205,7 +193,6 @@ Return ONLY this JSON object (absolutely no other text):
     ])
     raw = response.content.strip()
 
-    # Strip markdown fences if the model added them
     if "```json" in raw:
         raw = raw.split("```json")[1].split("```")[0].strip()
     elif "```" in raw:
@@ -213,7 +200,6 @@ Return ONLY this JSON object (absolutely no other text):
 
     try:
         result = json.loads(raw)
-        # Recalculate total to be safe
         result["overall_score"] = (
             result.get("code_quality_score", 0) +
             result.get("innovation_score", 0) +
@@ -224,7 +210,6 @@ Return ONLY this JSON object (absolutely no other text):
         result["student_name"] = student_name
         return result
     except Exception:
-        # Graceful fallback
         return {
             "overall_score": 0,
             "code_quality_score": 0,

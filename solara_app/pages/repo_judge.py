@@ -1,11 +1,3 @@
-"""
-repo_judge.py  ·  Solara page
-------------------------------
-A web screen that lets you paste a public GitHub URL,
-enter a student name, and receive a full hackathon judge
-verdict from the local Ollama LLM.
-"""
-
 import solara
 import requests
 import os
@@ -13,14 +5,13 @@ import threading
 
 API = os.getenv("API_URL", "http://localhost:8000")
 
-# ── Reactive state ─────────────────────────────────────────────────────────────
 github_url    = solara.reactive("")
 student_name  = solara.reactive("")
 error_msg     = solara.reactive("")
 loading       = solara.reactive(False)
-loading_step  = solara.reactive("")   # granular progress label
-result        = solara.reactive(None) # dict from /repo-judge/analyze
-screen        = solara.reactive("form") # "form" | "results"
+loading_step  = solara.reactive("")   
+result        = solara.reactive(None) 
+screen        = solara.reactive("form") 
 
 
 def _parse_error(r) -> str:
@@ -34,20 +25,19 @@ def _run_analysis(url: str, name: str):
     """Runs in a background thread — never blocks Solara's render thread."""
     try:
         loading_step.set("📡 Scraping GitHub repository files…")
-        # No timeout= here — we let Ollama take as long as it needs.
         r = requests.post(
             f"{API}/repo-judge/analyze",
             json={"github_url": url, "student_name": name},
-            timeout=None,   # ← unlimited; background thread won't block the UI
+            timeout=None,   
         )
         loading_step.set("🧠 LLM is reading the code and writing verdict…")
         if r.status_code == 200:
             result.set(r.json())
             screen.set("results")
         else:
-            error_msg.set(f"❌ {_parse_error(r)}")
+            error_msg.set(f" {_parse_error(r)}")
     except Exception as e:
-        error_msg.set(f"❌ {e}")
+        error_msg.set(f" {e}")
     finally:
         loading.set(False)
         loading_step.set("")
@@ -59,18 +49,17 @@ def analyze():
     name = student_name.value.strip()
 
     if not url:
-        error_msg.set("⚠️ Please enter a GitHub repository URL.")
+        error_msg.set("Please enter a GitHub repository URL.")
         return
     if "github.com" not in url:
-        error_msg.set("⚠️ URL must be a valid github.com link.")
+        error_msg.set("URL must be a valid github.com link.")
         return
     if not name:
-        error_msg.set("⚠️ Please enter the student's name.")
+        error_msg.set("Please enter the student's name.")
         return
 
     loading.set(True)
     loading_step.set("🔌 Connecting to backend…")
-    # Fire and forget — background thread handles everything
     t = threading.Thread(target=_run_analysis, args=(url, name), daemon=True)
     t.start()
 
@@ -83,8 +72,6 @@ def reset():
     loading.set(False)
     screen.set("form")
 
-
-# ── Sub-components ─────────────────────────────────────────────────────────────
 
 SCORE_META = {
     "code_quality_score":   ("Code Quality",   "#6366f1"),
@@ -121,8 +108,6 @@ def BulletList(items: list, icon: str, color: str):
             solara.Text(icon, style=f"color:{color}; font-size:14px; flex-shrink:0;")
             solara.Text(item, style="font-size:13px; line-height:1.6;")
 
-
-# ── Screens ───────────────────────────────────────────────────────────────────
 
 @solara.component
 def FormScreen():
@@ -191,7 +176,6 @@ def ResultsScreen():
             style="color:#6366f1; font-size:13px; margin-bottom:16px;",
         )
 
-        # ── Overall score card ──────────────────────────────────────────────
         with solara.Card(style=f"text-align:center; padding:28px; border-top:4px solid {color};"):
             solara.Text("Overall Score", style="color:#888; font-size:14px;")
             solara.Text(
@@ -206,51 +190,43 @@ def ResultsScreen():
                     style="color:#374151; font-size:14px; margin-top:10px; font-style:italic;",
                 )
 
-        # ── Score breakdown ─────────────────────────────────────────────────
         with solara.Card("📊 Score Breakdown", style="margin-top:16px;"):
             for key, (label, bar_color) in SCORE_META.items():
                 ScoreBar(label, r.get(key, 0), bar_color)
-
-        # ── Hackathon readiness ─────────────────────────────────────────────
         readiness = r.get("hackathon_readiness", "")
         if readiness:
             with solara.Card("🎯 Hackathon Readiness", style="margin-top:16px;"):
                 solara.Text(readiness, style="font-size:14px; line-height:1.7;")
 
-        # ── Strengths & Improvements ────────────────────────────────────────
         strengths    = r.get("strengths", [])
         improvements = r.get("improvements", [])
         if strengths or improvements:
             with solara.Row(style="gap:16px; margin-top:16px;"):
                 if strengths:
-                    with solara.Card("💪 What's Good", style="flex:1;"):
-                        BulletList(strengths, "✅", "#10b981")
+                    with solara.Card(" What's Good", style="flex:1;"):
+                        BulletList(strengths, "#10b981")
                 if improvements:
-                    with solara.Card("🔧 Improvements Needed", style="flex:1;"):
-                        BulletList(improvements, "🎯", "#f59e0b")
+                    with solara.Card(" Improvements Needed", style="flex:1;"):
+                        BulletList(improvements, "#f59e0b")
 
-        # ── File-level insights ─────────────────────────────────────────────
         standout  = r.get("standout_files", [])
         problem   = r.get("problem_areas", [])
         if standout or problem:
             with solara.Row(style="gap:16px; margin-top:16px;"):
                 if standout:
-                    with solara.Card("⭐ Standout Files", style="flex:1;"):
-                        BulletList(standout, "📄", "#6366f1")
+                    with solara.Card(" Standout Files", style="flex:1;"):
+                        BulletList(standout, "#6366f1")
                 if problem:
-                    with solara.Card("⚠️ Problem Areas", style="flex:1;"):
-                        BulletList(problem, "🔴", "#ef4444")
+                    with solara.Card(" Problem Areas", style="flex:1;"):
+                        BulletList(problem, "#ef4444")
 
-        # ── Reset button ────────────────────────────────────────────────────
         solara.Button(
-            "🔁 Judge Another Repo",
+            " Judge Another Repo",
             color="primary",
             on_click=reset,
             style="margin-top:24px; width:100%;",
         )
 
-
-# ── Main Page ──────────────────────────────────────────────────────────────────
 
 @solara.component
 def Page():
