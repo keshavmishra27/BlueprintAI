@@ -10,7 +10,7 @@ class MemberCreate(BaseModel):
 class MemberCreateWithDomains(BaseModel):
     name: str
     category: Literal["junior", "intermediate", "senior"]
-    domain_ids: Optional[List[int]] = []   # list of domain IDs to assign
+    domain_ids: Optional[List[int]] = []   
 
 class MemberResponse(BaseModel):
     id: int
