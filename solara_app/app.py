@@ -6,7 +6,7 @@ if _project_root not in sys.path:
 
 import solara
 import solara.lab
-from solara_app.pages import members, assessment
+from solara_app.pages import members, assessment, repo_judge
 
 
 @solara.component
@@ -15,7 +15,6 @@ def Layout(children=[]):
         pass
 
 
-# ── Route definitions ──────────────────────────────────────────────────────
 routes = [
     solara.Route(
         path="/",
@@ -26,5 +25,10 @@ routes = [
         path="assessment",
         component=assessment.Page,
         label="📝 Assessment",
+    ),
+    solara.Route(
+        path="repo-judge",
+        component=repo_judge.Page,
+        label="🧑‍⚖️ Repo Judge",
     ),
 ]

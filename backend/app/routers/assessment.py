@@ -12,7 +12,6 @@ from backend.app.models import AssessmentSession
 
 router = APIRouter(prefix="/assess", tags=["Assessment"])
 
-# Available domains students can pick from
 AVAILABLE_DOMAINS = [
     "Web Development",
     "Machine Learning",
@@ -23,7 +22,6 @@ AVAILABLE_DOMAINS = [
 ]
 
 
-# Schemas
 class StartSessionRequest(BaseModel):
     student_name: str
     domains: List[str]
@@ -63,7 +61,7 @@ class SessionSummary(BaseModel):
     created_at: str
 
 
-# Helpers
+
 
 def _check_ollama():
     """Verify Ollama is running and the configured model is available."""
@@ -96,7 +94,6 @@ def _get_session(session_id: int, db: Session) -> AssessmentSession:
     return session
 
 
-# Routes
 
 @router.get(
     "/domains",
@@ -178,7 +175,6 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
         student_message=req.student_message.strip(),
     )
 
-    # Append to transcript``
     updated = list(session.transcript)
     updated.append({"role": "student", "content": req.student_message.strip()})
     updated.append({"role": "agent",   "content": reply})

@@ -1,12 +1,3 @@
-"""
-backend/app/services/crew_service.py
---------------------------------------
-CrewAI service — now powered by Ollama (local, free, no API key needed).
-
-Set OLLAMA_MODEL in .env to choose the model (default: llama3.2).
-Ollama must be running: `ollama serve` (it auto-runs on Windows).
-"""
-
 import os
 import json
 from dotenv import load_dotenv
@@ -16,7 +7,6 @@ load_dotenv()
 OLLAMA_MODEL    = os.getenv("OLLAMA_MODEL", "llama3.2")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
-# Disable CrewAI telemetry to prevent signal handler warnings in FastAPI threads
 os.environ["CREWAI_DISABLE_TELEMETRY"] = "true"
 
 
@@ -26,11 +16,11 @@ def _get_llm():
     return LLM(
         model=OLLAMA_MODEL,
         base_url=f"{OLLAMA_BASE_URL}/v1",
-        api_key="ollama",  # dummy key required by OpenAI client
+        api_key="ollama",  
     )
 
 
-# Interviewer
+
 def get_interviewer_response(
     student_name: str,
     domains: list[str],
@@ -83,7 +73,7 @@ Start by introducing yourself briefly and asking the first domain-specific quest
     return response.content
 
 
-# Scorer note:(direct Ollama call — much faster than CrewAI crew) 
+
 def score_session(
     student_name: str,
     domains: list[str],
@@ -125,7 +115,7 @@ Return ONLY this JSON object (no other text, no markdown):
     llm = ChatOllama(
         model=OLLAMA_MODEL,
         base_url=OLLAMA_BASE_URL,
-        temperature=0.3,   # lower temp for more structured output
+        temperature=0.3,   
     )
 
     response = llm.invoke([
@@ -134,7 +124,6 @@ Return ONLY this JSON object (no other text, no markdown):
     ])
     raw = response.content.strip()
 
-    # Strip markdown code fences if present
     if "```json" in raw:
         raw = raw.split("```json")[1].split("```")[0].strip()
     elif "```" in raw:
@@ -155,7 +144,6 @@ Return ONLY this JSON object (no other text, no markdown):
     except Exception:
         pass
 
-    # Fallback if JSON parsing fails
     return {
         "domain_knowledge": 15,
         "creativity": 15,

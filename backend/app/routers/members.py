@@ -70,7 +70,7 @@ def create_member(payload: MemberCreateWithDomains, db: Session = Depends(get_db
     db.add(member)
     db.flush()
 
-    # Assign to domains
+
     if payload.domain_ids:
         domains = db.query(Domain).filter(Domain.id.in_(payload.domain_ids)).all()
         if len(domains) != len(payload.domain_ids):
