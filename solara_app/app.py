@@ -6,7 +6,7 @@ if _project_root not in sys.path:
 
 import solara
 import solara.lab
-from solara_app.pages import members, assessment, repo_judge
+from solara_app.pages import home, members, assessment, repo_judge, project_suggest
 from pathlib import Path
 
 
@@ -20,6 +20,11 @@ def Layout(children=[]):
 routes = [
     solara.Route(
         path="/",
+        component=home.Page,
+        label="🏠 Home",
+    ),
+    solara.Route(
+        path="members",
         component=members.Page,
         label="👥 Members",
     ),
@@ -32,5 +37,10 @@ routes = [
         path="repo-judge",
         component=repo_judge.Page,
         label="🧑‍⚖️ Repo Judge",
+    ),
+    solara.Route(
+        path="project-suggest",
+        component=project_suggest.Page,
+        label="🚀 Project Ideas",
     ),
 ]
