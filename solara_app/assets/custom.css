@@ -1,0 +1,29 @@
+/* Global Vuetify Override for Group Maker Themes */
+
+/* Completely wipe out Vuetify backgrounds down the DOM tree */
+html, body, #app, .v-application, .v-application--wrap, .v-main, .v-main__wrap {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Glassmorphism Cards */
+.v-card {
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.v-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.25) !important;
+}

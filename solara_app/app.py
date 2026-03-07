@@ -7,10 +7,12 @@ if _project_root not in sys.path:
 import solara
 import solara.lab
 from solara_app.pages import members, assessment, repo_judge
+from pathlib import Path
 
 
 @solara.component
 def Layout(children=[]):
+    solara.Style(Path(__file__).parent / "assets" / "custom.css")
     with solara.AppLayout(title="Group Maker", children=children):
         pass
 

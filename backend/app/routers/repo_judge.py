@@ -19,9 +19,6 @@ from pydantic import BaseModel, HttpUrl
 
 router = APIRouter(prefix="/repo-judge", tags=["Repo Judge"])
 
-
-# ── Pydantic models ────────────────────────────────────────────────────────────
-
 class AnalyzeRequest(BaseModel):
     github_url: str
     student_name: str = "Anonymous"
@@ -42,8 +39,6 @@ class JudgeResult(BaseModel):
     standout_files: List[str] = []
     problem_areas: List[str] = []
 
-
-# ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _check_ollama():
     """Verify Ollama is running before hitting it."""
@@ -66,8 +61,6 @@ def _check_ollama():
         )
 
 
-# ── Routes ─────────────────────────────────────────────────────────────────────
-
 @router.get(
     "/health",
     summary="Repo Judge health check",
@@ -80,11 +73,11 @@ def health():
 @router.post(
     "/analyze",
     response_model=JudgeResult,
-    summary="Analyze a GitHub repo as a hackathon judge",
+    summary="Analyze a GitHub repo as a international hackathon judge",
     description=(
         "Provide the URL of any **public** GitHub repository. "
         "The agent will scrape the code, read it in full, and return "
-        "a structured hackathon judge verdict with scores, strengths, "
+        "a structured international hackathon judge verdict with scores, strengths, "
         "and specific improvements your student should make."
     ),
 )
@@ -117,7 +110,7 @@ def analyze_repo(req: AnalyzeRequest):
             detail=f"Analysis failed: {e}",
         )
 
-    # Coerce score fields to int in case the LLM returned floats or strings
+    
     for score_field in (
         "overall_score", "code_quality_score",
         "innovation_score", "completeness_score", "documentation_score",
@@ -127,7 +120,7 @@ def analyze_repo(req: AnalyzeRequest):
         except (TypeError, ValueError):
             result[score_field] = 0
 
-    # Ensure list fields are actually lists
+# Ensure list fields are actually lists
     for list_field in ("strengths", "improvements", "standout_files", "problem_areas"):
         if not isinstance(result.get(list_field), list):
             result[list_field] = []

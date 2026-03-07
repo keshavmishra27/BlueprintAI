@@ -5,7 +5,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.database import engine
 from backend.app import models
 
-models.Base.metadata.create_all(bind=engine)
+try:
+    models.Base.metadata.create_all(bind=engine)
+except Exception as e:
+    import logging
+    logging.warning(f"Could not connect to database at startup: {e}")
+    logging.warning("The app will start, but DB-dependent endpoints will fail until the database is reachable.")
 
 app = FastAPI()
 
