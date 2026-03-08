@@ -596,12 +596,13 @@ def ResultsScreen():
 def Page():
     solara.Title("MCQ Assessment")
 
-    solara.HTML(tag="style", unsafe_innerHTML="""
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap');
+    with solara.v.Html(tag="div"):
+        solara.HTML(tag="style", unsafe_innerHTML="""
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap');
 
-        .v-application, .v-application--wrap, .v-main__wrap {
-            background: transparent !important;
-        }
+            .v-application, .v-application--wrap, .v-main__wrap {
+                background: transparent !important;
+            }
 
         @keyframes assessGradient {
             0% { background-position: 0% 50%; }
@@ -692,36 +693,38 @@ def Page():
 
         ::-webkit-scrollbar { width:8px; }
         ::-webkit-scrollbar-track { background:rgba(15, 23, 42, 0.3); border-radius:4px; }
+        ::-webkit-scrollbar { width:8px; }
+        ::-webkit-scrollbar-track { background:rgba(15, 23, 42, 0.3); border-radius:4px; }
         ::-webkit-scrollbar-thumb { background:linear-gradient(180deg, #7c3aed, #6366f1); border-radius:4px; }
         ::-webkit-scrollbar-thumb:hover { background:linear-gradient(180deg, #8b5cf6, #818cf8); }
         html { scroll-behavior: smooth; }
-    """)
+        """)
 
-    solara.use_effect(load_domains, [])
+        solara.use_effect(load_domains, [])
 
-    with solara.v.Html(
-        tag="div",
-        style_=(
-            "min-height:100vh; position:relative; overflow:hidden;"
-            "background: linear-gradient(-45deg, #0a0a1a, #1a0a2e, #150e30, #0d1025, #0a0a1a);"
-            "background-size: 400% 400%;"
-            "animation: assessGradient 20s ease infinite;"
-            "font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"
-            "color:#e2e8f0; padding-bottom:60px; box-sizing:border-box;"
-        ),
-    ):
-        for _ in range(3):
-            solara.v.Html(tag="div", attributes={"class": "assess-particle"})
-        for _ in range(2):
-            solara.v.Html(tag="div", attributes={"class": "assess-star"})
-        solara.v.Html(tag="div", attributes={"class": "assess-grid"})
+        with solara.v.Html(
+            tag="div",
+            style_=(
+                "min-height:100vh; position:relative; overflow:hidden;"
+                "background: linear-gradient(-45deg, #0a0a1a, #1a0a2e, #150e30, #0d1025, #0a0a1a);"
+                "background-size: 400% 400%;"
+                "animation: assessGradient 20s ease infinite;"
+                "font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"
+                "color:#e2e8f0; padding-bottom:60px; box-sizing:border-box;"
+            ),
+        ):
+            for _ in range(3):
+                solara.v.Html(tag="div", attributes={"class": "assess-particle"})
+            for _ in range(2):
+                solara.v.Html(tag="div", attributes={"class": "assess-star"})
+            solara.v.Html(tag="div", attributes={"class": "assess-grid"})
 
-        with solara.v.Html(tag="div", style_="position:relative; z-index:1;"):
-            if screen.value == "setup":
-                SetupScreen()
-            elif screen.value == "quiz":
-                QuizScreen()
-            elif screen.value == "submitting":
-                SubmittingScreen()
-            else:
-                ResultsScreen()
+            with solara.v.Html(tag="div", style_="position:relative; z-index:1;"):
+                if screen.value == "setup":
+                    SetupScreen()
+                elif screen.value == "quiz":
+                    QuizScreen()
+                elif screen.value == "submitting":
+                    SubmittingScreen()
+                else:
+                    ResultsScreen()

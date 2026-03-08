@@ -5,33 +5,12 @@ Horizontal layout flashcards matching the project suggestion theme.
 
 import solara
 
-CARD_STYLE = (
-    "background:rgba(10, 25, 40, 0.65); backdrop-filter:blur(16px);"
-    "border:1px solid rgba(0, 255, 204, 0.25); border-radius:16px;"
-    "padding:24px; box-shadow:0 8px 32px rgba(0, 136, 255, 0.15);"
-    "transition:transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;"
-    "cursor:pointer;"
-)
-
 HOME_CSS = """
-.home-card:hover {
-    transform: translateY(-4px) !important;
-    box-shadow: 0 12px 40px rgba(0, 255, 204, 0.25) !important;
-    border-color: rgba(0, 255, 204, 0.5) !important;
+.feature-section:hover {
+    transform: translateX(10px) !important;
 }
-.home-card { transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; }
-
-.tech-chip {
-    display: inline-block;
-    background: rgba(0, 136, 255, 0.2);
-    border: 1px solid rgba(0, 136, 255, 0.4);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 12px;
-    color: #7dd3fc;
-    margin: 3px 4px 3px 0;
-    font-weight: 600;
-    letter-spacing: 0.3px;
+.feature-section {
+    transition: transform 0.3s ease;
 }
 
 @keyframes fadeInUp {
@@ -116,78 +95,46 @@ HOME_CSS = """
 
 
 @solara.component
-def TechChips(techs: list):
-    """Render tech stack as small pill badges."""
-    if not techs:
-        return
-    with solara.v.Html(tag="div", style_="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:16px;"):
-        for tech in techs:
-            solara.v.Html(
-                tag="span",
-                class_="tech-chip",
-                children=[tech],
-            )
-
-@solara.component
-def FeatureCard(index: int, title: str, description: str, tech_stack: list, highlight_label: str, highlight_text: str, accent: str, route: str):
-    """A horizontal flashcard component."""
+def FeatureSection(index: int, title: str, description: str, highlight_text: str, accent: str, route: str):
+    """A clean feature section without card styling."""
     with solara.v.Html(
         tag="div",
-        class_="home-card fade-in-up",
+        class_="feature-section fade-in-up",
         attributes={"onclick": f"window.location.href='{route}'"},
         style_=(
-            f"{CARD_STYLE}"
             f"animation-delay:{index * 0.1}s;"
-            f"border-top:3px solid {accent};"
-            "margin-bottom:24px; width:100%; display:block;"
+            "margin-bottom:60px; width:100%; display:block;"
+            "cursor:pointer; padding-left:20px;"
+            f"border-left: 4px solid {accent};"
+            "background: transparent;"
         ),
     ):
-        # Header
-        with solara.v.Html(
-            tag="div",
-            style_="display:flex; align-items:center; gap:12px; margin-bottom:12px;",
-        ):
-            solara.v.Html(
-                tag="div",
-                style_=(
-                    f"width:32px; height:32px; border-radius:50%; background:{accent};"
-                    "display:flex; align-items:center; justify-content:center;"
-                    "font-weight:800; font-size:14px; color:#000; flex-shrink:0;"
-                ),
-                children=[str(index)]
-            )
-            solara.v.Html(
-                tag="span",
-                style_="font-size:20px; font-weight:700; color:#ffffff; line-height:1.3;",
-                children=[title]
-            )
+        # Feature Name as Heading
+        solara.v.Html(
+            tag="h2",
+            style_=f"font-size:32px; font-weight:800; color:{accent}; margin-bottom:16px; letter-spacing:-0.5px;",
+            children=[title]
+        )
         
         # Description
         solara.v.Html(
-            tag="span",
-            style_="font-size:15px; color:rgba(255,255,255,0.8); line-height:1.6; display:block; margin-bottom:12px;",
+            tag="p",
+            style_="font-size:18px; color:rgba(255,255,255,0.8); line-height:1.6; margin-bottom:24px; max-width:800px;",
             children=[description]
         )
         
-        # Tech stack chips
-        TechChips(tech_stack)
-        
-        # Highlight Section
+        # Why it is unique
         with solara.v.Html(
             tag="div",
-            style_=(
-                f"margin-top:14px; padding:12px 16px; border-radius:10px;"
-                f"background:rgba(0, 255, 204, 0.06); border-left:3px solid {accent};"
-            ),
         ):
             solara.v.Html(
-                tag="span",
-                style_=f"font-size:12px; text-transform:uppercase; letter-spacing:1px; color:{accent}; font-weight:700; display:block; margin-bottom:6px;",
-                children=[highlight_label]
+                tag="h3",
+                style_="font-size:20px; font-weight:700; color:#ffffff; margin-bottom:12px;",
+                children=["Why it's unique:"]
             )
             solara.v.Html(
-                tag="span",
-                style_="font-size:14px; color:rgba(255,255,255,0.85); line-height:1.5; display:block;",
+                tag="p",
+                style_="font-size:16px; color:rgba(255,255,255,0.7); line-height:1.6; max-width:800px;",
                 children=[highlight_text]
             )
 
@@ -299,46 +246,38 @@ def Page():
                 #         style={"font-size": "15px", "color": "rgba(255,255,255,0.6)", "display": "block"},
                 #     )
 
-            with solara.v.Html(tag="div", style_="display:flex; flex-direction:column; gap:24px;"):
-                FeatureCard(
+            with solara.v.Html(tag="div", style_="display:flex; flex-direction:column; gap:8px; margin-top:40px;"):
+                FeatureSection(
                     index=1,
                     title="AI MCQ Assessment",
                     description="Test developer skills accurately. Our LLM generates 15 questions across 3 difficulty levels based on the selected domain.",
-                    tech_stack=["LLM Integration", "Automated Grading", "Dynamic Difficulty"],
-                    highlight_label="✨ WHY IT'S UNIQUE",
                     highlight_text="Instantly computes a global developer percentile based on a weighted scoring curve, replacing subjective interviews with objective metrics.",
                     accent="#0088ff", # Blue
                     route="/assessment"
                 )
 
-                FeatureCard(
+                FeatureSection(
                     index=2,
                     title="Member Management",
                     description="Organise perfect hackathon teams. Create profiles and assign domains to sync your entire team's skills in one place.",
-                    tech_stack=["Team Sync", "Role Management", "Centralized DB"],
-                    highlight_label="✨ WHY IT'S UNIQUE",
                     highlight_text="Acts as a central nervous system for your hackathon, cleanly separating frontend, backend, and AI specialists.",
                     accent="#00ffcc", # Teal
                     route="/members"
                 )
 
-                FeatureCard(
+                FeatureSection(
                     index=3,
                     title="Repo Judge",
                     description="Share your GitHub repository and get an international hackathon judge's critical feedback. Understand exactly where your code needs improvement.",
-                    tech_stack=["GitHub Actions", "Static Analysis", "AI Code Review"],
-                    highlight_label="✨ WHY IT'S UNIQUE",
                     highlight_text="Simulates a real hackathon judge's perspective, pointing out exact architectural flaws and code quality issues before you submit.",
                     accent="#0088ff", # Blue
                     route="/repo-judge"
                 )
                 
-                FeatureCard(
+                FeatureSection(
                     index=4,
                     title="Project Ideas Generator",
                     description="Stuck on what to build? Enter a theme and get the top 5 industry-standard resume projects and 5 winning hackathon ideas instantly.",
-                    tech_stack=["LangChain", "Ollama", "Structured Output"],
-                    highlight_label="✨ WHY IT'S UNIQUE",
                     highlight_text="Uses LangChain and Ollama to guarantee highly relevant, structured, and technically impressive ideas tailored precisely to your input.",
                     accent="#00ffcc", # Teal
                     route="/project-suggest"
