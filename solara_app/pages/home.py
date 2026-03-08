@@ -2,8 +2,8 @@
 home.py — Landing page for Group Maker
 Horizontal layout flashcards matching the project suggestion theme.
 """
-
 import solara
+from solara_app.components import CountdownTerminal
 
 HOME_CSS = """
 .feature-section:hover {
@@ -141,6 +141,7 @@ def FeatureSection(index: int, title: str, description: str, highlight_text: str
 @solara.component
 def Page():
     solara.Title("Group Maker | Home")
+    CountdownTerminal()
 
     solara.HTML(tag="style", unsafe_innerHTML=f"""
         .v-application, .v-application--wrap, .v-main__wrap {{

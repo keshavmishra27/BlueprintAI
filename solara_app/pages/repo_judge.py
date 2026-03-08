@@ -3,6 +3,8 @@ import requests
 import os
 import threading
 
+from solara_app.components import CountdownTerminal
+
 API = os.getenv("API_URL", "http://localhost:8000")
 
 github_url    = solara.reactive("")
@@ -83,7 +85,7 @@ SCORE_META = {
 
 @solara.component
 def ScoreBar(label: str, value: int, color: str, max_val: int = 25):
-    pct = min(100, (value / max_val) * 100)
+    pct = int(min(100.0, float((value / max_val) * 100)))
     with solara.v.Html(tag="div", style_="margin-bottom:14px;"):
         with solara.v.Html(tag="div", style_="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"):
             solara.Text(label, style={"font-weight": "600", "font-size": "14px", "color": "#ffffff"})
@@ -114,7 +116,7 @@ def BulletList(items: list, icon: str, color: str):
 @solara.component
 def FormScreen():
     with solara.v.Html(tag="div", style_="max-width:680px; margin:40px auto; padding:0 24px;"):
-        solara.Text("🧑‍⚖️ GitHub Repo Judge", style={"font-size": "32px", "font-weight": "800", "color": "#ffffff", "margin-bottom": "12px", "display": "block", "text-shadow": "0 2px 10px rgba(0,255,204,0.3)"})
+        solara.Text("🧑‍⚖️ GitHub Repo Judge", style={"font-size": "32px", "font-weight": "800", "color": "#ffffff", "margin-bottom": "12px", "display": "block", "text-shadow": "0 0 20px rgba(0,255,204,0.4)"})
         solara.Text(
             "Paste your student's public GitHub repository URL. "
             "The AI will read the entire codebase and return a hackathon judge verdict "
@@ -125,12 +127,12 @@ def FormScreen():
         with solara.v.Html(
             tag="div",
             style_=(
-                "background:rgba(10, 25, 40, 0.6); backdrop-filter:blur(16px);"
+                "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
                 "border:1px solid rgba(0, 255, 204, 0.3); border-radius:16px;"
-                "padding:32px; box-shadow:0 8px 32px rgba(0, 136, 255, 0.2);"
+                "padding:32px; box-shadow:0 8px 32px rgba(0, 0, 0, 0.4);"
             )
         ):
-            solara.Text("Judge a Repository", style={"font-size": "20px", "font-weight": "700", "color": "#00ffcc", "margin-bottom": "24px", "display": "block"})
+            solara.Text("Judge a Repository", style={"font-size": "20px", "font-weight": "700", "color": "#00ffcc", "margin-bottom": "24px", "display": "block", "text-shadow": "0 0 10px rgba(0,255,204,0.3)"})
             solara.InputText(
                 "Student Name",
                 value=student_name,
@@ -195,7 +197,7 @@ def ResultsScreen():
     )
 
     with solara.v.Html(tag="div", style_="max-width:760px; margin:40px auto; padding:0 24px;"):
-        solara.Text(f"🧑‍⚖️ Judge Verdict: {r.get('student_name', '')}", style={"font-size": "28px", "font-weight": "800", "color": "#ffffff", "display": "block", "margin-bottom":"8px"})
+        solara.Text(f"🧑‍⚖️ Judge Verdict: {r.get('student_name', '')}", style={"font-size": "28px", "font-weight": "800", "color": "#ffffff", "display": "block", "margin-bottom":"8px", "text-shadow": "0 0 20px rgba(0,255,204,0.4)"})
         solara.Text(
             r.get("repository", ""),
             style={"color": "#00ffcc", "font-size": "14px", "display": "block", "margin-bottom": "24px"}
@@ -205,8 +207,8 @@ def ResultsScreen():
             tag="div",
             style_=(
                 f"text-align:center; padding:32px; border-top:4px solid {color};"
-                "background:rgba(10, 25, 40, 0.6); backdrop-filter:blur(16px);"
-                "border-radius:16px; box-shadow:0 8px 32px rgba(0, 136, 255, 0.2);"
+                "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
+                "border-radius:16px; box-shadow:0 8px 32px rgba(0, 0, 0, 0.4);"
             )
         ):
             solara.Text("Overall Score", style={"color": "rgba(255,255,255,0.6)", "font-size": "14px", "text-transform": "uppercase", "letter-spacing": "1px", "display": "block"})
@@ -226,7 +228,7 @@ def ResultsScreen():
             tag="div",
             style_=(
                 "margin-top:24px; padding:24px; border-radius:16px;"
-                "background:rgba(10, 25, 40, 0.6); backdrop-filter:blur(16px);"
+                "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
                 "border:1px solid rgba(0, 255, 204, 0.2);"
             )
         ):
@@ -240,7 +242,7 @@ def ResultsScreen():
                 tag="div",
                 style_=(
                     "margin-top:24px; padding:24px; border-radius:16px;"
-                    "background:rgba(10, 25, 40, 0.6); backdrop-filter:blur(16px);"
+                    "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
                     "border:1px solid rgba(0, 255, 204, 0.2);"
                 )
             ):
@@ -309,6 +311,7 @@ def ResultsScreen():
 @solara.component
 def Page():
     solara.Title("Repo Judge")
+    CountdownTerminal()
 
     # Global CSS injection for animations and global resets
     solara.HTML(tag="style", unsafe_innerHTML="""
@@ -316,14 +319,59 @@ def Page():
             background: transparent !important;
         }
         body {
-            background-color: #030a16 !important;
+            background-color: #030812 !important;
             margin: 0;
             min-height: 100vh;
         }
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+
+        /* Astonishing Neon Input Fields */
+        .v-text-field > .v-input__control > .v-input__slot {
+            background: rgba(10, 5, 30, 0.8) !important;
+            border: 1px solid rgba(255, 0, 128, 0.5) !important;
+            border-radius: 12px !important;
+            box-shadow: inset 0 0 15px rgba(255, 0, 128, 0.1), 0 0 10px rgba(0, 240, 255, 0.1) !important;
+            transition: all 0.4s ease;
+        }
+        .v-text-field > .v-input__control > .v-input__slot:hover {
+            background: rgba(15, 10, 40, 0.9) !important;
+            border-color: #00f0ff !important;
+            box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.2), 0 0 15px rgba(0, 240, 255, 0.4) !important;
+        }
+        .v-input--is-focused > .v-input__control > .v-input__slot {
+            background: rgba(20, 10, 50, 0.9) !important;
+            border-color: #00f0ff !important;
+            box-shadow: inset 0 0 25px rgba(0, 240, 255, 0.3), 0 0 20px rgba(0, 240, 255, 0.6) !important;
+        }
+        .v-text-field > .v-input__control > .v-input__slot::before,
+        .v-text-field > .v-input__control > .v-input__slot::after {
+            display: none !important;
+        }
+
+        /* Electric Neon Typing Text */
+        .v-text-field input, .v-textarea textarea, .v-input input {
+            color: #00f0ff !important;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+            font-weight: 700 !important;
+            letter-spacing: 1px;
+        }
+        
+        /* Vibrant Floating Labels */
+        .v-text-field .v-label {
+            color: #ff007f !important;
+            font-weight: 700;
+            text-shadow: 0 0 5px rgba(255, 0, 127, 0.4);
+            letter-spacing: 0.5px;
+        }
+        .v-text-field .v-label--active {
+            color: #00f0ff !important;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+            transform: translateY(-20px) scale(0.85);
+        }
+
+        /* Fixes for any other random Vuetify elements */
+        .v-card, .v-sheet, .v-messages__message {
+            background-color: transparent !important;
+            color: #00f0ff !important;
         }
     """)
 
@@ -332,9 +380,7 @@ def Page():
         tag="div",
         style_=(
             "min-height:100vh;"
-            "background: linear-gradient(-45deg, #0f2027, #203a43, #153243, #0a192f);"
-            "background-size: 400% 400%;"
-            "animation: gradientBG 15s ease infinite;"
+            "background: #030812;"
             "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"
             "color:#ffffff;"
             "padding-bottom:60px;"

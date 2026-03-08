@@ -23,7 +23,7 @@ router = APIRouter(prefix="/project-suggest", tags=["Project Suggest"])
 # ── Request / Response schemas ──────────────────────────────────────
 
 class SuggestRequest(BaseModel):
-    theme: str
+    themes: List[str]
 
 
 class ProjectItem(BaseModel):
@@ -35,7 +35,7 @@ class ProjectItem(BaseModel):
 
 
 class SuggestResult(BaseModel):
-    theme: str
+    themes: List[str]
     resume_projects: List[ProjectItem] = []
     hackathon_projects: List[ProjectItem] = []
 
@@ -82,16 +82,19 @@ def health():
     ),
 )
 def suggest_projects(req: SuggestRequest):
-    theme = req.theme.strip()
-    if not theme:
-        raise HTTPException(status_code=400, detail="theme cannot be empty.")
+    if not req.themes:
+        raise HTTPException(status_code=400, detail="themes list cannot be empty.")
+    
+    theme_str = ", ".join([t.strip() for t in req.themes if t.strip()])
+    if not theme_str:
+        raise HTTPException(status_code=400, detail="no valid themes provided.")
 
     _check_ollama()
 
     from backend.app.services.project_suggest_service import suggest_projects as run_suggest
 
     try:
-        data = run_suggest(theme=theme)
+        data = run_suggest(theme=theme_str)
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -109,7 +112,7 @@ def suggest_projects(req: SuggestRequest):
             hackathon.append(ProjectItem(**{k: p.get(k, "") for k in ProjectItem.model_fields}))
 
     return SuggestResult(
-        theme=theme,
+        themes=req.themes,
         resume_projects=resume,
         hackathon_projects=hackathon,
     )

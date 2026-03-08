@@ -617,6 +617,16 @@ def Page():
             animation: fadeSlideUp 0.8s ease-out both;
         }
 
+        /* === TYPING TEXT === */
+        .v-text-field input, .v-textarea textarea, .v-input input {
+            color: #00f0ff !important;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+            font-weight: 600;
+        }
+        .v-text-field .v-label {
+            color: rgba(255,255,255,0.6) !important;
+        }
+
         /* === STATUS MSG === */
         .custom-status-msg {
             margin-top:20px;

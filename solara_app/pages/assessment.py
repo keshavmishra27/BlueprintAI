@@ -8,11 +8,13 @@ import requests
 import os
 import threading
 
+from solara_app.components import CountdownTerminal
+
 API = os.getenv("API_URL", "http://localhost:8000")
 
 # ── Reactive state ─────────────────────────────────────────────────
 student_name     = solara.reactive("")
-selected_domain  = solara.reactive("")
+selected_domains = solara.reactive([])
 all_domains      = solara.reactive([])
 setup_error      = solara.reactive("")
 
@@ -44,13 +46,13 @@ def _parse_error(r) -> str:
         return r.text or f"HTTP {r.status_code}"
 
 
-def _run_generate(name: str, domain: str):
+def _run_generate(name: str, domains: list):
     """Background thread — calls the backend to generate MCQs."""
     try:
         loading_step.set("🧠 AI is crafting 15 questions for you…")
         r = requests.post(
             f"{API}/assess/generate-mcq",
-            json={"student_name": name, "domain": domain},
+            json={"student_name": name, "domains": domains},
             timeout=None,
         )
         if r.status_code == 200:
@@ -71,17 +73,17 @@ def _run_generate(name: str, domain: str):
 def start_quiz():
     setup_error.set("")
     name = student_name.value.strip()
-    domain = selected_domain.value.strip()
+    domains = selected_domains.value
     if not name:
         setup_error.set("⚠️ Please enter your name.")
         return
-    if not domain:
-        setup_error.set("⚠️ Please select a domain.")
+    if not domains:
+        setup_error.set("⚠️ Please select at least one domain.")
         return
 
     loading.set(True)
     loading_step.set("🔌 Connecting to backend…")
-    threading.Thread(target=_run_generate, args=(name, domain), daemon=True).start()
+    threading.Thread(target=_run_generate, args=(name, domains), daemon=True).start()
 
 
 def select_answer(q_index: int, letter: str):
@@ -126,7 +128,7 @@ def restart():
     user_answers.set({})
     scores.set(None)
     student_name.set("")
-    selected_domain.set("")
+    selected_domains.set([])
     setup_error.set("")
     loading.set(False)
 
@@ -186,8 +188,8 @@ def QuestionCard(q: dict, index: int):
         tag="div",
         class_="assess-glass-card assess-fade-in",
         style_=(
-            "background:rgba(15, 23, 42, 0.7); backdrop-filter:blur(20px);"
-            "border:1px solid rgba(139, 92, 246, 0.2); border-radius:20px;"
+            "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
+            "border:1px solid rgba(0,255,204,0.2); border-radius:20px;"
             f"padding:28px; margin-bottom:20px;"
             f"animation-delay:{index * 0.05}s;"
             "box-shadow:0 8px 32px rgba(0, 0, 0, 0.2);"
@@ -200,9 +202,9 @@ def QuestionCard(q: dict, index: int):
                     tag="div",
                     style_=(
                         "width:36px; height:36px; border-radius:50%;"
-                        "background:linear-gradient(135deg, #7c3aed, #6366f1);"
+                        "background:linear-gradient(135deg, #00ffcc, #0088ff);"
                         "display:flex; align-items:center; justify-content:center;"
-                        "font-weight:800; font-size:14px; color:#fff; flex-shrink:0;"
+                        "font-weight:800; font-size:14px; color:#030812; flex-shrink:0;"
                     ),
                     children=[str(index + 1)],
                 )
@@ -232,29 +234,15 @@ def QuestionCard(q: dict, index: int):
 @solara.component
 def SetupScreen():
     with solara.v.Html(tag="div", style_="max-width:680px; margin:0 auto; padding:40px 24px;"):
-        solara.v.Html(
-            tag="div",
-            attributes={"class": "assess-fade-in"},
-            children=["📝 MCQ Assessment"],
-            style_="font-size:34px; font-weight:900; color:#f1f5f9; margin-bottom:12px; text-shadow:0 2px 20px rgba(139, 92, 246, 0.4);",
-        )
-        solara.v.Html(
-            tag="div",
-            attributes={"class": "assess-fade-in"},
-            children=["15 MCQ questions • 5 Easy • 5 Medium • 5 Hard • See how you rank among developers worldwide"],
-            style_="font-size:16px; color:rgba(255,255,255,0.7); line-height:1.6; margin-bottom:36px;",
+        solara.Text("⚡ AI Developer Assessment", style={"font-size": "36px", "font-weight": "900", "color": "#ffffff", "margin-bottom": "16px", "display": "block", "letter-spacing": "-1px", "text-shadow": "0 0 20px rgba(0,255,204,0.4)"})
+        solara.Text(
+            "Select a domain to generate an adaptive, 15-question technical exam. "
+            "Our AI will grade your responses and calculate your global percentile.",
+            style={"font-size": "16px", "color": "rgba(255,255,255,0.7)", "line-height": "1.6"}
         )
 
-        with solara.v.Html(
-            tag="div",
-            attributes={"class": "assess-glass-card"},
-            style_=(
-                "background:rgba(15, 23, 42, 0.7); backdrop-filter:blur(20px);"
-                "border:1px solid rgba(139, 92, 246, 0.2); border-radius:20px;"
-                "padding:32px; box-shadow:0 12px 40px rgba(0, 0, 0, 0.3);"
-            ),
-        ):
-            solara.Text("🎯 Your Details", style={"font-size": "20px", "font-weight": "800", "color": "#a78bfa", "margin-bottom": "24px", "display": "block"})
+        with solara.v.Html(tag="div", style_="background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px); border:1px solid rgba(0,255,204,0.2); border-radius:16px; padding:32px; box-shadow:0 10px 40px rgba(0,0,0,0.5); margin-top:36px;"):
+            solara.Text("🎯 Your Details", style={"font-size": "20px", "font-weight": "800", "color": "#00ffcc", "margin-bottom": "24px", "display": "block", "text-shadow": "0 0 10px rgba(0,255,204,0.3)"})
             solara.InputText("Full Name", value=student_name, style="width:100%; margin-bottom:16px;")
 
             solara.Text("Select a Domain:", style={"font-weight": "700", "font-size": "14px", "color": "rgba(255,255,255,0.7)", "margin-bottom": "12px", "display": "block"})
@@ -264,28 +252,38 @@ def SetupScreen():
             else:
                 with solara.v.Html(tag="div", style_="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:8px;"):
                     for d in all_domains.value:
-                        is_sel = (d == selected_domain.value)
+                        is_sel = (d in selected_domains.value)
+                        style = {
+                            "border-radius": "12px", "font-weight": "600", "transition": "all 0.3s ease",
+                            "background": "linear-gradient(135deg, #00ffcc, #0088ff)", "border": "1px solid rgba(0,255,204,0.3)", "color": "#030812", "box-shadow": "0 2px 12px rgba(0,255,204,0.3)"
+                        } if is_sel else {
+                            "border-radius": "12px", "font-weight": "600", "transition": "all 0.3s ease",
+                            "background": "rgba(0,255,204,0.08)", "border": "1px solid rgba(0,255,204,0.25)", "color": "#94a3b8"
+                        }
+
+                        def create_toggle(dom=d):
+                            def toggle():
+                                current = list(selected_domains.value)
+                                if dom in current:
+                                    current.remove(dom)
+                                else:
+                                    current.append(dom)
+                                selected_domains.set(current)
+                            return toggle
+
                         solara.Button(
                             ("✓ " if is_sel else "") + d,
-                            on_click=lambda dom=d: selected_domain.set(dom),
+                            on_click=create_toggle(d),
                             color="primary" if is_sel else "default",
                             outlined=not is_sel,
                             small=True,
-                            style=(
-                                f"border-radius:12px; font-weight:600; transition:all 0.3s ease; "
-                                + (
-                                    "background:linear-gradient(135deg, #7c3aed, #6366f1); border:none; color:#fff; "
-                                    "box-shadow:0 2px 12px rgba(124, 58, 237, 0.3);"
-                                    if is_sel else
-                                    "background:rgba(139, 92, 246, 0.08); color:#94a3b8; border:1px solid rgba(139, 92, 246, 0.25);"
-                                )
-                            ),
+                            style=style,
                         )
 
-            if selected_domain.value:
+            if selected_domains.value:
                 solara.Text(
-                    f"Selected: {selected_domain.value}",
-                    style={"color": "#a78bfa", "font-size": "13px", "margin-top": "8px", "font-weight": "600"},
+                    f"Selected: {', '.join(selected_domains.value)}",
+                    style={"color": "#00ffcc", "font-size": "13px", "margin-top": "8px", "font-weight": "600"},
                 )
 
         if setup_error.value:
@@ -307,7 +305,7 @@ def SetupScreen():
             style=(
                 "width:100%; margin-top:24px; padding:16px; font-weight:800; font-size:16px;"
                 "letter-spacing:1px; border-radius:14px;"
-                "background:linear-gradient(135deg, #7c3aed, #6366f1); border:none; color:#fff;"
+                "background:linear-gradient(135deg, #00ffcc, #0088ff); border:none; color:#030812;"
             ),
         )
 
@@ -339,13 +337,13 @@ def QuizScreen():
         with solara.v.Html(tag="div", style_="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:12px;"):
             solara.v.Html(
                 tag="div",
-                children=[f"📝 Quiz: {selected_domain.value}"],
+                children=[f"📝 Quiz: {', '.join(selected_domains.value)}"],
                 style_="font-size:24px; font-weight:800; color:#f1f5f9;",
             )
             solara.v.Html(
                 tag="div",
                 style_=(
-                    "background:rgba(15, 23, 42, 0.8); border:1px solid rgba(139, 92, 246, 0.3);"
+                    "background:rgba(10, 15, 20, 0.8); border:1px solid rgba(0,255,204,0.3);"
                     "border-radius:12px; padding:8px 16px; backdrop-filter:blur(8px);"
                 ),
                 children=[f"✅ {answered}/{total_q} answered"],
@@ -363,7 +361,7 @@ def QuizScreen():
             solara.v.Html(
                 tag="div",
                 style_=(
-                    f"background:linear-gradient(90deg, #7c3aed, #a78bfa); height:8px;"
+                    f"background:linear-gradient(90deg, #00ffcc, #0088ff); height:8px;"
                     f"border-radius:9999px; width:{pct}%; transition:width 0.5s ease;"
                 ),
                 children=[],
@@ -385,9 +383,9 @@ def QuizScreen():
                 "width:100%; margin-top:12px; padding:16px; font-weight:800; font-size:16px;"
                 "letter-spacing:1px; border-radius:14px;"
                 + (
-                    "background:linear-gradient(135deg, #7c3aed, #6366f1); border:none; color:#fff;"
+                    "background:linear-gradient(135deg, #00ffcc, #0088ff); border:none; color:#030812;"
                     if all_answered else
-                    "background:rgba(139, 92, 246, 0.2); border:none; color:rgba(255,255,255,0.4);"
+                    "background:rgba(0, 255, 204, 0.2); border:none; color:rgba(255,255,255,0.4);"
                     "cursor:not-allowed;"
                 )
             ),
@@ -402,11 +400,11 @@ def SubmittingScreen():
             attributes={"class": "assess-glass-card"},
             style_=(
                 "text-align:center; padding:48px;"
-                "background:rgba(15, 23, 42, 0.7); backdrop-filter:blur(20px);"
-                "border:1px solid rgba(139, 92, 246, 0.2); border-radius:20px;"
+                "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
+                "border:1px solid rgba(0,255,204,0.2); border-radius:20px;"
             ),
         ):
-            solara.Text("📊 Grading Your Quiz…", style={"font-size": "24px", "font-weight": "800", "color": "#a78bfa", "display": "block", "margin-bottom": "12px"})
+            solara.Text("📊 Grading Your Quiz…", style={"font-size": "24px", "font-weight": "800", "color": "#00ffcc", "display": "block", "margin-bottom": "12px", "text-shadow": "0 0 10px rgba(0,255,204,0.3)"})
             solara.Text(
                 "Calculating your score and developer percentile. Just a moment!",
                 style={"color": "rgba(255,255,255,0.6)", "font-size": "15px", "display": "block"},
@@ -443,7 +441,7 @@ def ResultsScreen():
             tag="div",
             attributes={"class": "assess-fade-in"},
             children=[f"🎓 Results for {student_name.value}"],
-            style_="font-size:30px; font-weight:900; color:#f1f5f9; margin-bottom:24px; text-shadow:0 2px 20px rgba(139, 92, 246, 0.4);",
+            style_="font-size:30px; font-weight:900; color:#f1f5f9; margin-bottom:24px; text-shadow:0 2px 20px rgba(0,255,204,0.4);",
         )
 
         # ── Score Card ──
@@ -452,7 +450,7 @@ def ResultsScreen():
             attributes={"class": "assess-fade-in"},
             style_=(
                 f"text-align:center; padding:40px; border-top:4px solid {color};"
-                "background:rgba(15, 23, 42, 0.7); backdrop-filter:blur(20px);"
+                "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
                 "border-radius:20px; box-shadow:0 12px 40px rgba(0, 0, 0, 0.3);"
                 f"border:1px solid {color}33;"
             ),
@@ -472,13 +470,13 @@ def ResultsScreen():
             )
 
         # ── Percentile Card ──
-        pctile_color = "#a78bfa" if pctile >= 70 else "#f59e0b" if pctile >= 40 else "#ef4444"
+        pctile_color = "#00ffcc" if pctile >= 70 else "#f59e0b" if pctile >= 40 else "#ef4444"
         with solara.v.Html(
             tag="div",
             attributes={"class": "assess-fade-in"},
             style_=(
                 "margin-top:20px; text-align:center; padding:32px;"
-                "background:rgba(15, 23, 42, 0.7); backdrop-filter:blur(20px);"
+                "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
                 f"border:1px solid {pctile_color}33; border-radius:20px;"
                 "box-shadow:0 8px 32px rgba(0, 0, 0, 0.2);"
             ),
@@ -532,11 +530,11 @@ def ResultsScreen():
                 tag="div",
                 style_=(
                     "margin-top:32px; padding:28px; border-radius:20px;"
-                    "background:rgba(15, 23, 42, 0.7); backdrop-filter:blur(20px);"
-                    "border:1px solid rgba(139, 92, 246, 0.2);"
+                    "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
+                    "border:1px solid rgba(0,255,204,0.2);"
                 ),
             ):
-                solara.Text("📋 Question Review", style={"font-size": "20px", "font-weight": "800", "color": "#a78bfa", "display": "block", "margin-bottom": "24px"})
+                solara.Text("📋 Question Review", style={"font-size": "20px", "font-weight": "800", "color": "#00ffcc", "display": "block", "margin-bottom": "24px", "text-shadow": "0 0 10px rgba(0,255,204,0.3)"})
 
                 for d in details:
                     is_correct = d.get("is_correct", False)
@@ -585,7 +583,7 @@ def ResultsScreen():
             style=(
                 "margin-top:28px; width:100%; padding:16px; font-weight:800; font-size:16px;"
                 "letter-spacing:1px; border-radius:14px;"
-                "background:linear-gradient(135deg, #7c3aed, #6366f1); border:none; color:#fff;"
+                "background:linear-gradient(135deg, #00ffcc, #0088ff); border:none; color:#030812;"
             ),
         )
 
@@ -595,6 +593,7 @@ def ResultsScreen():
 @solara.component
 def Page():
     solara.Title("MCQ Assessment")
+    CountdownTerminal()
 
     with solara.v.Html(tag="div"):
         solara.HTML(tag="style", unsafe_innerHTML="""
@@ -602,6 +601,18 @@ def Page():
 
             .v-application, .v-application--wrap, .v-main__wrap {
                 background: transparent !important;
+            }
+            body { background-color: #030812 !important; margin: 0; min-height: 100vh; }
+
+            /* Electric Blue Typing Text */
+            .v-text-field input, .v-textarea textarea, .v-input input {
+                color: #00f0ff !important;
+                text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+                font-family: 'JetBrains Mono', monospace !important;
+                font-weight: 600;
+            }
+            .v-text-field .v-label {
+                color: rgba(255,255,255,0.6) !important;
             }
 
         @keyframes assessGradient {
@@ -616,17 +627,17 @@ def Page():
         }
         .assess-particle:nth-child(1) {
             width:350px; height:350px;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(0, 255, 204, 0.15) 0%, transparent 70%);
             top:-5%; left:-10%; animation-delay:0s;
         }
         .assess-particle:nth-child(2) {
             width:280px; height:280px;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.10) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(0, 136, 255, 0.12) 0%, transparent 70%);
             top:40%; right:-8%; animation-delay:-5s;
         }
         .assess-particle:nth-child(3) {
             width:200px; height:200px;
-            background: radial-gradient(circle, rgba(167, 139, 250, 0.08) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(0, 255, 204, 0.10) 0%, transparent 70%);
             bottom:10%; left:15%; animation-delay:-10s;
         }
         @keyframes assessFloat {
@@ -638,7 +649,7 @@ def Page():
 
         .assess-star {
             position:absolute; width:120px; height:2px;
-            background:linear-gradient(90deg, transparent, #8b5cf6, #a78bfa, transparent);
+            background:linear-gradient(90deg, transparent, #00ffcc, #0088ff, transparent);
             border-radius:2px; opacity:0; pointer-events:none;
         }
         .assess-star:nth-child(4) { top:18%; right:5%; animation: assessShoot 4s linear 1s infinite; }
@@ -653,8 +664,8 @@ def Page():
         .assess-grid {
             position:absolute; inset:0;
             background-image:
-                linear-gradient(rgba(139, 92, 246, 0.06) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(139, 92, 246, 0.06) 1px, transparent 1px);
+                linear-gradient(rgba(0, 255, 204, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 204, 0.06) 1px, transparent 1px);
             background-size:60px 60px; pointer-events:none; opacity:0.5;
             animation: assessGridFade 8s ease-in-out infinite alternate;
         }
@@ -665,8 +676,8 @@ def Page():
         }
         .assess-glass-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3), 0 0 20px rgba(139, 92, 246, 0.08);
-            border-color: rgba(139, 92, 246, 0.35) !important;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 255, 204, 0.08);
+            border-color: rgba(0, 255, 204, 0.35) !important;
         }
 
         .assess-fade-in { animation: assessFadeSlide 0.6s ease-out both; }
@@ -676,27 +687,27 @@ def Page():
         }
 
         .assess-start-btn {
-            box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
             animation: assessBtnPulse 3s ease-in-out infinite;
             transition: all 0.3s ease !important;
         }
         .assess-start-btn:hover {
             animation: none !important;
             transform: translateY(-3px) scale(1.02) !important;
-            box-shadow: 0 0 30px rgba(124, 58, 237, 0.4), 0 8px 30px rgba(0,0,0,0.3) !important;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.4), 0 8px 30px rgba(0,0,0,0.3) !important;
             filter: brightness(1.15) !important;
         }
         @keyframes assessBtnPulse {
-            0%, 100% { box-shadow: 0 0 15px rgba(124, 58, 237, 0.3); }
-            50% { box-shadow: 0 0 25px rgba(124, 58, 237, 0.4), 0 0 50px rgba(124, 58, 237, 0.15); }
+            0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 204, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(0, 255, 204, 0.4), 0 0 50px rgba(0, 255, 204, 0.15); }
         }
 
         ::-webkit-scrollbar { width:8px; }
         ::-webkit-scrollbar-track { background:rgba(15, 23, 42, 0.3); border-radius:4px; }
         ::-webkit-scrollbar { width:8px; }
         ::-webkit-scrollbar-track { background:rgba(15, 23, 42, 0.3); border-radius:4px; }
-        ::-webkit-scrollbar-thumb { background:linear-gradient(180deg, #7c3aed, #6366f1); border-radius:4px; }
-        ::-webkit-scrollbar-thumb:hover { background:linear-gradient(180deg, #8b5cf6, #818cf8); }
+        ::-webkit-scrollbar-thumb { background:linear-gradient(180deg, #00ffcc, #0088ff); border-radius:4px; }
+        ::-webkit-scrollbar-thumb:hover { background:linear-gradient(180deg, #00e6b8, #0077e6); }
         html { scroll-behavior: smooth; }
         """)
 
@@ -705,12 +716,8 @@ def Page():
         with solara.v.Html(
             tag="div",
             style_=(
-                "min-height:100vh; position:relative; overflow:hidden;"
-                "background: linear-gradient(-45deg, #0a0a1a, #1a0a2e, #150e30, #0d1025, #0a0a1a);"
-                "background-size: 400% 400%;"
-                "animation: assessGradient 20s ease infinite;"
-                "font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"
-                "color:#e2e8f0; padding-bottom:60px; box-sizing:border-box;"
+                "min-height:100vh; background:#030812; font-family:'Inter',sans-serif; color:#ffffff;"
+                "position:relative; overflow:hidden;"
             ),
         ):
             for _ in range(3):

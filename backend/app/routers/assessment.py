@@ -42,7 +42,7 @@ AVAILABLE_DOMAINS = [
 
 class GenerateMCQRequest(BaseModel):
     student_name: str
-    domain: str
+    domains: List[str]
 
 
 class QuestionOut(BaseModel):
@@ -56,7 +56,7 @@ class QuestionOut(BaseModel):
 class GenerateMCQResponse(BaseModel):
     session_id: int
     student_name: str
-    domain: str
+    domains: List[str]
     questions: List[QuestionOut]
 
 
@@ -68,7 +68,7 @@ class SubmitMCQRequest(BaseModel):
 class SubmitMCQResponse(BaseModel):
     session_id: int
     student_name: str
-    domain: str
+    domains: List[str]
     scores: dict
 
 
@@ -134,22 +134,23 @@ def list_domains():
 def generate_mcq(req: GenerateMCQRequest, db: Session = Depends(get_db)):
     if not req.student_name.strip():
         raise HTTPException(status_code=400, detail="student_name cannot be empty.")
-    if not req.domain.strip():
-        raise HTTPException(status_code=400, detail="domain cannot be empty.")
+    if not req.domains:
+        raise HTTPException(status_code=400, detail="domains cannot be empty.")
 
     _check_ollama()
 
     from backend.app.services.mcq_service import generate_mcq as run_generate
 
     try:
-        questions = run_generate(domain=req.domain.strip())
+        domain_str = ", ".join(req.domains)
+        questions = run_generate(domain=domain_str)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"MCQ generation failed: {e}")
 
     # Save to DB — transcript stores the full questions (with answers)
     session = AssessmentSession(
         student_name=req.student_name.strip(),
-        domains=[req.domain.strip()],
+        domains=req.domains,
         transcript=questions,          # full questions with correct_answer
         status="active",
     )
@@ -171,7 +172,7 @@ def generate_mcq(req: GenerateMCQRequest, db: Session = Depends(get_db)):
     return GenerateMCQResponse(
         session_id=session.id,
         student_name=session.student_name,
-        domain=req.domain.strip(),
+        domains=req.domains,
         questions=questions_out,
     )
 
@@ -188,7 +189,7 @@ def submit_mcq(req: SubmitMCQRequest, db: Session = Depends(get_db)):
         return SubmitMCQResponse(
             session_id=session.id,
             student_name=session.student_name,
-            domain=session.domains[0] if session.domains else "",
+            domains=session.domains or [],
             scores=session.scores,
         )
 
@@ -207,7 +208,7 @@ def submit_mcq(req: SubmitMCQRequest, db: Session = Depends(get_db)):
     return SubmitMCQResponse(
         session_id=session.id,
         student_name=session.student_name,
-        domain=session.domains[0] if session.domains else "",
+        domains=session.domains or [],
         scores=scores,
     )
 
@@ -248,7 +249,7 @@ def get_result(session_id: int, db: Session = Depends(get_db)):
     return SubmitMCQResponse(
         session_id=session.id,
         student_name=session.student_name,
-        domain=session.domains[0] if session.domains else "",
+        domains=session.domains or [],
         scores=session.scores,
     )
 

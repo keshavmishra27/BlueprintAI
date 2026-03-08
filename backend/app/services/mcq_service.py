@@ -30,12 +30,13 @@ def generate_mcq(domain: str) -> list[dict]:
         "Return ONLY valid JSON — no markdown fences, no extra text."
     )
 
-    user_prompt = f"""Create exactly 15 multiple-choice questions about "{domain}".
+    user_prompt = f"""Create exactly 15 multiple-choice questions about the following domain(s): "{domain}".
+CRITICAL REQUIREMENT: These must NOT be theoretical or bookish questions. Instead, create REAL-LIFE SCENARIOS that test a developer's practical problem-solving skills, debugging, architecture, and productivity.
 
 Difficulty distribution:
-- Questions 1-5: EASY (fundamental concepts any beginner should know)
-- Questions 6-10: MEDIUM (intermediate concepts working developers encounter)
-- Questions 11-15: HARD (tricky, edge-case, or deep knowledge questions)
+- Questions 1-5: EASY (common practical scenarios a beginner should safely handle)
+- Questions 6-10: MEDIUM (intermediate scenarios involving trade-offs, debugging, or real-world constraints)
+- Questions 11-15: HARD (complex production issues, tricky edge cases, or advanced architecture choices)
 
 Return ONLY this JSON array (no other text):
 [

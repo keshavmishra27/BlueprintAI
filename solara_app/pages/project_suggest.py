@@ -8,10 +8,12 @@ import requests
 import os
 import threading
 
+from solara_app.components import CountdownTerminal
+
 API = os.getenv("API_URL", "http://localhost:8000")
 
 # ── Reactive state ─────────────────────────────────────────────────
-theme_input   = solara.reactive("")
+selected_domains = solara.reactive([])
 error_msg     = solara.reactive("")
 loading       = solara.reactive(False)
 loading_step  = solara.reactive("")
@@ -28,13 +30,13 @@ def _parse_error(r) -> str:
         return r.text or f"HTTP {r.status_code}"
 
 
-def _run_suggest(theme: str):
+def _run_suggest(themes: list):
     """Background thread — calls the backend."""
     try:
         loading_step.set("🧠 AI is brainstorming project ideas…")
         r = requests.post(
             f"{API}/project-suggest/suggest",
-            json={"theme": theme},
+            json={"themes": themes},
             timeout=None,
         )
         if r.status_code == 200:
@@ -51,17 +53,18 @@ def _run_suggest(theme: str):
 
 def submit():
     error_msg.set("")
-    t = theme_input.value.strip()
-    if not t:
-        error_msg.set("Please enter a theme or domain.")
+    domains = selected_domains.value
+    if not domains:
+        error_msg.set("Please select at least one theme or domain.")
         return
+    
     loading.set(True)
     loading_step.set("🔌 Connecting to backend…")
-    threading.Thread(target=_run_suggest, args=(t,), daemon=True).start()
+    threading.Thread(target=_run_suggest, args=(domains,), daemon=True).start()
 
 
 def reset():
-    theme_input.set("")
+    selected_domains.set([])
     error_msg.set("")
     result.set(None)
     loading.set(False)
@@ -71,9 +74,9 @@ def reset():
 # ── Shared Styles ──────────────────────────────────────────────────
 
 CARD_STYLE = (
-    "background:rgba(10, 25, 40, 0.65); backdrop-filter:blur(16px);"
+    "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
     "border:1px solid rgba(0, 255, 204, 0.25); border-radius:16px;"
-    "padding:24px; box-shadow:0 8px 32px rgba(0, 136, 255, 0.15);"
+    "padding:24px; box-shadow:0 8px 32px rgba(0, 0, 0, 0.4);"
     "transition:transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;"
 )
 
@@ -193,7 +196,7 @@ def FormScreen():
             style={
                 "font-size": "32px", "font-weight": "800", "color": "#ffffff",
                 "margin-bottom": "12px", "display": "block",
-                "text-shadow": "0 2px 10px rgba(0,255,204,0.3)",
+                "text-shadow": "0 0 20px rgba(0,255,204,0.4)",
             },
         )
         solara.Text(
@@ -213,33 +216,53 @@ def FormScreen():
                 style={
                     "font-size": "20px", "font-weight": "700", "color": "#00ffcc",
                     "margin-bottom": "20px", "display": "block",
+                    "text-shadow": "0 0 10px rgba(0, 255, 204, 0.3)",
                 },
             )
 
             # Suggested themes
             with solara.v.Html(tag="div", style_="margin-bottom:20px;"):
                 solara.Text(
-                    "Popular themes:",
+                    "Select one or more themes:",
                     style={"font-size": "13px", "color": "rgba(255,255,255,0.5)", "display": "block", "margin-bottom": "8px"},
                 )
                 with solara.v.Html(tag="div", style_="display:flex; flex-wrap:wrap; gap:8px;"):
-                    for suggestion in ["Artificial Intelligence", "FinTech", "Healthcare", "Web3 / Blockchain", "EdTech", "Sustainability"]:
+                    for suggestion in ["Artificial Intelligence", "FinTech", "Healthcare", "Web3 / Blockchain", "EdTech", "Sustainability", "Cybersecurity", "IoT"]:
+                        
+                        def toggle_domain(s=suggestion):
+                            current = list(selected_domains.value)
+                            if s in current:
+                                current.remove(s)
+                            else:
+                                current.append(s)
+                            selected_domains.set(current)
+                            
+                        is_selected = suggestion in selected_domains.value
+                        
                         solara.Button(
                             suggestion,
-                            on_click=lambda s=suggestion: theme_input.set(s),
-                            outlined=True,
+                            on_click=toggle_domain,
+                            outlined=not is_selected,
+                            color="primary" if is_selected else None,
                             style=(
                                 "text-transform:none; font-size:12px; border-radius:20px;"
-                                "border-color:rgba(0,136,255,0.4); color:#7dd3fc;"
+                                f"border-color:{'transparent' if is_selected else 'rgba(0,136,255,0.4)'}; "
+                                f"color:{'#000' if is_selected else '#7dd3fc'};"
+                                f"background:{'linear-gradient(90deg, #0088ff, #00ffcc)' if is_selected else 'transparent'};"
                                 "padding:2px 14px; min-width:auto;"
                             ),
                         )
 
-            solara.InputText(
-                "Enter theme / domain  (e.g. AI, FinTech, Healthcare, IoT …)",
-                value=theme_input,
-                style="width:100%;",
-            )
+            # Display selected domains
+            if selected_domains.value:
+                with solara.v.Html(tag="div", style_="margin-bottom: 20px; padding: 10px; background: rgba(0, 136, 255, 0.1); border-radius: 8px; border: 1px solid rgba(0, 136, 255, 0.3);"):
+                    solara.Text("Selected Domains: ", style={"font-weight": "600", "color": "#7dd3fc", "margin-right": "8px"})
+                    for d in selected_domains.value:
+                        solara.v.Html(
+                            tag="span", 
+                            children=[d], 
+                            style_="background: rgba(0, 255, 204, 0.2); color: #00ffcc; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-right: 6px; display: inline-block; margin-bottom: 4px; border: 1px solid rgba(0, 255, 204, 0.4);"
+                        )
 
             if error_msg.value:
                 with solara.v.Html(
@@ -302,7 +325,7 @@ def ResultsScreen():
             style={
                 "font-size": "28px", "font-weight": "800", "color": "#ffffff",
                 "display": "block", "margin-bottom": "8px",
-                "text-shadow": "0 2px 10px rgba(0,255,204,0.3)",
+                "text-shadow": "0 0 20px rgba(0,255,204,0.4)",
             },
         )
         solara.Text(
@@ -410,20 +433,26 @@ def ResultsScreen():
 @solara.component
 def Page():
     solara.Title("Project Ideas")
+    CountdownTerminal()
 
     solara.HTML(tag="style", unsafe_innerHTML=f"""
         .v-application, .v-application--wrap, .v-main__wrap {{
             background: transparent !important;
         }}
         body {{
-            background-color: #030a16 !important;
+            background-color: #030812 !important;
             margin: 0;
             min-height: 100vh;
         }}
-        @keyframes gradientBG {{
-            0% {{ background-position: 0% 50%; }}
-            50% {{ background-position: 100% 50%; }}
-            100% {{ background-position: 0% 50%; }}
+
+        /* Electric Blue Typing Text */
+        .v-text-field input, .v-textarea textarea, .v-input input {{
+            color: #00f0ff !important;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+            font-weight: 600;
+        }}
+        .v-text-field .v-label {{
+            color: rgba(255,255,255,0.6) !important;
         }}
         {CARD_HOVER_CSS}
     """)
@@ -432,9 +461,7 @@ def Page():
         tag="div",
         style_=(
             "min-height:100vh;"
-            "background: linear-gradient(-45deg, #0f2027, #203a43, #153243, #0a192f);"
-            "background-size: 400% 400%;"
-            "animation: gradientBG 15s ease infinite;"
+            "background: #030812;"
             "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"
             "color:#ffffff;"
             "padding-bottom:60px;"
