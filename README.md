@@ -14,11 +14,12 @@
 
 | Feature | Description |
 |---|---|
+| 🏠 **Premium Home Page** | Landing page with highly creative glassmorphism flashcards, glowing orbs, and grid overlays |
 | 👥 **Member Management** | Full CRUD for members with domain assignment. Dynamic themed UI that changes per skill domain |
+| 💡 **Project Suggestion** | AI-driven multi-domain project idea generation, producing hackathon/resume-ready ideas |
 | 📝 **AI Assessment** | Timed 5-min AI interview with real-time chat, auto-scoring via CrewAI agents |
 | 🧑‍⚖️ **Repo Judge** | Submit any GitHub repo URL — AI reads the entire codebase and delivers a hackathon-style verdict |
 | 🎨 **Dynamic Themes** | Each domain (Web Dev, ML, Cybersecurity, etc.) has its own animated background & accent colors |
-| 🔊 **Text-to-Speech** | Announcement system with browser-native TTS and configurable repeat intervals |
 
 ---
 
@@ -36,7 +37,7 @@ The Members page features **7 unique visual themes** that change automatically w
 | ☁️ Cloud Computing | Sky Blue | Blue |
 | 🔒 Cybersecurity | Hacker Terminal | Matrix Green |
 
-**Visual effects include:** animated gradient backgrounds, floating particles, shooting stars, grid overlays, glassmorphism cards, neon button glow pulses, custom gradient scrollbar, and hover lift animations.
+**Visual effects include:** animated gradient backgrounds, electric blue input text fields, floating particles, shooting stars, grid overlays, glassmorphism cards, neon button glow pulses, custom gradient scrollbar, and hover lift animations, all seamlessly integrated into a premium Black & Blue camera automation aesthetic.
 
 ---
 
@@ -46,24 +47,27 @@ The Members page features **7 unique visual themes** that change automatically w
 group_maker/
 ├── backend/
 │   └── app/
-│       ├── main.py            # FastAPI entry point + CORS config
-│       ├── models.py          # SQLAlchemy models (Member, Domain, AssessmentSession)
-│       ├── schemas.py         # Pydantic request/response schemas
-│       ├── crud.py            # Database helpers
-│       ├── database.py        # DB engine (PostgreSQL / SQLite fallback)
+│       ├── main.py                # FastAPI entry point + CORS config
+│       ├── models.py              # SQLAlchemy models (Member, Domain, AssessmentSession)
+│       ├── schemas.py             # Pydantic request/response schemas
+│       ├── crud.py                # Database helpers
+│       ├── database.py            # DB engine (PostgreSQL / SQLite fallback)
 │       ├── routers/
-│       │   ├── members.py     # CRUD endpoints for members & domains
-│       │   ├── assessment.py  # AI assessment session endpoints
-│       │   └── repo_judge.py  # GitHub repo evaluation endpoint
-│       └── services/          # Business logic & AI service wrappers
+│       │   ├── members.py         # CRUD endpoints for members & domains
+│       │   ├── assessment.py      # AI assessment session endpoints
+│       │   ├── repo_judge.py      # GitHub repo evaluation endpoint
+│       │   └── project_suggest.py # Endpoint for AI project suggestions
+│       └── services/              # Business logic & AI service wrappers
 ├── solara_app/
-│   ├── app.py                 # Solara app layout, routing & global CSS
+│   ├── app.py                     # Solara app layout, routing & global CSS
 │   ├── assets/
-│   │   └── custom.css         # Global Vuetify overrides & glassmorphism
+│   │   └── custom.css             # Global Vuetify overrides & glassmorphism
 │   └── pages/
-│       ├── members.py         # Members UI — dynamic themed CRUD page
-│       ├── assessment.py      # AI Assessment — setup → chat → results
-│       └── repo_judge.py      # Repo Judge — form → AI analysis → verdict
+│       ├── home.py                # Landing page with interactive flashcards
+│       ├── members.py             # Members UI — dynamic themed CRUD page
+│       ├── assessment.py          # AI Assessment — setup → chat → results
+│       ├── project_suggest.py     # Multi-domain project idea generation
+│       └── repo_judge.py          # Repo Judge — form → AI analysis → verdict
 ├── requirements.txt
 ├── render.yaml                # Render.com deployment blueprint
 └── .env                       # Environment variables (not committed)
@@ -163,6 +167,14 @@ solara run solara_app/app.py
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/repo-judge/analyze` | Submit a GitHub repo for AI evaluation |
+
+
+### Project Suggestion
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/project-suggest/suggest` | Get AI-generated project ideas for multiple domains |
+| `GET` | `/project-suggest/health` | Project suggestion health check |
 
 
 **Services deployed:**
