@@ -19,7 +19,28 @@
 | 💡 **Project Suggestion** | AI-driven multi-domain project idea generation, producing hackathon/resume-ready ideas |
 | 📝 **AI Assessment** | Timed 5-min AI interview with real-time chat, auto-scoring via CrewAI agents |
 | 🧑‍⚖️ **Repo Judge** | Submit any GitHub repo URL — AI reads the entire codebase and delivers a hackathon-style verdict |
-| 🎨 **Dynamic Themes** | Each domain (Web Dev, ML, Cybersecurity, etc.) has its own animated background & accent colors |
+| 🌌 **Astonishing Dark Theme** | Seamless deep-dark aesthetic (#030812) with zero gaps and an animated black/blue navigation system |
+
+### 🚀 Feature Flow
+
+```mermaid
+graph TD
+    Start(Home Page) --> Members(Member Management)
+    Start --> Assessment(AI Assessment)
+    Start --> RepoJudge(Repo Judge)
+    Start --> ProjectSuggest(Project Suggestion)
+    
+    Members --> DomainTheming(Dynamic Domain Themes)
+    Assessment --> Chat(Real-time AI Chat) --> Scoring(AI Auto-Scoring)
+    RepoJudge --> CodeAnalysis(Deep Codebase Analysis) --> Verdict(Hackathon Verdict)
+    ProjectSuggest --> MultiDomain(Multi-Domain Ideas) --> ResumeHackathon(Resume + Hackathon Ideas)
+    
+    style Start fill:#1A3673,stroke:#00f0ff,stroke-width:2px,color:#fff
+    style Members fill:#0A0F1C,stroke:#00f0ff,stroke-width:1px,color:#fff
+    style Assessment fill:#0A0F1C,stroke:#00f0ff,stroke-width:1px,color:#fff
+    style RepoJudge fill:#0A0F1C,stroke:#00f0ff,stroke-width:1px,color:#fff
+    style ProjectSuggest fill:#0A0F1C,stroke:#00f0ff,stroke-width:1px,color:#fff
+```
 
 ---
 
@@ -37,7 +58,7 @@ The Members page features **7 unique visual themes** that change automatically w
 | ☁️ Cloud Computing | Sky Blue | Blue |
 | 🔒 Cybersecurity | Hacker Terminal | Matrix Green |
 
-**Visual effects include:** animated gradient backgrounds, electric blue input text fields, floating particles, shooting stars, grid overlays, glassmorphism cards, neon button glow pulses, custom gradient scrollbar, and hover lift animations, all seamlessly integrated into a premium Black & Blue camera automation aesthetic.
+**Visual effects include:** an animated black/blue navigation system with glowing cyan indicators, animated gradient backgrounds, electric blue input text fields, floating particles, shooting stars, grid overlays, glassmorphism cards, neon button glow pulses, custom gradient scrollbar, and hover lift animations—all seamlessly integrated into a premium, astonishing dark aesthetic.
 
 ---
 
@@ -77,12 +98,31 @@ group_maker/
 
 ## ⚙️ Tech Stack
 
+### 🛠️ Architecture
+
+```mermaid
+graph LR
+    User((User)) <--> UI[Solara Frontend]
+    UI <--> API[FastAPI Backend]
+    API <--> DB[(PostgreSQL/SQLite)]
+    API <--> AI{AI Logic}
+    AI <--> Ollama[Ollama LLM]
+    AI <--> CrewAI[CrewAI Agents]
+    AI <--> GoogleAI[Google GenAI]
+    
+    style User fill:#00f0ff,stroke:#fff,stroke-width:2px,color:#000
+    style UI fill:#1A3673,stroke:#00f0ff,stroke-width:1px,color:#fff
+    style API fill:#1A3673,stroke:#00f0ff,stroke-width:1px,color:#fff
+    style DB fill:#0A0F1C,stroke:#00f0ff,stroke-width:1px,color:#fff
+    style AI fill:#00f0ff,stroke:#0A0F1C,stroke-width:2px,color:#000
+```
+
 | Layer | Technology |
 |---|---|
 | **Backend** | FastAPI, SQLAlchemy, Pydantic |
 | **Database** | PostgreSQL (Supabase) — auto-fallback to SQLite |
 | **Frontend** | Solara (Python-native reactive UI) |
-| **AI / LLM** | Ollama (`qwen2.5:3b`), CrewAI, LangChain Google GenAI |
+| **AI / LLM** | Ollama (`qwen2.5:3b`), CrewAI, LangChain, Google GenAI |
 | **Deployment** | Render.com (Blueprint via `render.yaml`) |
 
 ---
