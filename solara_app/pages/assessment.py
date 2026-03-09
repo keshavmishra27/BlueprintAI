@@ -1,3 +1,4 @@
+from pathlib import Path
 """
 assessment.py  —  Solara page for MCQ-based assessment.
 User picks a domain → AI generates 15 MCQs → user answers → gets score + percentile.
@@ -594,15 +595,19 @@ def ResultsScreen():
 def Page():
     solara.Title("MCQ Assessment")
     CountdownTerminal()
+    solara.Style(Path(__file__).parent.parent / 'assets' / 'custom.css')
 
     with solara.v.Html(tag="div"):
         solara.HTML(tag="style", unsafe_innerHTML="""
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap');
 
-            .v-application, .v-application--wrap, .v-main__wrap {
-                background: transparent !important;
+            .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-sheet {
+                background-color: #030812 !important;
+            background: #030812 !important;
             }
-            body { background-color: #030812 !important; margin: 0; min-height: 100vh; }
+            .theme--light.v-sheet {{ background-color: #030812 !important; }}
+        body { background-color: #030812 !important;
+            background: #030812 !important; margin: 0; min-height: 100vh; }
 
             /* Electric Blue Typing Text */
             .v-text-field input, .v-textarea textarea, .v-input input {

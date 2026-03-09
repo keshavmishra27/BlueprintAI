@@ -1,3 +1,4 @@
+from pathlib import Path
 """
 project_suggest.py  —  Solara page for the Project Ideas feature.
 User enters a theme → AI returns Top 5 Resume + Top 5 Hackathon projects.
@@ -434,13 +435,17 @@ def ResultsScreen():
 def Page():
     solara.Title("Project Ideas")
     CountdownTerminal()
+    solara.Style(Path(__file__).parent.parent / 'assets' / 'custom.css')
 
     solara.HTML(tag="style", unsafe_innerHTML=f"""
-        .v-application, .v-application--wrap, .v-main__wrap {{
-            background: transparent !important;
+        .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-sheet {{
+            background-color: #030812 !important;
+            background: #030812 !important;
         }}
+        .theme--light.v-sheet {{ background-color: #030812 !important; }}
         body {{
             background-color: #030812 !important;
+            background: #030812 !important;
             margin: 0;
             min-height: 100vh;
         }}

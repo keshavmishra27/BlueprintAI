@@ -1,3 +1,4 @@
+from pathlib import Path
 import solara
 import requests
 import os
@@ -312,14 +313,18 @@ def ResultsScreen():
 def Page():
     solara.Title("Repo Judge")
     CountdownTerminal()
+    solara.Style(Path(__file__).parent.parent / 'assets' / 'custom.css')
 
     # Global CSS injection for animations and global resets
     solara.HTML(tag="style", unsafe_innerHTML="""
-        .v-application, .v-application--wrap, .v-main__wrap {
-            background: transparent !important;
+        .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-sheet {
+            background-color: #030812 !important;
+            background: #030812 !important;
         }
+        .theme--light.v-sheet {{ background-color: #030812 !important; }}
         body {
             background-color: #030812 !important;
+            background: #030812 !important;
             margin: 0;
             min-height: 100vh;
         }

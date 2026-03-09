@@ -1,3 +1,4 @@
+from pathlib import Path
 """
 home.py — Landing page for Group Maker
 Horizontal layout flashcards matching the project suggestion theme.
@@ -142,13 +143,17 @@ def FeatureSection(index: int, title: str, description: str, highlight_text: str
 def Page():
     solara.Title("Group Maker | Home")
     CountdownTerminal()
+    solara.Style(Path(__file__).parent.parent / 'assets' / 'custom.css')
 
     solara.HTML(tag="style", unsafe_innerHTML=f"""
-        .v-application, .v-application--wrap, .v-main__wrap {{
-            background: transparent !important;
+        .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-sheet {{
+            background-color: #030812 !important;
+            background: #030812 !important;
         }}
+        .theme--light.v-sheet {{ background-color: #030812 !important; }}
         body {{
             background-color: #030812 !important;
+            background: #030812 !important;
             margin: 0;
             min-height: 100vh;
         }}

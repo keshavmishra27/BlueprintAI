@@ -1,3 +1,4 @@
+from pathlib import Path
 import solara
 import requests
 import os
@@ -344,7 +345,8 @@ def TerminalLogin():
         .term-dot.red { background-color: #ff5f56; }
         .term-dot.yellow { background-color: #ffbd2e; }
         .term-dot.green { background-color: #27c93f; }
-        .terminal-body {
+        .terminal-.theme--light.v-sheet {{ background-color: #030812 !important; }}
+        body {
             padding: 24px; color: #00ffcc; font-size: 15px; line-height: 1.6;
         }
         .term-input-row { display: flex; align-items: center; gap: 10px; margin-top: 20px; }
@@ -421,9 +423,11 @@ def Page():
         }
         ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #38bdf8, #818cf8); }
 
-        .v-application, .v-application--wrap, .v-main__wrap {
-            background: transparent !important;
+        .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-sheet {
+            background-color: #030812 !important;
+            background: #030812 !important;
         }
+        .theme--light.v-sheet {{ background-color: #030812 !important; }}
         body {
             background-color: #0a0e1a !important;
             margin: 0;
