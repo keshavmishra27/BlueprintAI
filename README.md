@@ -16,10 +16,10 @@
 |---|---|
 | 🏠 **Premium Home Page** | Landing page with highly creative glassmorphism flashcards, glowing orbs, and grid overlays |
 | 👥 **Member Management** | Full CRUD for members with domain assignment. Dynamic themed UI that changes per skill domain |
-| 💡 **Project Suggestion** | AI-driven multi-domain project idea generation, producing hackathon/resume-ready ideas |
-| 📝 **AI Assessment** | Timed 5-min AI interview with real-time chat, auto-scoring via CrewAI agents |
-| 🧑‍⚖️ **Repo Judge** | Submit any GitHub repo URL — AI reads the entire codebase and delivers a hackathon-style verdict |
-| 🌌 **Astonishing Dark Theme** | Seamless deep-dark aesthetic (#030812) with zero gaps and an animated black/blue navigation system |
+| 💡 **Idea Refiner** | Patent-level gap analysis, novelty scoring (0-100), and technical refinement options |
+| 🧑‍⚖️ **Repo Judge** | Submit any GitHub repo URL — AI performs deep codebase analysis and delivers a hackathon-style verdict with mentor feedback |
+| 🧑‍💻 **Multi-Domain** | Comprehensive support for Web/App Dev, ML, AI, Cloud, and Cybersecurity across all features |
+| 🌌 **Astonishing Dark Theme** | Seamless deep-dark aesthetic (#030812) with electric-blue text input and animated navigation |
 
 ### 🚀 Feature Flow
 
@@ -29,17 +29,20 @@ graph TD
     Start --> Assessment(AI Assessment)
     Start --> RepoJudge(Repo Judge)
     Start --> ProjectSuggest(Project Suggestion)
+    Start --> IdeaRefiner(Idea Refiner)
     
     Members --> DomainTheming(Dynamic Domain Themes)
     Assessment --> Chat(Real-time AI Chat) --> Scoring(AI Auto-Scoring)
     RepoJudge --> CodeAnalysis(Deep Codebase Analysis) --> Verdict(Hackathon Verdict)
-    ProjectSuggest --> MultiDomain(Multi-Domain Ideas) --> ResumeHackathon(Resume + Hackathon Ideas)
+    ProjectSuggest --> MultiDomain(Multi-Domain Ideas)
+    IdeaRefiner(Idea Refiner) --> NoveltyScoring(Novelty Scoring) --> PatentAnalysis(Patent Gap Analysis)
     
     style Start fill:#1A3673,stroke:#00f0ff,stroke-width:2px,color:#fff
     style Members fill:#0A0F1C,stroke:#00f0ff,stroke-width:1px,color:#fff
     style Assessment fill:#0A0F1C,stroke:#00f0ff,stroke-width:1px,color:#fff
     style RepoJudge fill:#0A0F1C,stroke:#00f0ff,stroke-width:1px,color:#fff
     style ProjectSuggest fill:#0A0F1C,stroke:#00f0ff,stroke-width:1px,color:#fff
+    style IdeaRefiner fill:#0A0F1C,stroke:#00f0ff,stroke-width:1px,color:#fff
 ```
 
 ---
@@ -77,8 +80,10 @@ group_maker/
 │       │   ├── members.py         # CRUD endpoints for members & domains
 │       │   ├── assessment.py      # AI assessment session endpoints
 │       │   ├── repo_judge.py      # GitHub repo evaluation endpoint
-│       │   └── project_suggest.py # Endpoint for AI project suggestions
+│       │   ├── project_suggest.py # Endpoint for AI project suggestions
+│       │   └── idea_validator.py  # AI Idea refinement and gap analysis
 │       └── services/              # Business logic & AI service wrappers
+│           └── llm_factory.py     # Hybrid LLM priority & fallback logic
 ├── solara_app/
 │   ├── app.py                     # Solara app layout, routing & global CSS
 │   ├── assets/
@@ -88,7 +93,8 @@ group_maker/
 │       ├── members.py             # Members UI — dynamic themed CRUD page
 │       ├── assessment.py          # AI Assessment — setup → chat → results
 │       ├── project_suggest.py     # Multi-domain project idea generation
-│       └── repo_judge.py          # Repo Judge — form → AI analysis → verdict
+│       ├── repo_judge.py          # Repo Judge — form → AI analysis → verdict
+│       └── idea_refiner.py        # Patent-level idea validation & refinement
 ├── requirements.txt
 ├── render.yaml                # Render.com deployment blueprint
 └── .env                       # Environment variables (not committed)
@@ -108,7 +114,8 @@ graph LR
     API <--> AI{AI Logic}
     AI <--> Ollama[Ollama LLM]
     AI <--> CrewAI[CrewAI Agents]
-    AI <--> GoogleAI[Google GenAI]
+    AI <--> Gemini[Gemini 2.0 Flash]
+    AI <--> OpenRouter[OpenRouter API]
     
     style User fill:#00f0ff,stroke:#fff,stroke-width:2px,color:#000
     style UI fill:#1A3673,stroke:#00f0ff,stroke-width:1px,color:#fff
@@ -122,7 +129,8 @@ graph LR
 | **Backend** | FastAPI, SQLAlchemy, Pydantic |
 | **Database** | PostgreSQL (Supabase) — auto-fallback to SQLite |
 | **Frontend** | Solara (Python-native reactive UI) |
-| **AI / LLM** | Ollama (`qwen2.5:3b`), CrewAI, LangChain, Google GenAI |
+| **AI / LLM** | **Hybrid Model Factory** (Gemini 2.0 Flash via OpenRouter ↔️ Ollama Local) |
+| **Agents** | CrewAI, LangChain |
 | **Deployment** | Render.com (Blueprint via `render.yaml`) |
 
 ---
@@ -147,6 +155,8 @@ Create a `.env` file in the project root:
 DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<db>
 OLLAMA_MODEL=qwen2.5:3b
 OLLAMA_BASE_URL=http://localhost:11434
+OPENROUTER_API_KEY=your_key_here
+OPENROUTER_MODEL=google/gemini-2.0-flash-001
 API_URL=http://localhost:8000
 ```
 
@@ -215,6 +225,8 @@ solara run solara_app/app.py
 |---|---|---|
 | `POST` | `/project-suggest/suggest` | Get AI-generated project ideas for multiple domains |
 | `GET` | `/project-suggest/health` | Project suggestion health check |
+| `POST` | `/idea-validator/check` | Check idea similarity vs current market |
+| `POST` | `/idea-validator/refine` | Get patent-level refinement & novelty scoring |
 
 
 **Services deployed:**
