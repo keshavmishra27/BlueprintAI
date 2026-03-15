@@ -126,83 +126,110 @@ def analyze_repo(github_url: str, student_name: str) -> dict:
     code_dump = _gather_code(owner, repo)
     if not code_dump.strip():
         raise ValueError("No readable code files found in this repository or access limit reached.")
+    system_prompt = """You are an experienced international hackathon judge and technical mentor. Input: a PUBLIC GitHub repository URL. Your job: scrape the repository (all files, commit history optional), analyze it end-to-end, and deliver an expert, reproducible, and actionable judging report suitable for student grading and mentor feedback.
 
-    system_prompt = """You are a STRICT judge panel member at Smart India Hackathon (SIH) — India's largest national-level hackathon run by the Government of India. You have judged 500+ teams. You are known for being rigorous, honest, and impossible to impress with surface-level work.
+1) Mandatory checks (fail/notice conditions)
+- Confirm repository is public and accessible; return an error if not.
+- Confirm presence of a license file; flag missing or incompatible license.
+- Confirm top-level README.md exists; if missing, treat as a documentation issue.
+- Detect presence of obvious secrets (api keys, tokens) in repo; do not print secrets, but flag location and give remediation steps.
 
-Your core philosophy:
-- Most student projects are CRUD apps or tutorial clones in disguise. Call them out.
-- A high score (80+) is RARE and reserved for projects with genuine innovation, real-world impact, and solid technical depth.
-- You do NOT give marks for effort or good intentions — only for what is actually built.
-- You MUST score harshly and justify every deduction.
+2) Analysis tasks (perform in order)
+A. Project quick-run & reproducibility:
+   - Identify language(s), runtime, and build system (e.g., Python/Node/Java/C++).
+   - Find and list exact run/build commands (README, package.json, Makefile, Dockerfile, workflow files).
+   - Attempt to run tests and/or start the app only if the environment is available. If you cannot run, say so and list the missing steps or secrets.
+B. Functionality & correctness:
+   - Inspect main features claimed in README and demo; check code paths that implement those features.
+   - Verify presence and behavior of core modules; note unimplemented or stubbed features.
+C. Code quality & maintainability:
+   - Evaluate project structure, naming, modularity, duplication, complexity hotspots.
+   - Identify specific functions/files that need refactor (include file paths and line ranges).
+D. Architecture & design:
+   - Evaluate separation of concerns, layering (UI/backend/db), and use of patterns.
+   - Comment on scalability, coupling, and single-point-of-failure issues with examples.
+E. Tests & CI:
+   - Detect test suites, test coverage indicators, and CI workflows (GitHub Actions, Travis, etc.).
+   - If tests exist, report test count and failures (if run). If no tests, recommend what to test and provide 3 example unit tests (test name + one-line description).
+F. Documentation & onboarding:
+   - Evaluate README completeness (setup, dev run, testing, architecture diagram, contribution guide).
+   - Check for API docs, in-code comments, and inline docstrings.
+G. Security, dependencies, and license:
+   - List dependencies (requirements.txt, package.json) with their versions.
+   - Flag outdated or known vulnerable dependencies (if you cannot query CVE DB, still call out unpinned ranges or wildly old versions).
+   - Note license presence/type and compatibility issues.
+H. UX & polish:
+   - Comment on CLI/GUI friendliness, helpful error messages, and demo quality.
 
-SCORING RUBRIC (each dimension is 0–25, total 0–100):
+3) Output requirements (strict)
+Produce two artifacts: (A) A structured JSON verdict and (B) a short human summary.
 
-1. CODE QUALITY (0-25):
-   - 20-25: Clean architecture, SOLID principles, proper error handling, no hardcoding, production-like structure
-   - 10-19: Decent structure but has issues (god functions, magic numbers, duplicated logic, poor naming)
-   - 5-9:  Messy, procedural spaghetti, everything in one file, copy-pasted blocks
-   - 0-4:  Tutorial-level code, no structure, hardcoded credentials, broken patterns
+A. **Structured JSON format**
+Return ONLY the JSON object with these keys:
+{
+  "repo_url": "<url>",
+  "accessibility": "public",
+  "languages": ["python",...],
+  "scores": {
+    "functionality": {"score": 0-10, "reasons": []},
+    "code_quality": {"score": 0-10, "reasons": []},
+    "documentation": {"score": 0-10, "reasons": []},
+    "architecture": {"score": 0-10, "reasons": []},
+    "testing_ci": {"score": 0-10, "reasons": []},
+    "innovation_ux": {"score": 0-10, "reasons": []}
+  },
+  "total_score": 0-100,
+  "strengths": ["list top 3"],
+  "top_issues": [
+    {
+      "severity": "major",
+      "title": "Title",
+      "description": "Fix info",
+      "files": [{"path":"...","lines":"..."}],
+      "estimated_effort_hours": 1.0
+    }
+  ],
+  "security_warnings": [],
+  "reproducibility": {"can_run": true, "notes": ""},
+  "mentor_notes": "Constructive feedback (50-100 words)."
+}
 
-2. INNOVATION (0-25):
-   - 20-25: Solves a real, specific problem in a novel way. Not just "an app that does X" — genuine creative engineering.
-   - 10-19: Combines existing tools in a somewhat interesting way, but the core idea is not original
-   - 5-9:  Clone of a common project (todo app, weather app, chat app, basic ML classifier, basic CRUD)
-   - 0-4:  Textbook tutorial project with zero original contribution
+B. **Human summary** (plain text) — 2–4 sentences.
 
-3. COMPLETENESS (0-25):
-   - 20-25: Core feature fully works end-to-end, edge cases handled, no obvious crashes, deployable
-   - 10-19: Main flow works, but key features are missing, broken, or half-implemented
-   - 5-9:  Skeleton or prototype — mostly UI/stubs with little working logic
-   - 0-4:  Does not function, just boilerplate or empty files
+4) Scoring guidance (how to map 0–10)
+- 9–10: Excellent, production-grade for its scope; clean code; tests; docs; no critical bugs.
+- 7–8: Very good; minor polish or missing tests/docs.
+- 4–6: Functional but needs notable improvements (tests, structure, docs).
+- 1–3: Incomplete or brittle; critical issues present.
+- 0: Non-functional or mostly placeholder.
 
-4. DOCUMENTATION & PRESENTATION (0-25):
-   - 20-25: Clear README with problem statement, architecture diagram, setup, demo screenshots/video
-   - 10-19: Basic README but missing critical sections (no setup, no demo, no problem context)
-   - 5-9:  Almost no README, no comments in code, a judge cannot understand what it does
-   - 0-4:  Empty README or no README at all
+5) Evidence & quoting rules
+- Always attach at least one file path for every major claim.
+- Only include short code excerpts (≤3 lines) and annotate line numbers.
+- If you run commands, show exact commands and their raw outputs; otherwise label analysis as "static-only".
 
-PENALTY TRIGGERS (automatically deduct from innovation score):
-- -8 if it's a basic CRUD app with no real intelligence or unique logic
-- -8 if it's an ML project that just wraps a pre-trained model with no custom training/pipeline
-- -5 if it has no real deployment or runnable demo
+6) Deliver human-readable remediation guidance
+- For each top_issue include step-by-step fix plan and an estimated effort (hours).
+- Offer 3 example GitHub issue templates with title/body/labels for a mentor to assign to the student.
 
-Return ONLY valid JSON. No markdown. No explanations outside the JSON. All improvements MUST be specific to files and include a correction step."""
+7) Tone & constraints
+- Be factual, constructive, and kind. Avoid shaming language.
+- Do not fabricate running results or dates. If you can't verify something, say "not verified" and why.
 
-    user_prompt = f"""SIH Judge Evaluation
-====================
+If the repository is inaccessible or private, return a JSON with accessibility:"not_accessible" and a short reason. End.
+"""
+
+    user_prompt = f"""Expert Hackathon Evaluation
+===================
 Student: {student_name}
 Repository: https://github.com/{owner}/{repo}
 
 FULL CODEBASE:
 {code_dump}
 
-As a strict SIH judge, evaluate this project honestly. Be specific. Reference actual file names and function names.
-A score above 70 should be hard to achieve. Most student projects score 30–55.
-
-Return ONLY this JSON object (absolutely no other text):
-{{
-  "overall_score": <integer 0-100, sum of the four dimensions>,
-  "code_quality_score": <integer 0-25, per rubric>,
-  "innovation_score": <integer 0-25, per rubric, after penalties>,
-  "completeness_score": <integer 0-25, per rubric>,
-  "documentation_score": <integer 0-25, per rubric>,
-  "verdict": "<one brutally honest sentence — be direct, no sugarcoating>",
-  "hackathon_readiness": "<2-3 sentences: Is this ready for an SIH demo? What would embarrass the student in front of judges? What is the single most important thing to fix BEFORE the hackathon?>",
-  "strengths": [
-    "<genuine strength with specific file/function reference — do NOT list things that are just 'basic'>"
-  ],
-  "improvements": [
-    {{
-      "file": "<path/to/file>",
-      "issue": "<what exactly is wrong in this file>",
-      "fix": "<step-by-step instructions or code snippet to fix it>"
-    }}
-  ],
-  "standout_files": ["<path to the most impressive file, if any>"],
-  "problem_areas": ["<path or area that is most problematic>", "<another problem area>"]
-}}"""
-
-    from .llm_factory import invoke_hybrid_llm
+Analyze this project as an expert judge. Return ONLY the JSON object followed by the human summary.
+"""
+    from .llm_factory import invoke_hybrid_llm, extract_json_from_text
     from langchain_core.messages import SystemMessage, HumanMessage
 
     try:
@@ -210,45 +237,52 @@ Return ONLY this JSON object (absolutely no other text):
             SystemMessage(content=system_prompt),
             HumanMessage(content=user_prompt),
         ], temperature=0.3)
-        raw = response.content.strip()
+        raw_full = response.content.strip()
     except Exception as e:
-        raw = f"Error calling LLM: {str(e)}"
+        logger.error(f"LLM Invocation failed: {e}")
+        raw_full = ""
 
-    if "```json" in raw:
-        raw = raw.split("```json")[1].split("```")[0].strip()
-    elif "```" in raw:
-        raw = raw.split("```")[1].split("```")[0].strip()
+    # Use robust extraction
+    result = extract_json_from_text(raw_full)
+    
+    # Extract human summary (everything after the JSON block or just use mentor_notes)
+    human_summary = ""
+    if "```" in raw_full:
+        parts = raw_full.split("```")
+        if len(parts) > 2:
+            human_summary = parts[-1].strip()
 
-    try:
-        result = json.loads(raw)
-        result["overall_score"] = (
-            result.get("code_quality_score", 0) +
-            result.get("innovation_score", 0) +
-            result.get("completeness_score", 0) +
-            result.get("documentation_score", 0)
-        )
-        result["repository"] = f"https://github.com/{owner}/{repo}"
-        result["student_name"] = student_name
-        return result
-    except Exception:
-        return {
-            "overall_score": 0,
-            "code_quality_score": 0,
-            "innovation_score": 0,
-            "completeness_score": 0,
-            "documentation_score": 0,
-            "verdict": "Could not parse LLM response.",
-            "hackathon_readiness": raw[:500] if raw else "No response from LLM.",
-            "strengths": ["None identified due to processing error."],
-            "improvements": [
-                {
-                    "file": "General",
-                    "issue": "The AI returned an unparseable response.",
-                    "fix": "Please try again or check if the repository is too large."
-                }
-            ],
-            "standout_files": [],
-            "problem_areas": ["Processing failed."],
-            "repository": f"https://github.com/{owner}/{repo}",
-            "student_name": student_name,
-        }
+    if result:
+        try:
+            # Add metadata
+            result["repo_url"] = github_url
+            result["student_name"] = student_name
+            
+            # If the LLM didn't provide human_summary outside JSON, maybe it put it in mentor_notes
+            if not human_summary and "mentor_notes" in result:
+                 human_summary = result["mentor_notes"]
+            
+            return result
+        except Exception as e:
+            logger.error(f"Error post-processing JSON: {e}")
+
+    # Fallback return with error info that still matches the schema enough to not crash everything
+    return {
+        "repo_url": github_url,
+        "accessibility": "error",
+        "languages": [],
+        "scores": {
+            "functionality": {"score": 0, "weight": 0.3, "reasons": ["Parsing failed"]},
+            "code_quality": {"score": 0, "weight": 0.2, "reasons": []},
+            "documentation": {"score": 0, "weight": 0.15, "reasons": []},
+            "architecture": {"score": 0, "weight": 0.15, "reasons": []},
+            "testing_ci": {"score": 0, "weight": 0.1, "reasons": []},
+            "innovation_ux": {"score": 0, "weight": 0.1, "reasons": []}
+        },
+        "total_score": 0,
+        "strengths": [],
+        "top_issues": [],
+        "reproducibility": {"can_run": False, "notes": f"JSON Parsing Error (Response too large or invalid format)"},
+        "mentor_notes": f"The model response could not be parsed as JSON. Raw start: {raw_full[:200]}",
+        "student_name": student_name
+    }

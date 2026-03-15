@@ -6,7 +6,7 @@ if _project_root not in sys.path:
 
 import solara
 import solara.lab
-from solara_app.pages import home, members, assessment, repo_judge, project_suggest
+from solara_app.pages import home, members, assessment, repo_judge, project_suggest, idea_refiner
 from pathlib import Path
 
 NAV_CSS = """
@@ -99,6 +99,11 @@ routes = [
         path="project-suggest",
         component=project_suggest.Page,
         label="🚀 Project Ideas",
+    ),
+    solara.Route(
+        path="idea-refiner",
+        component=idea_refiner.Page,
+        label="💡 Idea Refiner",
     ),
 ]
 

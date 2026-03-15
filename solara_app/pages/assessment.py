@@ -13,25 +13,31 @@ from solara_app.components import CountdownTerminal
 
 API = os.getenv("API_URL", "http://localhost:8000")
 
-# ── Reactive state ─────────────────────────────────────────────────
-student_name     = solara.reactive("")
-selected_domains = solara.reactive([])
-all_domains      = solara.reactive([])
-setup_error      = solara.reactive("")
+# ── Persistent Session State ────────────────────────────────────────
 
-session_id       = solara.reactive(None)
-questions        = solara.reactive([])     # list of question dicts
-user_answers     = solara.reactive({})     # {"0": "A", "1": "C", ...}
-loading          = solara.reactive(False)
-loading_step     = solara.reactive("")
+SESSION_STATES = {}
 
-scores           = solara.reactive(None)
-screen           = solara.reactive("setup")   # "setup" | "quiz" | "results"
+def get_session_state():
+    sid = solara.get_session_id()
+    if sid not in SESSION_STATES:
+        SESSION_STATES[sid] = {
+            "student_name": solara.reactive(""),
+            "selected_domains": solara.reactive([]),
+            "all_domains": solara.reactive([]),
+            "setup_error": solara.reactive(""),
+            "session_id": solara.reactive(None),
+            "questions": solara.reactive([]),
+            "user_answers": solara.reactive({}),
+            "loading": solara.reactive(False),
+            "loading_step": solara.reactive(""),
+            "scores": solara.reactive(None),
+            "screen": solara.reactive("setup"),
+            "initialized": solara.reactive(False),
+        }
+    return SESSION_STATES[sid]
 
 
-# ── Actions ────────────────────────────────────────────────────────
-
-def load_domains():
+def load_domains(all_domains, setup_error):
     try:
         r = requests.get(f"{API}/assess/domains", timeout=5)
         r.raise_for_status()
@@ -47,8 +53,21 @@ def _parse_error(r) -> str:
         return r.text or f"HTTP {r.status_code}"
 
 
-def _run_generate(name: str, domains: list):
+def _run_generate(sid: str):
     """Background thread — calls the backend to generate MCQs."""
+    state = SESSION_STATES.get(sid)
+    if not state: return
+    
+    name = state["student_name"].value
+    domains = state["selected_domains"].value
+    session_id = state["session_id"]
+    questions = state["questions"]
+    user_answers = state["user_answers"]
+    screen = state["screen"]
+    setup_error = state["setup_error"]
+    loading = state["loading"]
+    loading_step = state["loading_step"]
+
     try:
         loading_step.set("🧠 AI is crafting 15 questions for you…")
         r = requests.post(
@@ -71,35 +90,24 @@ def _run_generate(name: str, domains: list):
         loading_step.set("")
 
 
-def start_quiz():
-    setup_error.set("")
-    name = student_name.value.strip()
-    domains = selected_domains.value
-    if not name:
-        setup_error.set("⚠️ Please enter your name.")
-        return
-    if not domains:
-        setup_error.set("⚠️ Please select at least one domain.")
-        return
-
-    loading.set(True)
-    loading_step.set("🔌 Connecting to backend…")
-    threading.Thread(target=_run_generate, args=(name, domains), daemon=True).start()
-
-
-def select_answer(q_index: int, letter: str):
-    updated = dict(user_answers.value)
-    updated[str(q_index)] = letter
-    user_answers.set(updated)
-
-
-def _run_submit():
+def _run_submit(sid: str):
     """Background thread — submits answers for grading."""
+    state = SESSION_STATES.get(sid)
+    if not state: return
+
+    session_id_val = state["session_id"].value
+    user_answers_val = state["user_answers"].value
+    scores = state["scores"]
+    screen = state["screen"]
+    setup_error = state["setup_error"]
+    loading = state["loading"]
+    loading_step = state["loading_step"]
+
     try:
         loading_step.set("📊 Grading your answers…")
         r = requests.post(
             f"{API}/assess/submit-mcq",
-            json={"session_id": session_id.value, "answers": user_answers.value},
+            json={"session_id": session_id_val, "answers": user_answers_val},
             timeout=60,
         )
         if r.status_code == 200:
@@ -114,24 +122,6 @@ def _run_submit():
     finally:
         loading.set(False)
         loading_step.set("")
-
-
-def submit_quiz():
-    loading.set(True)
-    screen.set("submitting")
-    threading.Thread(target=_run_submit, daemon=True).start()
-
-
-def restart():
-    screen.set("setup")
-    session_id.set(None)
-    questions.set([])
-    user_answers.set({})
-    scores.set(None)
-    student_name.set("")
-    selected_domains.set([])
-    setup_error.set("")
-    loading.set(False)
 
 
 # ── Difficulty helpers ─────────────────────────────────────────────
@@ -181,7 +171,7 @@ def OptionButton(q_index: int, letter: str, text: str, is_selected: bool):
 
 
 @solara.component
-def QuestionCard(q: dict, index: int):
+def QuestionCard(q: dict, index: int, user_answers, select_answer_fn):
     chosen = user_answers.value.get(str(index), "")
     diff = q.get("difficulty", "medium")
     
@@ -196,7 +186,6 @@ def QuestionCard(q: dict, index: int):
             "box-shadow:0 8px 32px rgba(0, 0, 0, 0.2);"
         ),
     ):
-        # Header: number + difficulty badge
         with solara.v.Html(tag="div", style_="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;"):
             with solara.v.Html(tag="div", style_="display:flex; align-items:center; gap:12px;"):
                 solara.v.Html(
@@ -215,25 +204,34 @@ def QuestionCard(q: dict, index: int):
                 )
             DifficultyBadge(diff)
 
-        # Question text
         solara.Text(
             q.get("question", ""),
             style={"font-size": "16px", "font-weight": "600", "color": "#f1f5f9", "line-height": "1.7", "display": "block", "margin-bottom": "20px"},
         )
 
-        # Options
         for opt in q.get("options", []):
             letter = opt[0] if opt else ""
-            OptionButton(
-                q_index=index,
-                letter=letter,
-                text=opt,
-                is_selected=(chosen == letter),
+            solara.Button(
+                opt,
+                on_click=lambda l=letter: select_answer_fn(index, l),
+                style=(
+                    f"width:100%; text-align:left; justify-content:flex-start; text-transform:none;"
+                    f"padding:12px 16px; border-radius:12px; font-size:14px; margin-bottom:8px;"
+                    f"white-space:pre-wrap; height:auto !important; min-height:48px; line-height:1.5;"
+                    f"transition:all 0.3s ease; font-weight:{'700' if chosen == letter else '500'}; "
+                    + (
+                        "background:linear-gradient(135deg, #7c3aed, #6366f1); border:none; color:#fff;"
+                        "box-shadow:0 4px 15px rgba(124, 58, 237, 0.3);"
+                        if chosen == letter else
+                        "background:rgba(139, 92, 246, 0.08); border:1px solid rgba(139, 92, 246, 0.2);"
+                        "color:#e2e8f0;"
+                    )
+                ),
             )
 
 
 @solara.component
-def SetupScreen():
+def SetupScreen(student_name, selected_domains, all_domains, setup_error, loading, loading_step, start_quiz_fn):
     with solara.v.Html(tag="div", style_="max-width:680px; margin:0 auto; padding:40px 24px;"):
         solara.Text("⚡ AI Developer Assessment", style={"font-size": "36px", "font-weight": "900", "color": "#ffffff", "margin-bottom": "16px", "display": "block", "letter-spacing": "-1px", "text-shadow": "0 0 20px rgba(0,255,204,0.4)"})
         solara.Text(
@@ -300,7 +298,7 @@ def SetupScreen():
         solara.Button(
             "🚀 Start Quiz" if not loading.value else "⏳ Generating questions…",
             color="primary",
-            on_click=start_quiz,
+            on_click=start_quiz_fn,
             disabled=loading.value,
             attributes={"class": "assess-start-btn"},
             style=(
@@ -329,12 +327,11 @@ def SetupScreen():
 
 
 @solara.component
-def QuizScreen():
+def QuizScreen(questions, user_answers, selected_domains, loading, submit_quiz_fn, select_answer_fn):
     total_q = len(questions.value)
     answered = len(user_answers.value)
 
-    with solara.v.Html(tag="div", style_="max-width:760px; margin:0 auto; padding:24px;"):
-        # Header
+    with solara.v.Html(tag="div", style_="max-width:760px; margin:0 auto; padding:24px; text-align:left;"):
         with solara.v.Html(tag="div", style_="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:12px;"):
             solara.v.Html(
                 tag="div",
@@ -350,7 +347,6 @@ def QuizScreen():
                 children=[f"✅ {answered}/{total_q} answered"],
             )
 
-        # Progress bar
         pct = (answered / total_q * 100) if total_q > 0 else 0
         with solara.v.Html(
             tag="div",
@@ -359,25 +355,16 @@ def QuizScreen():
                 "width:100%; overflow:hidden; margin-bottom:28px; margin-top:12px;"
             ),
         ):
-            solara.v.Html(
-                tag="div",
-                style_=(
-                    f"background:linear-gradient(90deg, #00ffcc, #0088ff); height:8px;"
-                    f"border-radius:9999px; width:{pct}%; transition:width 0.5s ease;"
-                ),
-                children=[],
-            )
+            solara.v.Html(tag="div", style_=f"background:linear-gradient(90deg, #00ffcc, #0088ff); height:8px; width:{pct}%; transition:width 0.5s ease;")
 
-        # Questions
         for i, q in enumerate(questions.value):
-            QuestionCard(q, i)
+            QuestionCard(q, i, user_answers, select_answer_fn)
 
-        # Submit button
         all_answered = answered >= total_q and total_q > 0
         solara.Button(
             f"📊 Submit Quiz ({answered}/{total_q})" if not all_answered else "📊 Submit Quiz ✓",
             color="primary",
-            on_click=submit_quiz,
+            on_click=submit_quiz_fn,
             disabled=not all_answered or loading.value,
             attributes={"class": "assess-start-btn"},
             style=(
@@ -393,12 +380,14 @@ def QuizScreen():
         )
 
 
+import pathlib
+solara.Style(pathlib.Path(__file__).parent.parent / 'assets' / 'custom.css')
+
 @solara.component
 def SubmittingScreen():
     with solara.v.Html(tag="div", style_="max-width:600px; margin:80px auto; padding:24px;"):
         with solara.v.Html(
             tag="div",
-            attributes={"class": "assess-glass-card"},
             style_=(
                 "text-align:center; padding:48px;"
                 "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
@@ -406,337 +395,128 @@ def SubmittingScreen():
             ),
         ):
             solara.Text("📊 Grading Your Quiz…", style={"font-size": "24px", "font-weight": "800", "color": "#00ffcc", "display": "block", "margin-bottom": "12px", "text-shadow": "0 0 10px rgba(0,255,204,0.3)"})
-            solara.Text(
-                "Calculating your score and developer percentile. Just a moment!",
-                style={"color": "rgba(255,255,255,0.6)", "font-size": "15px", "display": "block"},
-            )
+            solara.Text("Calculating your score and developer percentile. Just a moment!", style={"color": "rgba(255,255,255,0.6)", "font-size": "15px", "display": "block"})
 
 
 @solara.component
-def ResultsScreen():
+def ResultsScreen(scores, student_name_val, restart_fn):
     s = scores.value
     if not s:
-        solara.Text("No scores yet.", style={"color": "rgba(255,255,255,0.5)"})
-        return
+        return solara.Text("No scores yet.")
 
-    correct  = s.get("correct", 0)
-    total    = s.get("total", 15)
-    pctile   = s.get("percentile", 50)
-    details  = s.get("details", [])
-
+    correct, total, pctile = s.get("correct", 0), s.get("total", 15), s.get("percentile", 50)
+    details = s.get("details", [])
     pct_score = int((correct / total) * 100) if total > 0 else 0
     color = "#34d399" if pct_score >= 80 else "#f59e0b" if pct_score >= 50 else "#ef4444"
 
-    # Percentile message
-    if pctile >= 90:
-        pctile_msg = f"🔥 You're better than {pctile}% of developers worldwide! Elite level!"
-    elif pctile >= 70:
-        pctile_msg = f"🚀 You're better than {pctile}% of developers worldwide! Impressive!"
-    elif pctile >= 50:
-        pctile_msg = f"💪 You're better than {pctile}% of developers worldwide! Above average!"
-    else:
-        pctile_msg = f"📚 You're better than {pctile}% of developers worldwide. Keep learning!"
+    pctile_msg = (
+        f"🔥 You're better than {pctile}% of developers worldwide! Elite level!" if pctile >= 90 else
+        f"🚀 You're better than {pctile}% of developers worldwide! Impressive!" if pctile >= 70 else
+        f"💪 You're better than {pctile}% of developers worldwide! Above average!" if pctile >= 50 else
+        f"📚 You're better than {pctile}% of developers worldwide. Keep learning!"
+    )
 
     with solara.v.Html(tag="div", style_="max-width:760px; margin:0 auto; padding:40px 24px;"):
         solara.v.Html(
             tag="div",
-            attributes={"class": "assess-fade-in"},
-            children=[f"🎓 Results for {student_name.value}"],
+            children=[f"🎓 Results for {student_name_val}"],
             style_="font-size:30px; font-weight:900; color:#f1f5f9; margin-bottom:24px; text-shadow:0 2px 20px rgba(0,255,204,0.4);",
         )
 
-        # ── Score Card ──
-        with solara.v.Html(
-            tag="div",
-            attributes={"class": "assess-fade-in"},
-            style_=(
-                f"text-align:center; padding:40px; border-top:4px solid {color};"
-                "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
-                "border-radius:20px; box-shadow:0 12px 40px rgba(0, 0, 0, 0.3);"
-                f"border:1px solid {color}33;"
-            ),
-        ):
+        with solara.v.Html(tag="div", style_=f"text-align:center; padding:40px; border-top:4px solid {color}; background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px); border-radius:20px; box-shadow:0 12px 40px rgba(0, 0, 0, 0.3); border:1px solid {color}33;"):
             solara.Text("Your Score", style={"color": "rgba(255,255,255,0.5)", "font-size": "14px", "text-transform": "uppercase", "letter-spacing": "1px"})
-            solara.Text(
-                f"{correct}/{total}",
-                style={
-                    "font-size": "64px", "font-weight": "900", "color": color,
-                    "line-height": "1.1", "margin": "8px 0", "display": "block",
-                    "text-shadow": f"0 0 30px {color}40",
-                },
-            )
-            solara.Text(
-                f"{pct_score}% correct",
-                style={"color": color, "font-size": "18px", "font-weight": "700", "display": "block", "margin-bottom": "16px"},
-            )
+            solara.Text(f"{correct}/{total}", style={"font-size": "64px", "font-weight": "900", "color": color, "line-height": "1.1", "margin": "8px 0", "display": "block", "text-shadow": f"0 0 30px {color}40"})
+            solara.Text(f"{pct_score}% correct", style={"color": color, "font-size": "18px", "font-weight": "700", "display": "block", "margin-bottom": "16px"})
 
-        # ── Percentile Card ──
         pctile_color = "#00ffcc" if pctile >= 70 else "#f59e0b" if pctile >= 40 else "#ef4444"
-        with solara.v.Html(
-            tag="div",
-            attributes={"class": "assess-fade-in"},
-            style_=(
-                "margin-top:20px; text-align:center; padding:32px;"
-                "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
-                f"border:1px solid {pctile_color}33; border-radius:20px;"
-                "box-shadow:0 8px 32px rgba(0, 0, 0, 0.2);"
-            ),
-        ):
-            solara.Text(
-                "Developer Percentile",
-                style={"color": "rgba(255,255,255,0.5)", "font-size": "13px", "text-transform": "uppercase", "letter-spacing": "1px", "display": "block"},
-            )
-            solara.Text(
-                f"{pctile}%",
-                style={
-                    "font-size": "56px", "font-weight": "900", "color": pctile_color,
-                    "display": "block", "margin": "8px 0",
-                    "text-shadow": f"0 0 30px {pctile_color}40",
-                },
-            )
-            solara.Text(
-                pctile_msg,
-                style={"color": "#e2e8f0", "font-size": "16px", "font-weight": "600", "display": "block"},
-            )
+        with solara.v.Html(tag="div", style_=f"margin-top:20px; text-align:center; padding:32px; background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px); border:1px solid {pctile_color}33; border-radius:20px; box-shadow:0 8px 32px rgba(0, 0, 0, 0.2);"):
+            solara.Text("Developer Percentile", style={"color": "rgba(255,255,255,0.5)", "font-size": "13px", "text-transform": "uppercase", "letter-spacing": "1px", "display": "block"})
+            solara.Text(f"{pctile}%", style={"font-size": "56px", "font-weight": "900", "color": pctile_color, "display": "block", "margin": "8px 0", "text-shadow": f"0 0 30px {pctile_color}40"})
+            solara.Text(pctile_msg, style={"color": "#e2e8f0", "font-size": "16px", "font-weight": "600", "display": "block"})
 
-        # ── Difficulty Breakdown ──
-        with solara.v.Html(
-            tag="div",
-            style_=(
-                "margin-top:24px; display:flex; gap:16px; flex-wrap:wrap;"
-            ),
-        ):
-            for diff_key, (label, diff_color, bg, border) in DIFF_META.items():
-                c_key = f"{diff_key}_correct"
-                t_key = f"{diff_key}_total"
-                dc = s.get(c_key, 0)
-                dt = s.get(t_key, 0)
-                with solara.v.Html(
-                    tag="div",
-                    style_=(
-                        f"flex:1; min-width:180px; text-align:center; padding:24px;"
-                        f"background:{bg}; border:1px solid {border}; border-radius:16px;"
-                        "backdrop-filter:blur(12px);"
-                    ),
-                ):
-                    solara.Text(label, style={"font-size": "14px", "font-weight": "700", "color": diff_color, "display": "block", "margin-bottom": "8px"})
-                    solara.Text(
-                        f"{dc}/{dt}",
-                        style={"font-size": "32px", "font-weight": "900", "color": diff_color, "display": "block"},
-                    )
+        with solara.v.Html(tag="div", style_="margin-top:24px; display:flex; gap:16px; flex-wrap:wrap;"):
+            for dk, (l, dc, bg, b) in DIFF_META.items():
+                with solara.v.Html(tag="div", style_=f"flex:1; min-width:180px; text-align:center; padding:24px; background:{bg}; border:1px solid {b}; border-radius:16px; backdrop-filter:blur(12px);"):
+                    solara.Text(l, style={"font-size": "14px", "font-weight": "700", "color": dc, "display": "block", "margin-bottom": "8px"})
+                    solara.Text(f"{s.get(dk+'_correct', 0)}/{s.get(dk+'_total', 0)}", style={"font-size": "32px", "font-weight": "900", "color": dc, "display": "block"})
 
-        # ── Question Review ──
         if details:
-            with solara.v.Html(
-                tag="div",
-                style_=(
-                    "margin-top:32px; padding:28px; border-radius:20px;"
-                    "background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px);"
-                    "border:1px solid rgba(0,255,204,0.2);"
-                ),
-            ):
-                solara.Text("📋 Question Review", style={"font-size": "20px", "font-weight": "800", "color": "#00ffcc", "display": "block", "margin-bottom": "24px", "text-shadow": "0 0 10px rgba(0,255,204,0.3)"})
-
+            with solara.v.Html(tag="div", style_="margin-top:32px; padding:28px; border-radius:20px; background:rgba(10, 15, 20, 0.7); backdrop-filter:blur(20px); border:1px solid rgba(0,255,204,0.2); text-align:left;"):
+                solara.Text("📋 Question Review", style={"font-size": "20px", "font-weight": "800", "color": "#00ffcc", "display": "block", "margin-bottom": "24px"})
                 for d in details:
-                    is_correct = d.get("is_correct", False)
-                    diff = d.get("difficulty", "medium")
-                    _, diff_color, _, _ = DIFF_META.get(diff, DIFF_META["medium"])
-                    icon = "✅" if is_correct else "❌"
-                    border_c = "rgba(16, 185, 129, 0.3)" if is_correct else "rgba(239, 68, 68, 0.3)"
-                    bg_c = "rgba(16, 185, 129, 0.05)" if is_correct else "rgba(239, 68, 68, 0.05)"
-
-                    with solara.v.Html(
-                        tag="div",
-                        style_=(
-                            f"background:{bg_c}; border:1px solid {border_c};"
-                            "border-radius:14px; padding:18px; margin-bottom:14px;"
-                        ),
-                    ):
+                    ic = d.get("is_correct", False)
+                    bc = "rgba(16, 185, 129, 0.3)" if ic else "rgba(239, 68, 68, 0.3)"
+                    bgc = "rgba(16, 185, 129, 0.05)" if ic else "rgba(239, 68, 68, 0.05)"
+                    with solara.v.Html(tag="div", style_=f"background:{bgc}; border:1px solid {bc}; border-radius:14px; padding:18px; margin-bottom:14px;"):
                         with solara.v.Html(tag="div", style_="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"):
-                            with solara.v.Html(tag="div", style_="display:flex; align-items:center; gap:8px;"):
-                                solara.Text(f"{icon} Q{d['index'] + 1}", style={"font-weight": "800", "font-size": "14px", "color": "#e2e8f0"})
-                                DifficultyBadge(diff)
+                            solara.Text(f"{'✅' if ic else '❌'} Q{d['index']+1}", style={"font-weight": "800", "font-size": "14px", "color": "#e2e8f0"})
+                            DifficultyBadge(d.get("difficulty", "medium"))
+                        solara.Text(d.get("question", ""), style={"font-size": "14px", "color": "#e2e8f0", "line-height": "1.6", "display": "block", "margin-bottom": "10px"})
+                        solara.Text(f"Your answer: {d.get('user_answer','')} {'✓' if ic else '• Correct: '+d.get('correct_answer','')}", style={"font-size": "13px", "color": "#34d399" if ic else "#fca5a5", "font-weight": "600"})
 
-                        solara.Text(
-                            d.get("question", ""),
-                            style={"font-size": "14px", "color": "#e2e8f0", "line-height": "1.6", "display": "block", "margin-bottom": "10px"},
-                        )
+        solara.Button("🔁 Take Another Quiz", color="primary", on_click=restart_fn, style="margin-top:28px; width:100%; padding:16px; font-weight:800; font-size:16px; background:linear-gradient(135deg, #00ffcc, #0088ff); border:none; color:#030812; border-radius:14px;")
 
-                        user_ans = d.get("user_answer", "")
-                        correct_ans = d.get("correct_answer", "")
-
-                        if not is_correct:
-                            solara.Text(
-                                f"Your answer: {user_ans}  •  Correct: {correct_ans}",
-                                style={"font-size": "13px", "color": "#fca5a5", "font-weight": "600", "display": "block"},
-                            )
-                        else:
-                            solara.Text(
-                                f"Your answer: {user_ans} ✓",
-                                style={"font-size": "13px", "color": "#34d399", "font-weight": "600", "display": "block"},
-                            )
-
-        # Restart button
-        solara.Button(
-            "🔁 Take Another Quiz",
-            color="primary",
-            on_click=restart,
-            style=(
-                "margin-top:28px; width:100%; padding:16px; font-weight:800; font-size:16px;"
-                "letter-spacing:1px; border-radius:14px;"
-                "background:linear-gradient(135deg, #00ffcc, #0088ff); border:none; color:#030812;"
-            ),
-        )
-
-
-# ── Main Page ──────────────────────────────────────────────────────
 
 @solara.component
 def Page():
     solara.Title("MCQ Assessment")
-    CountdownTerminal()
-    solara.Style(Path(__file__).parent.parent / 'assets' / 'custom.css')
+    
+    # ── Session State ──
+    state = get_session_state()
+    student_name     = state["student_name"]
+    selected_domains = state["selected_domains"]
+    all_domains      = state["all_domains"]
+    setup_error      = state["setup_error"]
+    session_id       = state["session_id"]
+    questions        = state["questions"]
+    user_answers     = state["user_answers"]
+    loading          = state["loading"]
+    loading_step     = state["loading_step"]
+    scores           = state["scores"]
+    screen           = state["screen"]
+    initialized      = state["initialized"]
 
-    with solara.v.Html(tag="div"):
-        solara.HTML(tag="style", unsafe_innerHTML="""
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap');
+    def start_quiz():
+        setup_error.set("")
+        name, domains = student_name.value.strip(), selected_domains.value
+        if not name: return setup_error.set("⚠️ Please enter your name.")
+        if not domains: return setup_error.set("⚠️ Please select at least one domain.")
+        loading.set(True)
+        loading_step.set("🔌 Connecting to backend…")
+        sid = solara.get_session_id()
+        threading.Thread(target=_run_generate, args=(sid,), daemon=True).start()
 
-            .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-sheet {
-                background-color: #030812 !important;
-            background: #030812 !important;
-            }
-            .theme--light.v-sheet {{ background-color: #030812 !important; }}
-        body { background-color: #030812 !important;
-            background: #030812 !important; margin: 0; min-height: 100vh; }
+    def select_answer(qi, letter):
+        u = dict(user_answers.value); u[str(qi)] = letter; user_answers.set(u)
 
-            /* Electric Blue Typing Text */
-            .v-text-field input, .v-textarea textarea, .v-input input {
-                color: #00f0ff !important;
-                text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
-                font-family: 'JetBrains Mono', monospace !important;
-                font-weight: 600;
-            }
-            .v-text-field .v-label {
-                color: rgba(255,255,255,0.6) !important;
-            }
+    def submit_quiz():
+        loading.set(True); screen.set("submitting")
+        sid = solara.get_session_id()
+        threading.Thread(target=_run_submit, args=(sid,), daemon=True).start()
 
-        @keyframes assessGradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+    def restart():
+        screen.set("setup"); session_id.set(None); questions.set([]); user_answers.set({}); scores.set(None); student_name.set(""); selected_domains.set([]); setup_error.set(""); loading.set(False)
 
-        .assess-particle {
-            position: absolute; border-radius: 50%; pointer-events: none; opacity: 0;
-            animation: assessFloat 18s ease-in-out infinite;
-        }
-        .assess-particle:nth-child(1) {
-            width:350px; height:350px;
-            background: radial-gradient(circle, rgba(0, 255, 204, 0.15) 0%, transparent 70%);
-            top:-5%; left:-10%; animation-delay:0s;
-        }
-        .assess-particle:nth-child(2) {
-            width:280px; height:280px;
-            background: radial-gradient(circle, rgba(0, 136, 255, 0.12) 0%, transparent 70%);
-            top:40%; right:-8%; animation-delay:-5s;
-        }
-        .assess-particle:nth-child(3) {
-            width:200px; height:200px;
-            background: radial-gradient(circle, rgba(0, 255, 204, 0.10) 0%, transparent 70%);
-            bottom:10%; left:15%; animation-delay:-10s;
-        }
-        @keyframes assessFloat {
-            0%, 100% { opacity:0; transform:translateY(0) scale(1); }
-            25% { opacity:1; }
-            50% { opacity:1; transform:translateY(-40px) scale(1.15); }
-            75% { opacity:1; }
-        }
+    def on_init():
+        if not initialized.value:
+            def set_init(): 
+                import time
+                time.sleep(3.5)
+                initialized.set(True)
+            threading.Thread(target=set_init, daemon=True).start()
+    solara.use_effect(on_init, [])
 
-        .assess-star {
-            position:absolute; width:120px; height:2px;
-            background:linear-gradient(90deg, transparent, #00ffcc, #0088ff, transparent);
-            border-radius:2px; opacity:0; pointer-events:none;
-        }
-        .assess-star:nth-child(4) { top:18%; right:5%; animation: assessShoot 4s linear 1s infinite; }
-        .assess-star:nth-child(5) { top:55%; right:15%; animation: assessShoot 5s linear 3.5s infinite; }
-        @keyframes assessShoot {
-            0% { opacity:0; transform:translateX(0) rotate(-35deg); }
-            5% { opacity:1; }
-            30% { opacity:0; transform:translateX(-350px) rotate(-35deg); }
-            100% { opacity:0; }
-        }
+    if not initialized.value:
+        CountdownTerminal()
 
-        .assess-grid {
-            position:absolute; inset:0;
-            background-image:
-                linear-gradient(rgba(0, 255, 204, 0.06) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 204, 0.06) 1px, transparent 1px);
-            background-size:60px 60px; pointer-events:none; opacity:0.5;
-            animation: assessGridFade 8s ease-in-out infinite alternate;
-        }
-        @keyframes assessGridFade { 0% { opacity:0.3; } 100% { opacity:0.6; } }
+    solara.use_effect(lambda: load_domains(all_domains, setup_error), [])
+    solara.HTML(tag="style", unsafe_innerHTML=".v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-sheet { background-color: #030812 !important; background: #030812 !important; } .theme--light.v-sheet { background-color: #030812 !important; } body { background-color: #030812 !important; background: #030812 !important; margin: 0; min-height: 100vh; } .v-text-field input { color: #00f0ff !important; font-family: 'JetBrains Mono', monospace !important; }")
 
-        .assess-glass-card {
-            transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
-        }
-        .assess-glass-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 255, 204, 0.08);
-            border-color: rgba(0, 255, 204, 0.35) !important;
-        }
-
-        .assess-fade-in { animation: assessFadeSlide 0.6s ease-out both; }
-        @keyframes assessFadeSlide {
-            from { opacity:0; transform:translateY(20px); }
-            to { opacity:1; transform:translateY(0); }
-        }
-
-        .assess-start-btn {
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
-            animation: assessBtnPulse 3s ease-in-out infinite;
-            transition: all 0.3s ease !important;
-        }
-        .assess-start-btn:hover {
-            animation: none !important;
-            transform: translateY(-3px) scale(1.02) !important;
-            box-shadow: 0 0 30px rgba(0, 255, 204, 0.4), 0 8px 30px rgba(0,0,0,0.3) !important;
-            filter: brightness(1.15) !important;
-        }
-        @keyframes assessBtnPulse {
-            0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 204, 0.3); }
-            50% { box-shadow: 0 0 25px rgba(0, 255, 204, 0.4), 0 0 50px rgba(0, 255, 204, 0.15); }
-        }
-
-        ::-webkit-scrollbar { width:8px; }
-        ::-webkit-scrollbar-track { background:rgba(15, 23, 42, 0.3); border-radius:4px; }
-        ::-webkit-scrollbar { width:8px; }
-        ::-webkit-scrollbar-track { background:rgba(15, 23, 42, 0.3); border-radius:4px; }
-        ::-webkit-scrollbar-thumb { background:linear-gradient(180deg, #00ffcc, #0088ff); border-radius:4px; }
-        ::-webkit-scrollbar-thumb:hover { background:linear-gradient(180deg, #00e6b8, #0077e6); }
-        html { scroll-behavior: smooth; }
-        """)
-
-        solara.use_effect(load_domains, [])
-
-        with solara.v.Html(
-            tag="div",
-            style_=(
-                "min-height:100vh; background:#030812; font-family:'Inter',sans-serif; color:#ffffff;"
-                "position:relative; overflow:hidden;"
-            ),
-        ):
-            for _ in range(3):
-                solara.v.Html(tag="div", attributes={"class": "assess-particle"})
-            for _ in range(2):
-                solara.v.Html(tag="div", attributes={"class": "assess-star"})
-            solara.v.Html(tag="div", attributes={"class": "assess-grid"})
-
-            with solara.v.Html(tag="div", style_="position:relative; z-index:1;"):
-                if screen.value == "setup":
-                    SetupScreen()
-                elif screen.value == "quiz":
-                    QuizScreen()
-                elif screen.value == "submitting":
-                    SubmittingScreen()
-                else:
-                    ResultsScreen()
+    with solara.v.Html(tag="div", style_="min-height:100vh; background:#030812; font-family:'Inter',sans-serif; color:#ffffff; position:relative; overflow:hidden;"):
+        for _ in range(3): solara.v.Html(tag="div", attributes={"class": "assess-particle"})
+        solara.v.Html(tag="div", attributes={"class": "assess-grid"})
+        with solara.v.Html(tag="div", style_="position:relative; z-index:1;"):
+            if screen.value == "setup": SetupScreen(student_name, selected_domains, all_domains, setup_error, loading, loading_step, start_quiz)
+            elif screen.value == "quiz": QuizScreen(questions, user_answers, selected_domains, loading, submit_quiz, select_answer)
+            elif screen.value == "submitting": SubmittingScreen()
+            else: ResultsScreen(scores, student_name.value, restart)

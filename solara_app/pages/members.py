@@ -6,80 +6,106 @@ from typing import List
 
 API = os.getenv("API_URL", "http://localhost:8000")
 
-# Reactive state
-domains           = solara.reactive([])         # [{id, name}, ...]
-selected_domain   = solara.reactive(None)       # None = all; or {id, name}
+# ── Persistent Session State ────────────────────────────────────────
 
-members_in_domain = solara.reactive([])         # when a domain is selected
-all_by_domain     = solara.reactive([])         # [{domain_name, members:[...]}, ...]
+SESSION_STATES = {}
 
-# Add-member form
-name_input        = solara.reactive("")
-category_input    = solara.reactive("")
-new_member_domains= solara.reactive([])    # list of domain IDs chosen for new member
-status_msg        = solara.reactive("")
-loading           = solara.reactive(False)
-
-# Terminal Login state
-is_authorized     = solara.reactive(False)
-terminal_password = solara.reactive("")
-terminal_error    = solara.reactive("")
+def get_session_state():
+    sid = solara.get_session_id()
+    if sid not in SESSION_STATES:
+        SESSION_STATES[sid] = {
+            "domains": solara.reactive([]),
+            "selected_domain": solara.reactive(None),
+            "members_in_domain": solara.reactive([]),
+            "all_by_domain": solara.reactive([]),
+            "name_input": solara.reactive(""),
+            "category_input": solara.reactive(""),
+            "new_member_domains": solara.reactive([]),
+            "status_msg": solara.reactive(""),
+            "loading": solara.reactive(False),
+            "is_authorized": solara.reactive(False),
+            "terminal_password": solara.reactive(""),
+            "terminal_error": solara.reactive(""),
+        }
+    return SESSION_STATES[sid]
 
 
 # Data fetchers
-def fetch_domains():
+
+def fetch_domains(sid: str):
+    state = SESSION_STATES.get(sid)
+    if not state: return
     try:
         r = requests.get(f"{API}/members/domains", timeout=5)
-        domains.set(r.json())
+        state["domains"].set(r.json())
     except Exception as e:
-        status_msg.set(f"❌ Could not load domains: {e}")
+        state["status_msg"].set(f"❌ Could not load domains: {e}")
 
 
-def fetch_for_domain(domain_id: int):
-    loading.set(True)
+def fetch_for_domain(sid: str, domain_id: int):
+    state = SESSION_STATES.get(sid)
+    if not state: return
+    state["loading"].set(True)
     try:
         r = requests.get(f"{API}/members/", params={"domain_id": domain_id}, timeout=5)
-        members_in_domain.set(r.json())
+        state["members_in_domain"].set(r.json())
     except Exception as e:
-        status_msg.set(f"❌ {e}")
+        state["status_msg"].set(f"❌ {e}")
     finally:
-        loading.set(False)
+        state["loading"].set(False)
 
 
-def fetch_all_by_domain():
-    loading.set(True)
+def fetch_all_by_domain(sid: str):
+    state = SESSION_STATES.get(sid)
+    if not state: return
+    state["loading"].set(True)
     try:
         r = requests.get(f"{API}/members/by-domain", timeout=5)
-        all_by_domain.set(r.json())
+        state["all_by_domain"].set(r.json())
     except Exception as e:
-        status_msg.set(f"❌ {e}")
+        state["status_msg"].set(f"❌ {e}")
     finally:
-        loading.set(False)
+        state["loading"].set(False)
 
 
-def refresh():
+def refresh(sid: str):
     """Re-fetch whatever view is currently active."""
-    status_msg.set("")
-    if selected_domain.value:
-        fetch_for_domain(selected_domain.value["id"])
+    state = SESSION_STATES.get(sid)
+    if not state: return
+    state["status_msg"].set("")
+    if state["selected_domain"].value:
+        fetch_for_domain(sid, state["selected_domain"].value["id"])
     else:
-        fetch_all_by_domain()
+        fetch_all_by_domain(sid)
 
 
-def select_domain(domain):
+def select_domain(sid: str, domain):
     """Called when user clicks a domain chip."""
-    selected_domain.set(domain)
-    status_msg.set("")
+    state = SESSION_STATES.get(sid)
+    if not state: return
+    state["selected_domain"].set(domain)
+    state["status_msg"].set("")
     if domain:
-        fetch_for_domain(domain["id"])
+        fetch_for_domain(sid, domain["id"])
 
 
-def clear_domain():
-    selected_domain.set(None)
-    fetch_all_by_domain()
+def clear_domain(sid: str):
+    state = SESSION_STATES.get(sid)
+    if not state: return
+    state["selected_domain"].set(None)
+    fetch_all_by_domain(sid)
 
 
-def add_member():
+def add_member(sid: str):
+    state = SESSION_STATES.get(sid)
+    if not state: return
+    
+    name_input = state["name_input"]
+    category_input = state["category_input"]
+    new_member_domains = state["new_member_domains"]
+    status_msg = state["status_msg"]
+    loading = state["loading"]
+
     if not name_input.value.strip() or not category_input.value.strip():
         status_msg.set("⚠️ Please fill in both Name and Category.")
         return
@@ -101,7 +127,7 @@ def add_member():
             name_input.set("")
             category_input.set("")
             new_member_domains.set([])
-            refresh()
+            refresh(sid)
         else:
             status_msg.set(f"❌ {r.json().get('detail', r.text)}")
     except Exception as e:
@@ -110,16 +136,18 @@ def add_member():
         loading.set(False)
 
 
-def delete_member(member_id: int, member_name: str):
+def delete_member(sid: str, member_id: int, member_name: str):
+    state = SESSION_STATES.get(sid)
+    if not state: return
     try:
         r = requests.delete(f"{API}/members/{member_id}", timeout=5)
         if r.status_code == 200:
-            status_msg.set(f"🗑️ '{member_name}' deleted.")
-            refresh()
+            state["status_msg"].set(f"🗑️ '{member_name}' deleted.")
+            refresh(sid)
         else:
-            status_msg.set(f"❌ {r.text}")
+            state["status_msg"].set(f"❌ {r.text}")
     except Exception as e:
-        status_msg.set(f"❌ {e}")
+        state["status_msg"].set(f"❌ {e}")
 
 
 # Sub components
@@ -212,16 +240,17 @@ DOMAIN_THEMES = {
 }
 
 
-def get_current_theme():
+def get_current_theme(sid: str):
     """Get the theme for the currently selected domain."""
-    if selected_domain.value is None:
+    state = SESSION_STATES.get(sid)
+    if not state or state["selected_domain"].value is None:
         return DOMAIN_THEMES["default"]
-    name = selected_domain.value.get("name", "").lower()
+    name = state["selected_domain"].value.get("name", "").lower()
     return DOMAIN_THEMES.get(name, DOMAIN_THEMES["default"])
 
 
 @solara.component
-def MemberRow(member: dict):
+def MemberRow(sid: str, member: dict):
     cat   = member.get("category", "?")
     color = CATEGORY_COLOR.get(cat.lower(), "#cbd5e1")
     with solara.v.Html(
@@ -241,7 +270,7 @@ def MemberRow(member: dict):
             )
         solara.Button(
             "✕",
-            on_click=lambda: delete_member(member["id"], member["name"]),
+            on_click=lambda: delete_member(sid, member["id"], member["name"]),
             small=True,
             icon=True,
             color="error",
@@ -250,7 +279,7 @@ def MemberRow(member: dict):
 
 
 @solara.component
-def DomainSection(domain_name: str, members: list, is_unassigned: bool = False):
+def DomainSection(sid: str, domain_name: str, members: list, is_unassigned: bool = False):
     total = len(members)
     header_color = "#94a3b8" if is_unassigned else "#38bdf8"
     icon = "📋" if is_unassigned else "🏷️"
@@ -276,35 +305,39 @@ def DomainSection(domain_name: str, members: list, is_unassigned: bool = False):
             solara.Text("No members in this domain.", style={"color": "rgba(255,255,255,0.5)", "font-size": "14px", "font-style": "italic"})
         else:
             for m in members:
-                MemberRow(m)
+                MemberRow(sid, m)
 
 
 @solara.component
-def DomainChips():
+def DomainChips(sid: str):
     """Domain filter chips at the top."""
-    theme = get_current_theme()
+    theme = get_current_theme(sid)
+    state = SESSION_STATES.get(sid)
+    if not state: return
+
     accent = theme["accent"]
     chip_active = theme["chip_active"]
     glow = theme["glow"]
+    
     with solara.v.Html(tag="div", style_="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:32px;"):
         # "All" chip
-        all_active = selected_domain.value is None
+        all_active = state["selected_domain"].value is None
         solara.Button(
             "🌐 All Domains",
-            on_click=clear_domain,
+            on_click=lambda: clear_domain(sid),
             color="primary" if all_active else "default",
             small=True,
             outlined=not all_active,
             style=f"border-radius:20px; font-weight:700; {'background:' + chip_active + '; border:none; color:#fff; box-shadow:0 4px 15px ' + glow + ';' if all_active else 'background:' + accent + '14; color:#94a3b8; border:1px solid ' + accent + '33;'}"
         )
-        for d in domains.value:
+        for d in state["domains"].value:
             is_active = (
-                selected_domain.value is not None
-                and selected_domain.value["id"] == d["id"]
+                state["selected_domain"].value is not None
+                and state["selected_domain"].value["id"] == d["id"]
             )
             solara.Button(
                 d["name"],
-                on_click=lambda dom=d: select_domain(dom),
+                on_click=lambda dom=d: select_domain(sid, dom),
                 color="primary" if is_active else "default",
                 small=True,
                 outlined=not is_active,
@@ -315,7 +348,14 @@ def DomainChips():
 # ── Terminal Login ─────────────────────────────────────────────────
 
 @solara.component
-def TerminalLogin():
+def TerminalLogin(sid: str):
+    state = SESSION_STATES.get(sid)
+    if not state: return
+    
+    terminal_password = state["terminal_password"]
+    is_authorized = state["is_authorized"]
+    terminal_error = state["terminal_error"]
+
     def submit():
         if terminal_password.value == "admin":  # Default password
             is_authorized.set(True)
@@ -345,10 +385,7 @@ def TerminalLogin():
         .term-dot.red { background-color: #ff5f56; }
         .term-dot.yellow { background-color: #ffbd2e; }
         .term-dot.green { background-color: #27c93f; }
-        .terminal-.theme--light.v-sheet {{ background-color: #030812 !important; }}
-        body {
-            padding: 24px; color: #00ffcc; font-size: 15px; line-height: 1.6;
-        }
+        .terminal-body { padding: 24px; color: #00ffcc; font-size: 15px; line-height: 1.6; }
         .term-input-row { display: flex; align-items: center; gap: 10px; margin-top: 20px; }
         .term-input {
             background: transparent !important; border: none !important;
@@ -356,9 +393,7 @@ def TerminalLogin():
             flex-grow: 1; outline: none; border-bottom: 1px solid #00ffcc !important; margin: 0;
             padding: 0;
         }
-        .term-input .v-input__slot {
-            background: transparent !important; box-shadow: none !important;
-        }
+        .term-input .v-input__slot { background: transparent !important; box-shadow: none !important; }
         .term-input input { color: #00ffcc !important; font-family: 'Courier New', Courier, monospace !important; }
         .term-btn {
             background-color: #00ffcc !important; color: #000 !important; border: none !important; 
@@ -383,15 +418,9 @@ def TerminalLogin():
                 
                 with solara.v.Html(tag="div", class_="term-input-row"):
                     solara.Text("password:", style={"color": "#00ffcc", "font-weight": "bold"})
-                    solara.InputText(
-                        "", 
-                        value=terminal_password, 
-                        password=True, 
-                        classes=["term-input"]
-                    )
+                    solara.InputText("", value=terminal_password, password=True, classes=["term-input"])
                 
                 solara.Button("AUTHENTICATE", on_click=submit, classes=["term-btn"])
-                
                 if terminal_error.value:
                     solara.Text(terminal_error.value, style={"color": "#ff5f56", "display": "block", "margin-top": "16px"})
 
@@ -401,483 +430,100 @@ def TerminalLogin():
 @solara.component
 def Page():
     solara.Title("Members")
+    sid = solara.get_session_id()
+    state = get_session_state()
+
+    is_authorized = state["is_authorized"]
+    name_input = state["name_input"]
+    category_input = state["category_input"]
+    new_member_domains = state["new_member_domains"]
+    status_msg = state["status_msg"]
+    loading = state["loading"]
+    domains = state["domains"]
+    selected_domain = state["selected_domain"]
+    members_in_domain = state["members_in_domain"]
+    all_by_domain = state["all_by_domain"]
 
     if not is_authorized.value:
-        with solara.v.Html(tag="div"):
-            TerminalLogin()
+        TerminalLogin(sid)
     else:
-        with solara.v.Html(tag="div"):
-            # Premium dark theme CSS with cool effects
-            solara.HTML(tag="style", unsafe_innerHTML="""
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        # Premium dark theme CSS
+        solara.HTML(tag="style", unsafe_innerHTML="""
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+            html { scroll-behavior: smooth !important; }
+            ::-webkit-scrollbar { width: 8px; }
+            ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.8); }
+            ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #0ea5e9, #6366f1); border-radius: 10px; }
+            ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #38bdf8, #818cf8); }
+            .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-sheet { background-color: #030812 !important; background: #030812 !important; }
+            .theme--light.v-sheet {{ background-color: #030812 !important; }}
+            body { background-color: #0a0e1a !important; margin: 0; min-height: 100vh; }
+            @keyframes gradientMembers { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+            @keyframes float-particle { 0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; } 50% { transform: translateY(-30px) translateX(-20px) scale(0.85); opacity: 0.4; } }
+            @keyframes shooting-star { 0% { transform: translateX(-100px) translateY(100px) rotate(-45deg); opacity: 0; } 30% { transform: translateX(calc(100vw + 200px)) translateY(-100vh) rotate(-45deg); opacity: 0; } }
+            @keyframes btn-glow-pulse { 0%, 100% { box-shadow: 0 0 15px rgba(14, 165, 233, 0.3); } 50% { box-shadow: 0 0 25px rgba(14, 165, 233, 0.5); } }
+            @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+            .members-bg-particle { position: absolute; border-radius: 50%; pointer-events: none; }
+            .members-bg-particle:nth-child(1) { width: 350px; height: 350px; top: 5%; left: -8%; animation: float-particle 12s infinite; }
+            .shooting-star { position: absolute; width: 120px; height: 2px; border-radius: 2px; pointer-events: none; opacity: 0; }
+            .grid-overlay { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+            .v-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; position: relative !important; overflow: hidden !important; }
+            .v-btn:hover { transform: translateY(-2px) scale(1.03) !important; filter: brightness(1.15) !important; }
+            .add-member-btn { animation: btn-glow-pulse 3s infinite !important; }
+            .glass-card { animation: fadeSlideUp 0.6s ease-out both; transition: all 0.4s !important; }
+            .member-row { transition: all 0.3s ease !important; cursor: default; }
+            .domain-section { animation: fadeSlideUp 0.5s ease-out both; transition: all 0.4s ease !important; }
+            .v-text-field input { color: #00f0ff !important; text-shadow: 0 0 8px rgba(0, 240, 255, 0.4); font-weight: 600; }
+        """)
 
-        /* === SMOOTH SCROLL === */
-        html { scroll-behavior: smooth !important; }
-        
-        /* === CUSTOM SCROLLBAR === */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.8); }
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #0ea5e9, #6366f1);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #38bdf8, #818cf8); }
+        theme = get_current_theme(sid)
+        accent, glow, bg_gradient, btn_grad = theme["accent"], theme["glow"], theme["gradient"], theme["btn_gradient"]
 
-        .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-sheet {
-            background-color: #030812 !important;
-            background: #030812 !important;
-        }
-        .theme--light.v-sheet {{ background-color: #030812 !important; }}
-        body {
-            background-color: #0a0e1a !important;
-            margin: 0;
-            min-height: 100vh;
-        }
+        solara.HTML(tag="style", unsafe_innerHTML=f"""
+            .members-bg-particle:nth-child(1) {{ background: radial-gradient(circle, {theme['particle1']} 0%, transparent 70%); }}
+            .shooting-star {{ background: linear-gradient(90deg, transparent, {theme['star_color']}, transparent); }}
+            .add-member-btn {{ background: {btn_grad} !important; }}
+            .v-btn:hover {{ box-shadow: 0 0 20px {accent}40 !important; }}
+            ::-webkit-scrollbar-thumb {{ background: linear-gradient(180deg, {accent}, {accent}80) !important; }}
+        """)
 
-        /* === KEYFRAMES === */
-        @keyframes gradientMembers {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        @keyframes float-particle {
-            0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; }
-            25% { transform: translateY(-60px) translateX(30px) scale(1.2); opacity: 0.7; }
-            50% { transform: translateY(-30px) translateX(-20px) scale(0.85); opacity: 0.4; }
-            75% { transform: translateY(-80px) translateX(15px) scale(1.1); opacity: 0.6; }
-        }
-        @keyframes shooting-star {
-            0% { transform: translateX(-100px) translateY(100px) rotate(-45deg); opacity: 0; }
-            5% { opacity: 1; }
-            15% { opacity: 1; }
-            30% { transform: translateX(calc(100vw + 200px)) translateY(-100vh) rotate(-45deg); opacity: 0; }
-            100% { opacity: 0; }
-        }
-        @keyframes grid-scroll {
-            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
-            100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
-        }
-        @keyframes pulse-ring {
-            0% { transform: scale(1); opacity: 0.4; }
-            100% { transform: scale(1.8); opacity: 0; }
-        }
-        @keyframes btn-glow-pulse {
-            0%, 100% { box-shadow: 0 0 15px rgba(14, 165, 233, 0.3), 0 0 30px rgba(99, 102, 241, 0.15); }
-            50% { box-shadow: 0 0 25px rgba(14, 165, 233, 0.5), 0 0 50px rgba(99, 102, 241, 0.3), 0 0 80px rgba(14, 165, 233, 0.1); }
-        }
-        @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes borderGlow {
-            0%, 100% { border-color: rgba(56, 189, 248, 0.2); }
-            50% { border-color: rgba(56, 189, 248, 0.5); }
-        }
+        def on_mount():
+            fetch_domains(sid)
+            fetch_all_by_domain(sid)
+        solara.use_effect(on_mount, [])
 
-        /* === BACKGROUND PARTICLES === */
-        .members-bg-particle {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            filter: blur(1px);
-        }
-        .members-bg-particle:nth-child(1) {
-            width: 350px; height: 350px; top: 5%; left: -8%;
-            background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
-            animation: float-particle 12s ease-in-out infinite;
-        }
-        .members-bg-particle:nth-child(2) {
-            width: 280px; height: 280px; top: 45%; right: -10%;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
-            animation: float-particle 16s ease-in-out infinite 3s;
-        }
-        .members-bg-particle:nth-child(3) {
-            width: 220px; height: 220px; bottom: 8%; left: 25%;
-            background: radial-gradient(circle, rgba(20, 184, 166, 0.12) 0%, transparent 70%);
-            animation: float-particle 14s ease-in-out infinite 6s;
-        }
-        .members-bg-particle:nth-child(4) {
-            width: 200px; height: 200px; top: 20%; right: 15%;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
-            animation: float-particle 18s ease-in-out infinite 2s;
-        }
-
-        /* === SHOOTING STARS === */
-        .shooting-star {
-            position: absolute;
-            width: 120px; height: 2px;
-            background: linear-gradient(90deg, transparent, #38bdf8, #6366f1, transparent);
-            border-radius: 2px;
-            pointer-events: none;
-            opacity: 0;
-        }
-        .shooting-star:nth-child(5) {
-            top: 15%; left: 0;
-            animation: shooting-star 6s ease-in-out infinite 1s;
-        }
-        .shooting-star:nth-child(6) {
-            top: 40%; left: 0;
-            animation: shooting-star 8s ease-in-out infinite 3.5s;
-        }
-        .shooting-star:nth-child(7) {
-            top: 70%; left: 0;
-            animation: shooting-star 7s ease-in-out infinite 6s;
-        }
-
-        /* === GRID OVERLAY === */
-        .grid-overlay {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            background-image:
-                linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
-            background-size: 60px 60px;
-            mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.4) 0%, transparent 75%);
-            -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.4) 0%, transparent 75%);
-        }
-
-        /* === BUTTON EFFECTS === */
-        .v-btn {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            position: relative !important;
-            overflow: hidden !important;
-        }
-        .v-btn:hover {
-            transform: translateY(-2px) scale(1.03) !important;
-            filter: brightness(1.15) !important;
-        }
-        .v-btn:active {
-            transform: translateY(0px) scale(0.98) !important;
-        }
-        /* Ripple glow on hover */
-        .v-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 0; height: 0;
-            border-radius: 50%;
-            background: rgba(56, 189, 248, 0.15);
-            transform: translate(-50%, -50%);
-            transition: width 0.5s ease, height 0.5s ease;
-        }
-        .v-btn:hover::after {
-            width: 300px; height: 300px;
-        }
-
-        /* === ADD MEMBER BUTTON GLOW === */
-        .add-member-btn {
-            animation: btn-glow-pulse 3s ease-in-out infinite !important;
-        }
-        .add-member-btn:hover {
-            animation: none !important;
-            box-shadow: 0 0 30px rgba(14, 165, 233, 0.6), 0 0 60px rgba(99, 102, 241, 0.3), 0 8px 25px rgba(0,0,0,0.4) !important;
-            transform: translateY(-3px) scale(1.02) !important;
-        }
-
-        /* === CARD EFFECTS === */
-        .glass-card {
-            animation: fadeSlideUp 0.6s ease-out both, borderGlow 4s ease-in-out infinite;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        }
-        .glass-card:hover {
-            transform: translateY(-4px) !important;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 30px rgba(56, 189, 248, 0.1) !important;
-            border-color: rgba(56, 189, 248, 0.4) !important;
-        }
-
-        /* === MEMBER ROW HOVER === */
-        .member-row {
-            transition: all 0.3s ease !important;
-            cursor: default;
-        }
-        .member-row:hover {
-            background: rgba(56, 189, 248, 0.06) !important;
-            padding-left: 24px !important;
-        }
-
-        /* === DOMAIN SECTION HOVER === */
-        .domain-section {
-            animation: fadeSlideUp 0.5s ease-out both;
-            transition: all 0.4s ease !important;
-        }
-        .domain-section:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3), 0 0 20px rgba(56, 189, 248, 0.08) !important;
-        }
-
-        /* === CHIP HOVER EFFECTS === */
-        .domain-chip {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        }
-        .domain-chip:hover {
-            transform: translateY(-3px) scale(1.05) !important;
-            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.25) !important;
-        }
-
-        /* === TITLE EFFECTS === */
-        .page-title {
-            animation: fadeSlideUp 0.8s ease-out both;
-        }
-
-        /* === TYPING TEXT === */
-        .v-text-field input, .v-textarea textarea, .v-input input {
-            color: #00f0ff !important;
-            text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
-            font-weight: 600;
-        }
-        .v-text-field .v-label {
-            color: rgba(255,255,255,0.6) !important;
-        }
-
-        /* === STATUS MSG === */
-        .custom-status-msg {
-            margin-top:20px;
-            padding:12px 16px;
-            border-radius:10px;
-            font-weight:600;
-            font-size:14px;
-            color:#ffffff;
-            animation: fadeSlideUp 0.4s ease-out both;
-        }
-        .custom-status-success {
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-        .custom-status-error {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
-    """)
-
-
-    # --- Dynamic theme based on selected domain ---
-    theme = get_current_theme()
-    accent = theme["accent"]
-    glow = theme["glow"]
-    bg_gradient = theme["gradient"]
-    btn_grad = theme["btn_gradient"]
-
-    # Dynamic CSS injection that overrides accent colors per domain
-    solara.HTML(tag="style", unsafe_innerHTML=f"""
-        /* === DYNAMIC THEME OVERRIDES === */
-        .members-bg-particle:nth-child(1) {{
-            background: radial-gradient(circle, {theme['particle1']} 0%, transparent 70%) !important;
-        }}
-        .members-bg-particle:nth-child(2) {{
-            background: radial-gradient(circle, {theme['particle2']} 0%, transparent 70%) !important;
-        }}
-        .members-bg-particle:nth-child(3) {{
-            background: radial-gradient(circle, {theme['particle3']} 0%, transparent 70%) !important;
-        }}
-        .shooting-star {{
-            background: linear-gradient(90deg, transparent, {theme['star_color']}, transparent) !important;
-        }}
-        .grid-overlay {{
-            background-image:
-                linear-gradient({accent}12 1px, transparent 1px),
-                linear-gradient(90deg, {accent}12 1px, transparent 1px) !important;
-        }}
-        .add-member-btn {{
-            background: {btn_grad} !important;
-            animation: btn-glow-pulse 3s ease-in-out infinite !important;
-        }}
-        .add-member-btn:hover {{
-            animation: none !important;
-            box-shadow: 0 0 30px {glow}, 0 0 60px {glow}, 0 8px 25px rgba(0,0,0,0.4) !important;
-            transform: translateY(-3px) scale(1.02) !important;
-        }}
-        @keyframes btn-glow-pulse {{
-            0%, 100% {{ box-shadow: 0 0 15px {glow}, 0 0 30px {accent}20; }}
-            50% {{ box-shadow: 0 0 25px {glow}, 0 0 50px {accent}30, 0 0 80px {accent}15; }}
-        }}
-        @keyframes borderGlow {{
-            0%, 100% {{ border-color: {accent}33; }}
-            50% {{ border-color: {accent}80; }}
-        }}
-
-        /* Enhanced button hover glow */
-        .v-btn:hover {{
-            transform: translateY(-2px) scale(1.04) !important;
-            filter: brightness(1.2) !important;
-            box-shadow: 0 0 20px {accent}40, 0 4px 15px rgba(0,0,0,0.3) !important;
-        }}
-        .v-btn:active {{
-            transform: translateY(0px) scale(0.97) !important;
-            box-shadow: 0 0 10px {accent}30 !important;
-        }}
-        .v-btn::after {{
-            background: {accent}20 !important;
-        }}
-
-        /* Delete button enhanced glow */
-        .v-btn.error--text:hover,
-        .v-btn[color="error"]:hover {{
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5), 0 0 40px rgba(239, 68, 68, 0.2) !important;
-            background: rgba(239, 68, 68, 0.2) !important;
-        }}
-
-        .domain-chip:hover {{
-            box-shadow: 0 8px 25px {accent}40 !important;
-        }}
-
-        .member-row:hover {{
-            background: {accent}10 !important;
-            box-shadow: inset 3px 0 0 {accent} !important;
-        }}
-
-        .domain-section:hover {{
-            box-shadow: 0 16px 48px rgba(0,0,0,0.3), 0 0 25px {accent}15 !important;
-            border-color: {accent}50 !important;
-        }}
-
-        ::-webkit-scrollbar-thumb {{
-            background: linear-gradient(180deg, {accent}, {accent}80) !important;
-        }}
-    """)
-
-    def on_mount():
-        fetch_domains()
-        fetch_all_by_domain()
-
-    solara.use_effect(on_mount, [])
-
-    with solara.v.Html(
-        tag="div",
-        style_=(
-            "min-height:100vh;"
-            "position:relative; overflow:hidden;"
-            f"background: {bg_gradient};"
-            "background-size: 400% 400%;"
-            "animation: gradientMembers 20s ease infinite;"
-            "font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"
-            "color:#e2e8f0;"
-            "padding-bottom:60px;"
-            "box-sizing:border-box;"
-            "transition: background 1s ease;"
-        )
-    ):
-        # Floating background particles
-        for _ in range(4):
-            solara.v.Html(tag="div", attributes={"class": "members-bg-particle"})
-        # Shooting stars
-        for _ in range(3):
+        with solara.v.Html(tag="div", style_=f"min-height:100vh; position:relative; overflow:hidden; background:{bg_gradient}; background-size:400% 400%; animation:gradientMembers 20s ease infinite; color:#e2e8f0; padding-bottom:60px; box-sizing:border-box;"):
+            for _ in range(3): solara.v.Html(tag="div", attributes={"class": "members-bg-particle"})
             solara.v.Html(tag="div", attributes={"class": "shooting-star"})
-        # Grid overlay
-        solara.v.Html(tag="div", attributes={"class": "grid-overlay"})
-        with solara.v.Html(tag="div", style_="max-width:860px; margin:40px auto; padding:0 24px; position:relative; z-index:1;"):
-            solara.v.Html(tag="div", attributes={"class": "page-title"}, children=["👥 Team Members"], style_=f"font-size:36px; font-weight:900; color:#f1f5f9; margin-bottom:32px; text-shadow:0 2px 20px {glow};")
-
-            # Domain filter chips
-            DomainChips()
-
-            # Add Member Form
-            with solara.v.Html(
-                tag="div",
-                attributes={"class": "glass-card"},
-                style_=(
-                    "background:rgba(15, 23, 42, 0.7); backdrop-filter:blur(20px);"
-                    f"border:1px solid {accent}33; border-radius:20px;"
-                    "padding:32px; box-shadow:0 12px 40px rgba(0, 0, 0, 0.3);"
-                    "margin-bottom:40px;"
-                )
-            ):
-                solara.Text("➕ Add New Member", style={"font-size": "22px", "font-weight": "800", "color": accent, "margin-bottom": "24px", "display": "block"})
-                
-                with solara.v.Html(tag="div", style_="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px;"):
-                    with solara.v.Html(tag="div", style_="flex:1; min-width:250px;"):
-                        solara.InputText("Name", value=name_input, style="width:100%;")
-                    with solara.v.Html(tag="div", style_="flex:1; min-width:250px;"):
-                        solara.InputText(
-                            "Category (senior/intermediate/junior)",
-                            value=category_input,
-                            style="width:100%;",
-                        )
-
-                # Domain selection
-                if domains.value:
-                    solara.Text("Assign to Domain(s):", style={"font-weight": "700", "font-size": "14px", "color": "rgba(255,255,255,0.7)", "margin-bottom": "12px", "display": "block"})
-                    with solara.v.Html(tag="div", style_="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px;"):
-                        for d in domains.value:
-                            is_sel = d["id"] in new_member_domains.value
-                            def toggle(dom=d):
-                                cur = list(new_member_domains.value)
-                                if dom["id"] in cur:
-                                    cur.remove(dom["id"])
-                                else:
-                                    cur.append(dom["id"])
-                                new_member_domains.set(cur)
-                            solara.Button(
-                                ("✓ " if is_sel else "") + d["name"],
-                                on_click=toggle,
-                                color="primary" if is_sel else "default",
-                                outlined=not is_sel,
-                                small=True,
-                                style=f"border-radius:12px; font-weight:600; {'background:' + btn_grad + '; border:none; color:#fff; box-shadow:0 2px 10px ' + glow + ';' if is_sel else 'background:' + accent + '14; color:#94a3b8; border:1px solid ' + accent + '33;'}"
-                            )
-                else:
-                    solara.Text("No domains available yet.", style={"color": "rgba(255,255,255,0.5)", "font-size": "13px", "font-style": "italic", "display": "block"})
-
-                solara.Button(
-                    "➕ Add Member",
-                    color="primary",
-                    on_click=add_member,
-                    disabled=loading.value,
-                    attributes={"class": "add-member-btn"},
-                    style=f"width:100%; padding:14px; font-weight:800; font-size:16px; letter-spacing:1px; border-radius:12px; background:{btn_grad}; border:none; color:#fff;",
-                )
-
-                if status_msg.value:
-                    with solara.v.Html(
-                        tag="div",
-                        attributes={"class": "custom-status-msg " + ("custom-status-success" if '✅' in status_msg.value else "custom-status-error")},
-                    ):
-                        solara.Text(status_msg.value)
-
-                # Refresh button
+            with solara.v.Html(tag="div", style_="max-width:860px; margin:40px auto; padding:0 24px; position:relative; z-index:1;"):
+                solara.v.Html(tag="div", children=["👥 Team Members"], style=f"font-size:36px; font-weight:900; color:#f1f5f9; margin-bottom:32px; text-shadow:0 2px 20px {glow};")
+                DomainChips(sid)
+                with solara.v.Html(tag="div", style_=f"background:rgba(15, 23, 42, 0.7); backdrop-filter:blur(20px); border:1px solid {accent}33; border-radius:20px; padding:32px; margin-bottom:40px;"):
+                    solara.Text("➕ Add New Member", style={"font-size":"22px", "font-weight":"800", "color":accent, "margin-bottom":"24px", "display":"block"})
+                    with solara.v.Html(tag="div", style_="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px;"):
+                        solara.InputText("Name", value=name_input, style="flex:1; min-width:250px;")
+                        solara.InputText("Category", value=category_input, style="flex:1; min-width:250px;")
+                    if domains.value:
+                        solara.Text("Assign to Domain(s):", style={"font-weight":"700", "font-size":"14px", "color":"rgba(255,255,255,0.7)", "margin-bottom":"12px", "display":"block"})
+                        with solara.v.Html(tag="div", style_="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px;"):
+                            for d in domains.value:
+                                is_sel = d["id"] in new_member_domains.value
+                                def toggle(dom=d):
+                                    cur = list(new_member_domains.value)
+                                    if dom["id"] in cur: cur.remove(dom["id"])
+                                    else: cur.append(dom["id"])
+                                    new_member_domains.set(cur)
+                                solara.Button(("✓ " if is_sel else "") + d["name"], on_click=toggle, color="primary" if is_sel else "default", style=f"border-radius:12px; font-weight:600; {'background:'+btn_grad+';' if is_sel else ''}")
+                    solara.Button("➕ Add Member", color="primary", on_click=lambda: add_member(sid), disabled=loading.value, style=f"width:100%; padding:14px; font-weight:800; border-radius:12px; background:{btn_grad}; color:#fff;")
+                    if status_msg.value:
+                        solara.Text(status_msg.value, style={"margin-top":"20px", "display":"block", "color": "#10b981" if '✅' in status_msg.value else "#ef4444"})
                 with solara.v.Html(tag="div", style_=f"display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px; border-bottom:2px solid {accent}1a; padding-bottom:16px;"):
-                    if selected_domain.value:
-                        solara.Text(
-                            f"Members of {selected_domain.value['name']} ({len(members_in_domain.value)})",
-                            style={"font-size": "24px", "font-weight": "800", "color": accent, "display": "block"}
-                        )
-                    else:
-                        total = sum(len(d["members"]) for d in all_by_domain.value)
-                        solara.Text(f"All Members ({total} total)", style={"font-size": "24px", "font-weight": "800", "color": accent, "display": "block"})
-                    
-                    solara.Button("🔄 Refresh", on_click=refresh, outlined=True, small=True, style=f"background:{accent}14; color:{accent}; border:1px solid {accent}4d; border-radius:10px;")
-
+                    solara.Text(f"Members ({len(members_in_domain.value) if selected_domain.value else 'All'})", style={"font-size":"24px","font-weight":"800","color":accent})
+                    solara.Button("🔄 Refresh", on_click=lambda: refresh(sid), outlined=True, small=True)
                 if loading.value:
-                    solara.Text("⚡ Loading data...", style={"color": "rgba(255,255,255,0.7)", "font-size": "16px", "font-weight": "600", "text-align": "center", "display": "block", "margin-top": "40px"})
-                    return
-
-                # Single domain view
-                if selected_domain.value:
-                    if not members_in_domain.value:
-                        with solara.v.Html(tag="div", style_=f"text-align:center; padding:40px; background:rgba(15, 23, 42, 0.5); border-radius:16px; border:1px dashed {accent}33;"):
-                            solara.Text(
-                                "No members in this domain yet.",
-                                style={"color": "rgba(255,255,255,0.6)", "font-size": "16px", "font-style": "italic", "display": "block"},
-                            )
-                    else:
-                        with solara.v.Html(tag="div", style_=f"background:rgba(15, 23, 42, 0.6); backdrop-filter:blur(16px); border:1px solid {accent}26; border-radius:16px; overflow:hidden;"):
-                            for m in members_in_domain.value:
-                                MemberRow(m)
-
-                # All domains view
+                    solara.Text("⚡ Loading...", style={"text-align":"center","display":"block","margin-top":"40px"})
+                elif selected_domain.value:
+                    for m in members_in_domain.value: MemberRow(sid, m)
                 else:
-                    if not all_by_domain.value:
-                        solara.Text(
-                            "Loading members… if this persists, check your API connection.",
-                            style={"color": "rgba(255,255,255,0.6)", "text-align": "center", "display": "block", "margin-top": "40px"},
-                        )
-                    else:
-                        for domain_data in all_by_domain.value:
-                            is_unassigned = domain_data.get("domain_id") is None
-                            DomainSection(
-                                domain_data["domain_name"],
-                                domain_data["members"],
-                                is_unassigned=is_unassigned,
-                            )
+                    for d_data in all_by_domain.value: DomainSection(sid, d_data["domain_name"], d_data["members"], is_unassigned=d_data.get("domain_id") is None)
 
