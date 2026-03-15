@@ -22,55 +22,46 @@ def suggest_projects(theme: str) -> dict:
     Call Ollama to generate project suggestions for the given theme.
     Returns a dict with keys `resume_projects` and `hackathon_projects`.
     """
-    from langchain_ollama import ChatOllama
+    from .llm_factory import invoke_hybrid_llm
     from langchain_core.messages import SystemMessage, HumanMessage
 
-    system_prompt = (
-        "You are an elite tech career mentor and hackathon judge with deep "
-        "industry experience. When given a theme or domain, you return ONLY "
-        "valid JSON — no markdown fences, no extra text."
-    )
+    system_prompt = """You are a highly creative and strategic career counselor and hackathon mentor. 
+    Your goal is to suggest project ideas that either make a resume stand out to top-tier recruiters or win major international hackathons.
+    
+    For each suggestion, provide:
+    - A catchy title
+    - A detailed description (2-3 sentences)
+    - A modern tech stack
+    - A 'USP' (Unique Selling Point) - why it's great for a resume or why it wins a hackathon.
+    
+    Return ONLY valid JSON with two lists: 'resume_projects' and 'hackathon_projects'."""
 
-    user_prompt = f"""Generate project ideas for the theme: "{theme}"
-
-Return ONLY this JSON object (no other text, no markdown):
-{{
-  "resume_projects": [
+    user_prompt = f"""Generate 5 resume-grade projects and 5 hackathon-winning project ideas for the theme(s): {theme}.
+    
+    Return ONLY this JSON structure:
     {{
-      "title": "<project title>",
-      "description": "<2-3 sentence description of what it does>",
-      "tech_stack": ["<tech1>", "<tech2>", "<tech3>"],
-      "why_great_for_resume": "<1-2 sentences on why recruiters love this>"
-    }}
-  ],
-  "hackathon_projects": [
-    {{
-      "title": "<project title>",
-      "description": "<2-3 sentence description of what it does>",
-      "tech_stack": ["<tech1>", "<tech2>", "<tech3>"],
-      "why_it_wins": "<1-2 sentences on why judges pick this>"
-    }}
-  ]
-}}
+        "resume_projects": [
+            {{
+                "title": "...",
+                "description": "...",
+                "tech_stack": ["...", "..."],
+                "why_great_for_resume": "..."
+            }}
+        ],
+        "hackathon_projects": [
+            {{
+                "title": "...",
+                "description": "...",
+                "tech_stack": ["...", "..."],
+                "why_it_wins": "..."
+            }}
+        ]
+    }}"""
 
-RULES:
-- Provide exactly 5 items in resume_projects and 5 in hackathon_projects.
-- Resume projects should be practical, industry-relevant, and demonstrate real engineering skills.
-- Hackathon projects should be innovative, creative, demo-friendly, and have strong wow-factor.
-- All projects must be original ideas, not generic tutorials.
-- Tech stacks should be modern and specific.
-- Return ONLY the JSON object, nothing else."""
-
-    llm = ChatOllama(
-        model=OLLAMA_MODEL,
-        base_url=OLLAMA_BASE_URL,
-        temperature=0.7,
-    )
-
-    response = llm.invoke([
+    response = invoke_hybrid_llm([
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt),
-    ])
+    ], temperature=0.7)
     raw = response.content.strip()
 
     # Strip markdown fences if the model wraps them

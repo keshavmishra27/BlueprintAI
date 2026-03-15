@@ -11,17 +11,26 @@ GET  /repo-judge/health   — simple liveness probe
 """
 
 import os
+import logging
 from typing import List, Optional
 
 import requests as http_requests
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, ValidationError
 
 router = APIRouter(prefix="/repo-judge", tags=["Repo Judge"])
+logger = logging.getLogger(__name__)
 
 class AnalyzeRequest(BaseModel):
+
     github_url: str
     student_name: str = "Anonymous"
+
+
+class Improvement(BaseModel):
+    file: str
+    issue: str
+    fix: str
 
 
 class JudgeResult(BaseModel):
@@ -35,13 +44,17 @@ class JudgeResult(BaseModel):
     verdict: str = ""
     hackathon_readiness: str = ""
     strengths: List[str] = []
-    improvements: List[str] = []
+    improvements: List[Improvement] = []
     standout_files: List[str] = []
     problem_areas: List[str] = []
 
 
 def _check_ollama():
-    """Verify Ollama is running before hitting it."""
+    """Verify Ollama is running, but skip if Gemini is configured."""
+    google_key = os.getenv("GOOGLE_API_KEY")
+    if google_key and google_key != "your_gemini_api_key_here":
+        return  # Hybrid approach will use Gemini
+
     base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     model    = os.getenv("OLLAMA_MODEL",    "llama3.2")
     try:
@@ -59,6 +72,7 @@ def _check_ollama():
             status_code=503,
             detail=f"Ollama is not running. Start it with: ollama serve  ({e})",
         )
+
 
 
 @router.get(
@@ -125,4 +139,27 @@ def analyze_repo(req: AnalyzeRequest):
         if not isinstance(result.get(list_field), list):
             result[list_field] = []
 
-    return JudgeResult(**result)
+    try:
+        return JudgeResult(**result)
+    except ValidationError as e:
+        logger.error(f"Validation error in Repo Judge: {e}")
+        # Return a safe, valid-schema fallback if Pydantic fails
+        return JudgeResult(
+            student_name=req.student_name,
+            repository=req.github_url,
+            overall_score=0,
+            verdict="Validation failed for AI response.",
+            hackathon_readiness=f"Error: {e}",
+            improvements=[
+                Improvement(
+                    file="System",
+                    issue="Response validation failed.",
+                    fix="Check the logs for technical details."
+                )
+            ]
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unexpected error finalizing result: {e}",
+        )

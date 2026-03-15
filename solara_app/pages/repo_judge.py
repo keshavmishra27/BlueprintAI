@@ -27,13 +27,13 @@ def _parse_error(r) -> str:
 def _run_analysis(url: str, name: str):
     """Runs in a background thread — never blocks Solara's render thread."""
     try:
-        loading_step.set("📡 Scraping GitHub repository files…")
+        loading_step.set("⚡ Fast-Scraping repository archive...")
         r = requests.post(
             f"{API}/repo-judge/analyze",
             json={"github_url": url, "student_name": name},
             timeout=None,   
         )
-        loading_step.set("🧠 LLM is reading the code and writing verdict…")
+        loading_step.set("🧠 AI is deep-reading the code (takes 1-3 mins)...")
         if r.status_code == 200:
             result.set(r.json())
             screen.set("results")
@@ -112,6 +112,30 @@ def BulletList(items: list, icon: str, color: str):
         with solara.v.Html(tag="div", style_="display:flex; align-items:flex-start; gap:8px; margin-bottom:8px;"):
             solara.Text(icon, style={"color": color, "font-size": "15px", "flex-shrink": "0", "margin-top": "2px"})
             solara.Text(item, style={"font-size": "14px", "line-height": "1.6", "color": "#f8fafc"})
+
+
+@solara.component
+def DetailedImprovementList(improvements: list):
+    for imp in improvements:
+        # imp is a dict with 'file', 'issue', 'fix'
+        with solara.v.Html(
+            tag="div",
+            style_=(
+                "margin-bottom:20px; padding:16px; border-radius:12px;"
+                "background:rgba(255, 255, 255, 0.05); border:1px solid rgba(245, 158, 11, 0.2);"
+            )
+        ):
+            with solara.v.Html(tag="div", style_="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"):
+                solara.Text(f"📄 {imp.get('file', 'Unknown File')}", style={"font-weight": "700", "color": "#fcd34d", "font-size": "14px"})
+                solara.Text("⚡ Needs Fix", style={"font-size": "10px", "text-transform": "uppercase", "background": "#f59e0b", "color": "#000", "padding": "2px 6px", "border-radius": "4px", "font-weight": "900"})
+            
+            with solara.v.Html(tag="div", style_="margin-bottom:12px;"):
+                solara.Text("ISSUE:", style={"font-size": "11px", "font-weight": "900", "color": "#ef4444", "display": "block", "margin-bottom": "4px"})
+                solara.Text(imp.get("issue", ""), style={"font-size": "13px", "line-height": "1.5", "color": "#fca5a5"})
+            
+            with solara.v.Html(tag="div", style_="padding:12px; background:rgba(0,0,0,0.3); border-radius:8px; border-left:3px solid #10b981;"):
+                solara.Text("CORRECTION:", style={"font-size": "11px", "font-weight": "900", "color": "#10b981", "display": "block", "margin-bottom": "4px"})
+                solara.Text(imp.get("fix", ""), style={"font-size": "13px", "line-height": "1.5", "color": "#d1fae5", "white-space": "pre-wrap", "font-family": "monospace"})
 
 
 @solara.component
@@ -268,12 +292,12 @@ def ResultsScreen():
                     with solara.v.Html(
                         tag="div",
                         style_=(
-                            "flex:1; min-width:300px; padding:24px; border-radius:16px;"
-                            "background:rgba(245, 158, 11, 0.1); border:1px solid rgba(245, 158, 11, 0.3);"
+                            "width:100%; padding:24px; border-radius:16px;"
+                            "background:rgba(245, 158, 11, 0.1); border:1px solid rgba(245, 158, 11, 0.3); margin-top:24px;"
                         )
                     ):
-                        solara.Text("⚠️ Improvements Needed", style={"font-size": "18px", "font-weight": "700", "color": "#f59e0b", "display": "block", "margin-bottom": "16px"})
-                        BulletList(improvements, icon="!", color="#f59e0b")
+                        solara.Text("⚠️ Specific Improvements & Fixes", style={"font-size": "18px", "font-weight": "700", "color": "#f59e0b", "display": "block", "margin-bottom": "20px"})
+                        DetailedImprovementList(improvements)
 
         standout  = r.get("standout_files", [])
         problem   = r.get("problem_areas", [])

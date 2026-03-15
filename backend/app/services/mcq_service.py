@@ -22,49 +22,41 @@ def generate_mcq(domain: str) -> list[dict]:
     Returns a list of dicts, each with:
         question, options (list of 4), correct_answer, difficulty
     """
-    from langchain_ollama import ChatOllama
+    from .llm_factory import invoke_hybrid_llm
     from langchain_core.messages import SystemMessage, HumanMessage
 
-    system_prompt = (
-        "You are an expert technical quiz creator. "
-        "Return ONLY valid JSON — no markdown fences, no extra text."
-    )
+    system_prompt = """You are an expert technical interviewer and subject matter expert.
+    Your task is to generate 15 high-quality multiple-choice questions (MCQs) for a specific technical domain.
+    
+    The questions must be divided exactly as follows:
+    - 5 Easy questions: Testing basic concepts and syntax.
+    - 5 Medium questions: Testing logic, integration, and common libraries.
+    - 5 Hard questions: Testing architecture, edge cases, and performance optimization.
+    
+    Each question must have:
+    - A clear question statement.
+    - 4 distinct options labeled A, B, C, D.
+    - The correct answer letter (A, B, C, or D).
+    - The assigned difficulty.
+    
+    Return ONLY a valid JSON list of objects."""
 
-    user_prompt = f"""Create exactly 15 multiple-choice questions about the following domain(s): "{domain}".
-CRITICAL REQUIREMENT: These must NOT be theoretical or bookish questions. Instead, create REAL-LIFE SCENARIOS that test a developer's practical problem-solving skills, debugging, architecture, and productivity.
+    user_prompt = f"""Generate 15 technical MCQs for the domain: {domain}.
+    
+    Return ONLY this JSON structure (a list of 15 objects):
+    [
+        {{
+            "question": "...",
+            "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
+            "correct_answer": "A",
+            "difficulty": "easy"
+        }}
+    ]"""
 
-Difficulty distribution:
-- Questions 1-5: EASY (common practical scenarios a beginner should safely handle)
-- Questions 6-10: MEDIUM (intermediate scenarios involving trade-offs, debugging, or real-world constraints)
-- Questions 11-15: HARD (complex production issues, tricky edge cases, or advanced architecture choices)
-
-Return ONLY this JSON array (no other text):
-[
-  {{
-    "question": "<question text>",
-    "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
-    "correct_answer": "A",
-    "difficulty": "easy"
-  }}
-]
-
-RULES:
-- Exactly 15 items: 5 easy, 5 medium, 5 hard.
-- correct_answer must be one of "A", "B", "C", "D".
-- Each option string must start with "A) ", "B) ", "C) ", "D) ".
-- Questions must be specific, technical, and unambiguous.
-- Return ONLY the JSON array."""
-
-    llm = ChatOllama(
-        model=OLLAMA_MODEL,
-        base_url=OLLAMA_BASE_URL,
-        temperature=0.7,
-    )
-
-    response = llm.invoke([
+    response = invoke_hybrid_llm([
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt),
-    ])
+    ], temperature=0.7)
     raw = response.content.strip()
 
     # Strip markdown fences

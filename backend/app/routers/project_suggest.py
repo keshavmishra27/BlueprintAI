@@ -43,7 +43,11 @@ class SuggestResult(BaseModel):
 # ── Helpers ─────────────────────────────────────────────────────────
 
 def _check_ollama():
-    """Verify Ollama is running before hitting it."""
+    """Verify Ollama is running, but skip if Gemini is configured."""
+    google_key = os.getenv("GOOGLE_API_KEY")
+    if google_key and google_key != "your_gemini_api_key_here":
+        return  # Hybrid approach will use Gemini
+
     base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     model = os.getenv("OLLAMA_MODEL", "llama3.2")
     try:
@@ -61,6 +65,7 @@ def _check_ollama():
             status_code=503,
             detail=f"Ollama is not running. Start it with: ollama serve  ({e})",
         )
+
 
 
 # ── Endpoints ───────────────────────────────────────────────────────
