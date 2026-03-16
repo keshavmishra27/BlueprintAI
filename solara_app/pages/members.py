@@ -119,53 +119,64 @@ def delete_member(member_id: int, member_name: str):
 # Sub components
 
 CATEGORY_COLOR = {
-    "senior":       "#7c3aed",
-    "intermediate": "#0891b2",
-    "junior":       "#059669",
+    "senior":       "#ff00cc",
+    "intermediate": "#ff9a9e",
+    "junior":       "#fecfef",
 }
 
 
 @solara.component
 def MemberRow(member: dict):
     cat   = member.get("category", "?")
-    color = CATEGORY_COLOR.get(cat.lower(), "#6b7280")
-    with solara.Row(
-        justify="space-between",
-        style="padding:8px 4px; border-bottom:1px solid #f0f0f0;",
+    color = CATEGORY_COLOR.get(cat.lower(), "#cbd5e1")
+    with solara.v.Html(
+        tag="div",
+        style_="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.1); transition:background 0.2s ease;",
     ):
-        with solara.Row(style="gap:12px;"):
-            solara.Text(member["name"], style="font-weight:500; font-size:14px;")
+        with solara.v.Html(tag="div", style_="display:flex; align-items:center; gap:16px;"):
+            solara.Text(member["name"], style={"font-weight": "600", "font-size": "15px", "color": "#ffffff"})
             solara.Text(
                 cat,
-                style=(
-                    f"font-size:11px; padding:2px 8px; border-radius:12px;"
-                    f"background:{color}22; color:{color}; font-weight:600;"
-                ),
+                style={
+                    "font-size": "11px", "padding": "4px 10px", "border-radius": "12px",
+                    "background": f"rgba(255, 255, 255, 0.15)", "color": color, "font-weight": "700",
+                    "text-transform": "uppercase", "letter-spacing": "0.5px"
+                },
             )
         solara.Button(
             "✕",
             on_click=lambda: delete_member(member["id"], member["name"]),
             small=True,
             icon=True,
-            style="color:#ef4444;",
+            color="error",
+            style="min-width:32px; height:32px; border-radius:50%; background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3);",
         )
 
 
 @solara.component
-def DomainSection(domain_name: str, members: list):
+def DomainSection(domain_name: str, members: list, is_unassigned: bool = False):
     total = len(members)
-    with solara.Card(style="margin-bottom:16px;"):
-        with solara.Row(justify="space-between"):
+    header_color = "#fecfef" if is_unassigned else "#ff9a9e"
+    icon = "📋" if is_unassigned else "🏷️"
+    with solara.v.Html(
+        tag="div",
+        style_=(
+            "margin-bottom:24px; padding:24px; border-radius:16px;"
+            "background:rgba(10, 25, 40, 0.4); backdrop-filter:blur(16px);"
+            "border:1px solid rgba(255, 154, 158, 0.2); box-shadow:0 8px 32px rgba(255, 154, 158, 0.1);"
+        )
+    ):
+        with solara.v.Html(tag="div", style_="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;"):
             solara.Text(
-                f"🏷️ {domain_name}",
-                style="font-weight:700; font-size:16px; color:#4f46e5;",
+                f"{icon} {domain_name}",
+                style={"font-weight": "800", "font-size": "18px", "color": header_color, "letter-spacing": "0.5px"},
             )
             solara.Text(
                 f"{total} member{'s' if total != 1 else ''}",
-                style="font-size:12px; color:#888;",
+                style={"font-size": "13px", "color": "rgba(255,255,255,0.6)", "font-weight": "600"},
             )
         if not members:
-            solara.Text("No members in this domain.", style="color:#aaa; font-size:13px;")
+            solara.Text("No members in this domain.", style={"color": "rgba(255,255,255,0.5)", "font-size": "14px", "font-style": "italic"})
         else:
             for m in members:
                 MemberRow(m)
@@ -174,7 +185,7 @@ def DomainSection(domain_name: str, members: list):
 @solara.component
 def DomainChips():
     """Domain filter chips at the top."""
-    with solara.Row(style="flex-wrap:wrap; gap:8px; margin-bottom:16px;"):
+    with solara.v.Html(tag="div", style_="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:32px;"):
         # "All" chip
         all_active = selected_domain.value is None
         solara.Button(
@@ -183,6 +194,7 @@ def DomainChips():
             color="primary" if all_active else "default",
             small=True,
             outlined=not all_active,
+            style=f"border-radius:20px; font-weight:700; {'background:linear-gradient(90deg, #ff416c, #ff4b2b); border:none; color:#fff;' if all_active else 'background:rgba(255,255,255,0.1); color:#fff;'}"
         )
         for d in domains.value:
             is_active = (
@@ -195,6 +207,7 @@ def DomainChips():
                 color="primary" if is_active else "default",
                 small=True,
                 outlined=not is_active,
+                style=f"border-radius:20px; font-weight:700; {'background:linear-gradient(90deg, #ff416c, #ff4b2b); border:none; color:#fff;' if is_active else 'background:rgba(255,255,255,0.1); color:#fff;'}"
             )
 
 
@@ -204,99 +217,168 @@ def DomainChips():
 def Page():
     solara.Title("Members")
 
+    # Ultra-aggressive CSS strictly for this page to destroy Vuetify's background
+    solara.HTML(tag="style", unsafe_innerHTML="""
+        .v-application, .v-application--wrap, .v-main__wrap {
+            background: transparent !important;
+        }
+        body {
+            background-color: #1a0b16 !important;
+            margin: 0;
+            min-height: 100vh;
+        }
+        @keyframes gradientMembers {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .custom-status-msg {
+            margin-top:20px;
+            padding:12px 16px;
+            border-radius:8px;
+            font-weight:600;
+            font-size:14px;
+            color:#ffffff;
+        }
+        .custom-status-success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .custom-status-error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+    """)
+
     def on_mount():
         fetch_domains()
         fetch_all_by_domain()
 
     solara.use_effect(on_mount, [])
 
-    with solara.Column(style="max-width:860px; margin:0 auto; padding:24px;"):
-        solara.Markdown("# 👥 Members")
+    with solara.v.Html(
+        tag="div",
+        style_=(
+            "min-height:100vh;"
+            "background: linear-gradient(-45deg, #4b134f, #c94b4b, #ff416c, #ff4b2b);"
+            "background-size: 400% 400%;"
+            "animation: gradientMembers 15s ease infinite;"
+            "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"
+            "color:#ffffff;"
+            "padding-bottom:60px;"
+            "box-sizing:border-box;"
+        )
+    ):
+        with solara.v.Html(tag="div", style_="max-width:860px; margin:40px auto; padding:0 24px;"):
+            solara.Text("👥 Team Members", style={"font-size": "36px", "font-weight": "900", "color": "#ffffff", "margin-bottom": "32px", "display": "block", "text-shadow": "0 2px 15px rgba(255,65,108,0.5)"})
 
-        # Domain filter chips
-        DomainChips()
+            # Domain filter chips
+            DomainChips()
 
-        # Add Member Form
-        with solara.Card("➕ Add New Member"):
-            with solara.Row():
-                solara.InputText("Name", value=name_input, style="flex:1;")
-                solara.InputText(
-                    "Category  (senior / intermediate / junior)",
-                    value=category_input,
-                    style="flex:1;",
+            # Add Member Form
+            with solara.v.Html(
+                tag="div",
+                style_=(
+                    "background:rgba(10, 25, 40, 0.5); backdrop-filter:blur(20px);"
+                    "border:1px solid rgba(255, 65, 108, 0.4); border-radius:20px;"
+                    "padding:32px; box-shadow:0 12px 40px rgba(255, 75, 43, 0.25);"
+                    "margin-bottom:40px;"
                 )
-
-            # Domain selection
-            if domains.value:
-                solara.Text("Assign to Domain(s):", style="font-weight:600; font-size:13px; margin-top:8px;")
-                with solara.Div(style="display:flex; flex-wrap:wrap; gap:6px; margin:6px 0;"):
-                    for d in domains.value:
-                        is_sel = d["id"] in new_member_domains.value
-                        def toggle(dom=d):
-                            cur = list(new_member_domains.value)
-                            if dom["id"] in cur:
-                                cur.remove(dom["id"])
-                            else:
-                                cur.append(dom["id"])
-                            new_member_domains.set(cur)
-                        solara.Button(
-                            ("✓ " if is_sel else "") + d["name"],
-                            on_click=toggle,
-                            color="primary" if is_sel else "default",
-                            outlined=not is_sel,
-                            small=True,
+            ):
+                solara.Text("➕ Add New Member", style={"font-size": "22px", "font-weight": "800", "color": "#ffb199", "margin-bottom": "24px", "display": "block"})
+                
+                with solara.v.Html(tag="div", style_="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px;"):
+                    with solara.v.Html(tag="div", style_="flex:1; min-width:250px;"):
+                        solara.InputText("Name", value=name_input, style="width:100%;")
+                    with solara.v.Html(tag="div", style_="flex:1; min-width:250px;"):
+                        solara.InputText(
+                            "Category (senior/intermediate/junior)",
+                            value=category_input,
+                            style="width:100%;",
                         )
-            else:
-                solara.Text("No domains available yet.", style="color:#aaa; font-size:12px;")
 
-            solara.Button(
-                "Add Member",
-                color="primary",
-                on_click=add_member,
-                disabled=loading.value,
-                style="margin-top:8px;",
-            )
+                # Domain selection
+                if domains.value:
+                    solara.Text("Assign to Domain(s):", style={"font-weight": "700", "font-size": "14px", "color": "rgba(255,255,255,0.7)", "margin-bottom": "12px", "display": "block"})
+                    with solara.v.Html(tag="div", style_="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px;"):
+                        for d in domains.value:
+                            is_sel = d["id"] in new_member_domains.value
+                            def toggle(dom=d):
+                                cur = list(new_member_domains.value)
+                                if dom["id"] in cur:
+                                    cur.remove(dom["id"])
+                                else:
+                                    cur.append(dom["id"])
+                                new_member_domains.set(cur)
+                            solara.Button(
+                                ("✓ " if is_sel else "") + d["name"],
+                                on_click=toggle,
+                                color="primary" if is_sel else "default",
+                                outlined=not is_sel,
+                                small=True,
+                                style=f"border-radius:12px; font-weight:600; {'background:linear-gradient(90deg, #ff416c, #ff4b2b); border:none; color:#fff;' if is_sel else 'background:rgba(255,255,255,0.1); color:#fff;'}"
+                            )
+                else:
+                    solara.Text("No domains available yet.", style={"color": "rgba(255,255,255,0.5)", "font-size": "13px", "font-style": "italic", "display": "block"})
 
-        if status_msg.value:
-            solara.Text(status_msg.value, style="margin:6px 0;")
-
-        # Refresh button
-        with solara.Row(justify="space-between", style="margin-top:8px;"):
-            if selected_domain.value:
-                solara.Markdown(
-                    f"### Members of **{selected_domain.value['name']}**"
-                    f" ({len(members_in_domain.value)})"
+                solara.Button(
+                    "➕ Add Member",
+                    color="primary",
+                    on_click=add_member,
+                    disabled=loading.value,
+                    style="width:100%; padding:14px; font-weight:800; font-size:16px; letter-spacing:1px; border-radius:12px; background:linear-gradient(90deg, #fc4a1a, #f7b733); border:none; color:#000; box-shadow:0 4px 15px rgba(252,74,26,0.4);",
                 )
-            else:
-                total = sum(len(d["members"]) for d in all_by_domain.value)
-                solara.Markdown(f"### All Members ({total})")
-            solara.Button("🔄 Refresh", on_click=refresh, outlined=True, small=True)
 
-        if loading.value:
-            solara.Text("Loading…", style="color:#888;")
-            return
+                if status_msg.value:
+                    with solara.v.Html(
+                        tag="div",
+                        attributes={"class": "custom-status-msg " + ("custom-status-success" if '✅' in status_msg.value else "custom-status-error")},
+                    ):
+                        solara.Text(status_msg.value)
 
-        # Single domain view
-        if selected_domain.value:
-            if not members_in_domain.value:
-                solara.Text(
-                    "No members in this domain yet.",
-                    style="color:#aaa; font-size:14px;",
-                )
-            else:
-                for m in members_in_domain.value:
-                    MemberRow(m)
-
-        # All domains view
-        else:
-            if not all_by_domain.value:
-                solara.Text(
-                    "No domains found. Add members and assign them to domains first.",
-                    style="color:#aaa;",
-                )
-            else:
-                for domain_data in all_by_domain.value:
-                    DomainSection(
-                        domain_data["domain_name"],
-                        domain_data["members"],
+            # Refresh button
+            with solara.v.Html(tag="div", style_="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px; border-bottom:2px solid rgba(255,255,255,0.1); padding-bottom:16px;"):
+                if selected_domain.value:
+                    solara.Text(
+                        f"Members of {selected_domain.value['name']} ({len(members_in_domain.value)})",
+                        style={"font-size": "24px", "font-weight": "800", "color": "#ffb199", "display": "block"}
                     )
+                else:
+                    total = sum(len(d["members"]) for d in all_by_domain.value)
+                    solara.Text(f"All Members ({total} total)", style={"font-size": "24px", "font-weight": "800", "color": "#ffb199", "display": "block"})
+                
+                solara.Button("🔄 Refresh", on_click=refresh, outlined=True, small=True, style="background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:8px;")
+
+            if loading.value:
+                solara.Text("⚡ Loading data...", style={"color": "rgba(255,255,255,0.7)", "font-size": "16px", "font-weight": "600", "text-align": "center", "display": "block", "margin-top": "40px"})
+                return
+
+            # Single domain view
+            if selected_domain.value:
+                if not members_in_domain.value:
+                    with solara.v.Html(tag="div", style_="text-align:center; padding:40px; background:rgba(0,0,0,0.2); border-radius:16px; border:1px dashed rgba(255,255,255,0.2);"):
+                        solara.Text(
+                            "No members in this domain yet.",
+                            style={"color": "rgba(255,255,255,0.6)", "font-size": "16px", "font-style": "italic", "display": "block"},
+                        )
+                else:
+                    with solara.v.Html(tag="div", style_="background:rgba(10, 25, 40, 0.4); backdrop-filter:blur(16px); border:1px solid rgba(255, 154, 158, 0.2); border-radius:16px; overflow:hidden;"):
+                        for m in members_in_domain.value:
+                            MemberRow(m)
+
+            # All domains view
+            else:
+                if not all_by_domain.value:
+                    solara.Text(
+                        "Loading members… if this persists, check your API connection.",
+                        style={"color": "rgba(255,255,255,0.6)", "text-align": "center", "display": "block", "margin-top": "40px"},
+                    )
+                else:
+                    for domain_data in all_by_domain.value:
+                        is_unassigned = domain_data.get("domain_id") is None
+                        DomainSection(
+                            domain_data["domain_name"],
+                            domain_data["members"],
+                            is_unassigned=is_unassigned,
+                        )

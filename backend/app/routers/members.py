@@ -17,10 +17,11 @@ def get_domains(db: Session = Depends(get_db)):
 
 @router.get("/by-domain")
 def get_members_by_domain(db: Session = Depends(get_db)):
-    """Return all domains, each with a list of their members."""
-    from backend.app.models import Domain
+    """Return all domains each with their members, plus an 'Unassigned' group."""
+    from backend.app.models import Domain, MemberDomain
     domains = db.query(Domain).all()
-    return [
+
+    result = [
         {
             "domain_id": d.id,
             "domain_name": d.name,
@@ -31,6 +32,25 @@ def get_members_by_domain(db: Session = Depends(get_db)):
         }
         for d in domains
     ]
+
+    # Find members not in any domain
+    assigned_ids = db.query(MemberDomain.member_id).distinct().subquery()
+    unassigned = (
+        db.query(Member)
+        .filter(~Member.id.in_(assigned_ids))
+        .all()
+    )
+    if unassigned:
+        result.append({
+            "domain_id": None,
+            "domain_name": "Unassigned",
+            "members": [
+                {"id": m.id, "name": m.name, "category": m.category}
+                for m in unassigned
+            ],
+        })
+
+    return result
 
 @router.get("/")
 def get_members(domain_id: Optional[int] = Query(None), db: Session = Depends(get_db)):

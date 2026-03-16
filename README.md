@@ -43,6 +43,95 @@ group_maker/
 
 ---
 
+## 🏛️ Technical Architecture
+
+```mermaid
+graph TD
+    %% Styling
+    classDef primary fill:#4f46e5,stroke:#312e81,stroke-width:2px,color:#fff,rx:10,ry:10;
+    classDef secondary fill:#0ea5e9,stroke:#075985,stroke-width:2px,color:#fff,rx:10,ry:10;
+    classDef ai fill:#a855f7,stroke:#6b21a8,stroke-width:2px,color:#fff,rx:10,ry:10;
+    classDef storage fill:#10b981,stroke:#065f46,stroke-width:2px,color:#fff,rx:10,ry:10;
+    classDef highlight fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff,rx:10,ry:10;
+
+    subgraph Frontend ["🎨 Frontend (Solara)"]
+        UI["<b>Reactive UI</b><br/>(Python Pages)"]:::primary
+        State["<b>UI State</b><br/>(Reactive vars)"]:::primary
+    end
+
+    subgraph Backend ["🚀 Backend (FastAPI)"]
+        API["<b>REST API</b><br/>(Endpoints)"]:::secondary
+        Logic["<b>Business Logic</b><br/>(Services)"]:::secondary
+    end
+
+    subgraph Intelligence ["🧠 AI Engine"]
+        Ollama["<b>Ollama Local LLM</b><br/>(Qwen2.5/Llama3)"]:::ai
+        GoogleAI["<b>Google Gemini</b><br/>(Optional fallback)"]:::ai
+    end
+
+    subgraph Data ["💾 Data Layer"]
+        DB["<b>PostgreSQL / Supabase</b><br/>(SQLAlchemy Models)"]:::storage
+    end
+
+    %% Connections
+    UI -->|HTTP Requests| API
+    API --> Logic
+    Logic -->|CRUD Ops| DB
+    Logic -->|AI Prompting| Ollama
+    Logic -.->|Cloud AI| GoogleAI
+    
+    %% Legend/Highlight
+    FeatureFlow["<b>Next-Gen Automation</b>"]:::highlight
+```
+
+---
+
+## 🔄 Feature Workflow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    
+    %% Participants
+    participant U as User
+    participant S as Solara UI
+    participant F as FastAPI Backend
+    participant L as local LLM (Ollama)
+    participant D as Database
+
+    Note over U,D: Full End-to-End Skill Evaluation Flow
+
+    U->>S: Input student & select domains
+    S->>F: POST /assess/start
+    F->>L: Generate personalized intro
+    L-->>F: Opening message
+    F->>D: Create & save session
+    F-->>S: Session ID + Intro
+    S-->>U: Display Chat Interface
+
+    rect rgb(240, 240, 255)
+        Note right of U: Interactive Assessment Loop
+        U->>S: Answer question
+        S->>F: POST /assess/chat
+        F->>L: Analyze & ask next
+        L-->>F: Agent reply
+        F->>S: Reply
+        S-->>U: Updated transcript
+    end
+
+    U->>S: Click 'Complete Assessment'
+    S->>F: POST /assess/score/{id}
+    F->>L: Analyze full transcript & score
+    L-->>F: Structured scores (JSON)
+    F->>D: Save results & mark 'Scored'
+    F-->>S: Final Scores & Feedback
+    S-->>U: Display Astonishing Scorecard
+```
+
+---
+
+---
+
 ## ⚙️ Tech Stack
 
 - **Backend**: FastAPI, SQLAlchemy, PostgreSQL (Supabase)

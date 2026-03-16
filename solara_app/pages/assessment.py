@@ -403,6 +403,25 @@ def ResultsScreen():
 def Page():
     solara.Title("Assessment")
 
+    # Ultra-aggressive CSS strictly for this page to destroy Vuetify's background
+    solara.HTML(tag="style", unsafe_innerHTML="""
+        .v-application, .v-application--wrap, .v-main__wrap {
+            background: transparent !important;
+        }
+        body {
+            background: linear-gradient(-45deg, #84fab0, #8fd3f4, #a1c4fd, #c2e9fb) !important;
+            background-size: 400% 400% !important;
+            animation: gradientBG 12s ease infinite !important;
+            min-height: 100vh;
+            margin: 0;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    """)
+
     solara.use_effect(load_domains, [])
 
     if screen.value == "setup":
