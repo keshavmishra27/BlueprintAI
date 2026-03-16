@@ -19,53 +19,47 @@
 | 💡 **Idea Refiner** | Patent-level gap analysis, novelty scoring (0-100), and technical refinement options |
 | 🧑‍⚖️ **Repo Judge** | Submit any GitHub repo URL — AI performs deep codebase analysis and delivers a hackathon-style verdict with mentor feedback |
 | 🧑‍💻 **Multi-Domain** | Comprehensive support for Web/App Dev, ML, AI, Cloud, and Cybersecurity across all features |
-| 🌌 **Astonishing Dark Theme** | Seamless deep-dark aesthetic (#030812) with electric-blue text input and animated navigation |
-
----
-
-## 🏛️ Technical Architecture
+| 🌌 **Astonishing Dark Theme** | Seamless deep-dark aesthetic (#030812) with electric-b## 🏛️ Technical Architecture
 
 ```mermaid
 graph TD
-    %% Styling
-    classDef primary fill:#4f46e5,stroke:#312e81,stroke-width:2px,color:#fff,rx:10,ry:10;
-    classDef secondary fill:#0ea5e9,stroke:#075985,stroke-width:2px,color:#fff,rx:10,ry:10;
-    classDef ai fill:#a855f7,stroke:#6b21a8,stroke-width:2px,color:#fff,rx:10,ry:10;
-    classDef storage fill:#10b981,stroke:#065f46,stroke-width:2px,color:#fff,rx:10,ry:10;
-    classDef highlight fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff,rx:10,ry:10;
+    %% Styling for High Contrast Neon
+    classDef frontend fill:#1e1b4b,stroke:#0ea5e9,stroke-width:4px,color:#fff,rx:15,ry:15;
+    classDef backend fill:#1e1b4b,stroke:#8b5cf6,stroke-width:4px,color:#fff,rx:15,ry:15;
+    classDef ai fill:#1e1b4b,stroke:#ec4899,stroke-width:4px,color:#fff,rx:15,ry:15;
+    classDef db fill:#1e1b4b,stroke:#10b981,stroke-width:4px,color:#fff,rx:15,ry:15;
+    classDef cloud fill:#1e1b4b,stroke:#f59e0b,stroke-width:4px,color:#fff,rx:15,ry:15;
 
-    subgraph Frontend ["🎨 Frontend (Solara)"]
-        UI["<b>Reactive UI</b><br/>(Python Pages)"]:::primary
-        State["<b>UI State</b><br/>(Reactive vars)"]:::primary
+    subgraph UserZone ["👤 User Interface"]
+        UI["🎨 <b>Reactive Frontend</b><br/>(Solara / Python)"]:::frontend
     end
 
-    subgraph Backend ["🚀 Backend (FastAPI)"]
-        API["<b>REST API</b><br/>(Endpoints)"]:::secondary
-        Logic["<b>Business Logic</b><br/>(Services)"]:::secondary
+    subgraph ServiceZone ["⚙️ Backend Logic"]
+        API["🚀 <b>FastAPI Layer</b><br/>(Endpoints)"]:::backend
+        Biz["🧠 <b>Core Services</b><br/>(Business Logic)"]:::backend
     end
 
-    subgraph Intelligence ["🧠 AI Engine"]
-        Ollama["<b>Ollama Local LLM</b><br/>(Qwen2.5/Llama3)"]:::ai
-        CrewAI["<b>CrewAI</b><br/>(Agent Coordination)"]:::ai
-        Gemini["<b>Gemini 2.0 Flash</b><br/>(OpenRouter)"]:::ai
+    subgraph IntelligenceZone ["🤖 AI Multi-Model"]
+        Ollama["🏠 <b>Local LLM</b><br/>(Ollama)"]:::ai
+        Gemini["☁️ <b>Cloud AI</b><br/>(Gemini 2.0)"]:::ai
     end
 
-    subgraph Data ["💾 Data Layer"]
-        DB["<b>PostgreSQL / Supabase</b><br/>(SQLAlchemy Models)"]:::storage
-        SQLite["<b>SQLite Fallback</b><br/>(Local DB)"]:::storage
+    subgraph DataZone ["📊 Persistent Storage"]
+        PG["🐘 <b>PostgreSQL</b><br/>(Main DB)"]:::db
+        SQL["📂 <b>SQLite</b><br/>(Fallback)"]:::db
     end
 
-    %% Connections
-    UI -->|HTTP Requests| API
-    API --> Logic
-    Logic -->|CRUD Ops| DB
-    Logic -->|Local AI| Ollama
-    Logic -->|Multi-Agent| CrewAI
-    Logic -->|Cloud AI| Gemini
-    DB -.->|Fallback| SQLite
-    
-    %% Legend/Highlight
-    FeatureFlow["<b>Next-Gen Automation</b>"]:::highlight
+    %% Flow Connections with Neon Styling
+    UI ==>|Secure API Calls| API
+    API --> Biz
+    Biz ==>|Query/Store| PG
+    PG -.->|Failover| SQL
+    Biz ==>|Prompt| Ollama
+    Biz -.->|Fallback| Gemini
+
+    %% Link Styling
+    linkStyle 0,2,4 stroke:#0ea5e9,stroke-width:3px;
+    linkStyle 1,3,5 stroke:#8b5cf6,stroke-width:3px;
 ```
 
 ---
@@ -76,40 +70,44 @@ graph TD
 sequenceDiagram
     autonumber
     
-    %% Participants
-    participant U as User
-    participant S as Solara UI
-    participant F as FastAPI Backend
-    participant L as local LLM (Ollama)
-    participant D as Database
+    %% Premium Participants
+    participant U as 👤 User
+    participant S as 🎨 Solara UI
+    participant F as 🚀 FastAPI
+    participant A as 🤖 AI Engine
+    participant D as 🐘 Database
 
-    Note over U,D: Full End-to-End Skill Evaluation Flow
+    Note over U,D: ⚡ End-to-End Premium Assessment Flow ⚡
 
-    U->>S: Input student & select domains
-    S->>F: POST /assess/start
-    F->>L: Generate personalized intro
-    L-->>F: Opening message
-    F->>D: Create & save session
-    F-->>S: Session ID + Intro
-    S-->>U: Display Chat Interface
+    U->>+S: Start Assessment (Select Domains)
+    S->>+F: Initialize Session Request
+    F->>+A: Craft AI Intro Persona
+    A-->>-F: Personalized Opening
+    F->>+D: Log Active Session
+    D-->>-F: Session Stored
+    F-->>-S: Session ID + AI Greeting
+    S-->>-U: Show Dynamic Chat Interface
 
-    rect rgb(240, 240, 255)
-        Note right of U: Interactive Assessment Loop
-        U->>S: Answer question
-        S->>F: POST /assess/chat
-        F->>L: Analyze & ask next
-        L-->>F: Agent reply
-        F->>S: Reply
-        S-->>U: Updated transcript
+    rect rgb(30, 27, 75)
+        Note right of U: Interactive Real-Time Loop
+        U->>+S: Send Response / Question
+        S->>+F: Process Message
+        F->>+A: Analyze Context & Generate
+        A-->>-F: Intelligent Agent Reply
+        F->>+D: Update Transcript
+        D-->>-F: Saved
+        F-->>-S: Agent Text
+        S-->>-U: Smooth UI Update
     end
 
-    U->>S: Click 'Complete Assessment'
-    S->>F: POST /assess/score/{id}
-    F->>L: Analyze full transcript & score
-    L-->>F: Structured scores (JSON)
-    F->>D: Save results & mark 'Scored'
-    F-->>S: Final Scores & Feedback
-    S-->>U: Display Astonishing Scorecard
+    U->>+S: Complete Evaluation
+    S->>+F: Request Final Scoring
+    F->>+A: Deep Multi-Domain Analysis
+    A-->>-F: Structured KPI Data (JSON)
+    F->>+D: Mark Scored & Save Results
+    D-->>-F: Confirmed
+    F-->>-S: Final Report
+    S-->>-U: 🎉 Display Astonishing Scorecard
 ```
 
 ---
