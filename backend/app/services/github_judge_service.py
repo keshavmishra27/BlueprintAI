@@ -1,4 +1,5 @@
 import os
+import logging
 import json
 import base64
 import io
@@ -7,6 +8,8 @@ from urllib.parse import urlparse
 
 import requests as http_requests
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -118,7 +121,7 @@ def analyze_repo(github_url: str, student_name: str) -> dict:
     """
     Main entry point.
     1. Scrape the repo.
-    2. Send code to Ollama.
+    2. Send code to LLM.
     3. Return structured judge feedback.
     """
     owner, repo = _parse_github_url(github_url)
@@ -126,46 +129,14 @@ def analyze_repo(github_url: str, student_name: str) -> dict:
     code_dump = _gather_code(owner, repo)
     if not code_dump.strip():
         raise ValueError("No readable code files found in this repository or access limit reached.")
-    system_prompt = """You are an experienced international hackathon judge and technical mentor. Input: a PUBLIC GitHub repository URL. Your job: scrape the repository (all files, commit history optional), analyze it end-to-end, and deliver an expert, reproducible, and actionable judging report suitable for student grading and mentor feedback.
+    
+    system_prompt = """You are an experienced international hackathon judge and technical mentor. 
+Input: a PUBLIC GitHub repository URL and its full codebase. 
+Your job: analyze the repository end-to-end and deliver an expert, actionable judging report.
 
-1) Mandatory checks (fail/notice conditions)
-- Confirm repository is public and accessible; return an error if not.
-- Confirm presence of a license file; flag missing or incompatible license.
-- Confirm top-level README.md exists; if missing, treat as a documentation issue.
-- Detect presence of obvious secrets (api keys, tokens) in repo; do not print secrets, but flag location and give remediation steps.
-
-2) Analysis tasks (perform in order)
-A. Project quick-run & reproducibility:
-   - Identify language(s), runtime, and build system (e.g., Python/Node/Java/C++).
-   - Find and list exact run/build commands (README, package.json, Makefile, Dockerfile, workflow files).
-   - Attempt to run tests and/or start the app only if the environment is available. If you cannot run, say so and list the missing steps or secrets.
-B. Functionality & correctness:
-   - Inspect main features claimed in README and demo; check code paths that implement those features.
-   - Verify presence and behavior of core modules; note unimplemented or stubbed features.
-C. Code quality & maintainability:
-   - Evaluate project structure, naming, modularity, duplication, complexity hotspots.
-   - Identify specific functions/files that need refactor (include file paths and line ranges).
-D. Architecture & design:
-   - Evaluate separation of concerns, layering (UI/backend/db), and use of patterns.
-   - Comment on scalability, coupling, and single-point-of-failure issues with examples.
-E. Tests & CI:
-   - Detect test suites, test coverage indicators, and CI workflows (GitHub Actions, Travis, etc.).
-   - If tests exist, report test count and failures (if run). If no tests, recommend what to test and provide 3 example unit tests (test name + one-line description).
-F. Documentation & onboarding:
-   - Evaluate README completeness (setup, dev run, testing, architecture diagram, contribution guide).
-   - Check for API docs, in-code comments, and inline docstrings.
-G. Security, dependencies, and license:
-   - List dependencies (requirements.txt, package.json) with their versions.
-   - Flag outdated or known vulnerable dependencies (if you cannot query CVE DB, still call out unpinned ranges or wildly old versions).
-   - Note license presence/type and compatibility issues.
-H. UX & polish:
-   - Comment on CLI/GUI friendliness, helpful error messages, and demo quality.
-
-3) Output requirements (strict)
-Produce two artifacts: (A) A structured JSON verdict and (B) a short human summary.
-
-A. **Structured JSON format**
-Return ONLY the JSON object with these keys:
+### OUTPUT FORMAT (CRITICAL)
+Return ONLY a JSON object followed by a short human summary. 
+The JSON must strictly follow this structure:
 {
   "repo_url": "<url>",
   "accessibility": "public",
@@ -194,29 +165,17 @@ Return ONLY the JSON object with these keys:
   "mentor_notes": "Constructive feedback (50-100 words)."
 }
 
-B. **Human summary** (plain text) — 2–4 sentences.
+### SCORING GUIDANCE
+- 9-10: Production-grade; clean; tested; documented.
+- 7-8: Very good; minor polish needed.
+- 4-6: Functional but needs notable improvements.
+- 1-3: Incomplete or brittle.
+- 0: Non-functional or placeholder.
 
-4) Scoring guidance (how to map 0–10)
-- 9–10: Excellent, production-grade for its scope; clean code; tests; docs; no critical bugs.
-- 7–8: Very good; minor polish or missing tests/docs.
-- 4–6: Functional but needs notable improvements (tests, structure, docs).
-- 1–3: Incomplete or brittle; critical issues present.
-- 0: Non-functional or mostly placeholder.
-
-5) Evidence & quoting rules
-- Always attach at least one file path for every major claim.
-- Only include short code excerpts (≤3 lines) and annotate line numbers.
-- If you run commands, show exact commands and their raw outputs; otherwise label analysis as "static-only".
-
-6) Deliver human-readable remediation guidance
-- For each top_issue include step-by-step fix plan and an estimated effort (hours).
-- Offer 3 example GitHub issue templates with title/body/labels for a mentor to assign to the student.
-
-7) Tone & constraints
-- Be factual, constructive, and kind. Avoid shaming language.
-- Do not fabricate running results or dates. If you can't verify something, say "not verified" and why.
-
-If the repository is inaccessible or private, return a JSON with accessibility:"not_accessible" and a short reason. End.
+### CONSTRAINTS
+- ALWAYS attach at least one file path for every major claim.
+- Only include short code excerpts (≤3 lines) with line numbers.
+- Be factual, constructive, and kind.
 """
 
     user_prompt = f"""Expert Hackathon Evaluation
@@ -237,7 +196,7 @@ Analyze this project as an expert judge. Return ONLY the JSON object followed by
             SystemMessage(content=system_prompt),
             HumanMessage(content=user_prompt),
         ], temperature=0.3)
-        raw_full = response.content.strip()
+        raw_full = response.content.strip() if hasattr(response, 'content') else str(response).strip()
     except Exception as e:
         logger.error(f"LLM Invocation failed: {e}")
         raw_full = ""
@@ -245,6 +204,14 @@ Analyze this project as an expert judge. Return ONLY the JSON object followed by
     # Use robust extraction
     result = extract_json_from_text(raw_full)
     
+    # RECOVERY LOGIC: If keys are nested inside 'scores' due to missing brace
+    if result and "scores" in result and isinstance(result["scores"], dict):
+        potential_misplaced_keys = ["total_score", "mentor_notes", "strengths", "top_issues", "security_warnings", "reproducibility"]
+        for key in potential_misplaced_keys:
+            if key not in result and key in result["scores"]:
+                logger.info(f"Recovered misplaced key '{key}' from 'scores' sub-object.")
+                result[key] = result["scores"].pop(key)
+
     # Extract human summary (everything after the JSON block or just use mentor_notes)
     human_summary = ""
     if "```" in raw_full:
@@ -252,13 +219,26 @@ Analyze this project as an expert judge. Return ONLY the JSON object followed by
         if len(parts) > 2:
             human_summary = parts[-1].strip()
 
-    if result:
+    # TIGHTEN VALIDATION: Ensure at least some core fields are present
+    required_keys = {"total_score", "scores", "mentor_notes"}
+    is_valid_result = result and all(k in result for k in required_keys)
+
+    if not is_valid_result:
+        logger.error(f"Incomplete or invalid JSON from LLM. Raw response start: {raw_full[:500]}... (Total length: {len(raw_full)})")
+        # Log to a file for deeper inspection
         try:
-            # Add metadata
+            with open("llm_raw_debug.log", "w", encoding="utf-8") as f:
+                f.write(raw_full)
+        except:
+            pass
+
+    if is_valid_result:
+        try:
+            # Add/Fix metadata
             result["repo_url"] = github_url
             result["student_name"] = student_name
             
-            # If the LLM didn't provide human_summary outside JSON, maybe it put it in mentor_notes
+            # Ensure human_summary is populated
             if not human_summary and "mentor_notes" in result:
                  human_summary = result["mentor_notes"]
             
@@ -266,23 +246,39 @@ Analyze this project as an expert judge. Return ONLY the JSON object followed by
         except Exception as e:
             logger.error(f"Error post-processing JSON: {e}")
 
-    # Fallback return with error info that still matches the schema enough to not crash everything
+    # Fallback return with detailed error info that matches the schema
+    error_detail = "Analysis Incomplete (AI response format issue)"
+    if result and not is_valid_result:
+        missing = required_keys - set(result.keys())
+        error_detail = f"Incomplete AI response. Missing: {', '.join(missing)}"
+    elif not result:
+        error_detail = "No JSON found in AI response."
+
+    # Final fallback that matches the schema required by the router
     return {
         "repo_url": github_url,
         "accessibility": "error",
         "languages": [],
         "scores": {
-            "functionality": {"score": 0, "weight": 0.3, "reasons": ["Parsing failed"]},
-            "code_quality": {"score": 0, "weight": 0.2, "reasons": []},
-            "documentation": {"score": 0, "weight": 0.15, "reasons": []},
-            "architecture": {"score": 0, "weight": 0.15, "reasons": []},
-            "testing_ci": {"score": 0, "weight": 0.1, "reasons": []},
-            "innovation_ux": {"score": 0, "weight": 0.1, "reasons": []}
+            "functionality": {"score": 0, "reasons": ["Analysis failed"]},
+            "code_quality": {"score": 0, "reasons": []},
+            "documentation": {"score": 0, "reasons": []},
+            "architecture": {"score": 0, "reasons": []},
+            "testing_ci": {"score": 0, "reasons": []},
+            "innovation_ux": {"score": 0, "reasons": []}
         },
         "total_score": 0,
         "strengths": [],
-        "top_issues": [],
-        "reproducibility": {"can_run": False, "notes": f"JSON Parsing Error (Response too large or invalid format)"},
-        "mentor_notes": f"The model response could not be parsed as JSON. Raw start: {raw_full[:200]}",
+        "top_issues": [
+            {
+                "severity": "critical",
+                "title": "Analysis Incomplete",
+                "description": f"The AI could not complete the analysis for this repository properly. {error_detail}",
+                "estimated_effort_hours": 0,
+                "files": []
+            }
+        ],
+        "reproducibility": {"can_run": False, "notes": error_detail},
+        "mentor_notes": f"The analysis failed: {error_detail}. This usually happens if the AI response is too large or malformed. Please try again.",
         "student_name": student_name
     }

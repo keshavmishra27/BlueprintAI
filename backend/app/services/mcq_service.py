@@ -41,17 +41,69 @@ def generate_mcq(domain: str) -> list[dict]:
     
     Return ONLY a valid JSON list of objects."""
 
-    user_prompt = f"""Generate 15 technical MCQs for the domain: {domain}.
-    
-    Return ONLY this JSON structure (a list of 15 objects):
-    [
-        {{
-            "question": "...",
-            "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
-            "correct_answer": "A",
-            "difficulty": "easy"
-        }}
-    ]"""
+    user_prompt = f"""You are a subject-matter MCQ generator. Given a domain string {domain} (replace this placeholder with the actual domain, e.g., "networking", "data science", "manufacturing"), produce 15 technical, scenario-based multiple-choice questions that evaluate a student’s ability to apply domain knowledge to realistic, productivity-focused situations (decision making, prioritization, troubleshooting, optimization, time/resource tradeoffs), not just recall facts.
+
+Output format (required) — Return ONLY this JSON array (no commentary, no extra text):
+[
+{{
+"question": "short scenario + stem",
+"options": ["A) ...", "B) ...", "C) ...", "D) ..."],
+"correct_answer": "A",
+"difficulty": "easy"
+}},
+...
+]
+(15 objects total)
+
+Question-writing rules
+
+Each item must be self-contained. Begin with a concise scenario (≤35 words), then a clear question stem asking for the best action, likely outcome, or best explanation in that scenario. Total length ≲2 sentences.
+
+Focus on application/productivity: prefer "what will you do next?", "which choice maximizes throughput/minimizes downtime?", "which action best mitigates risk under these constraints?", "which sequence optimizes output given X?", or small calculations that measure effectiveness.
+
+Use real-world constraints (time, cost, resources, deadlines, system capacity). If numeric reasoning is required, include all numbers and units needed to solve it.
+
+Include a mix of cognitive skills: prioritization, troubleshooting, root-cause identification, small calculations, tool-selection, trade-off analysis, and best-next-step decisions.
+
+Avoid pure memorization questions (no definitions-only recall).
+
+Difficulty distribution: 6 easy, 6 medium, 3 hard.
+
+easy: basic applied decisions or simple one-step calculations.
+
+medium: multi-step reasoning or comparing tradeoffs.
+
+hard: require combining concepts, multi-stage planning, or nontrivial calculations.
+
+Options: always four options labeled exactly as "A) ...", "B) ...", "C) ...", "D) ...".
+
+Keep each option concise (≤20 words).
+
+Make distractors plausible and domain-relevant.
+
+Do not use "All of the above" or "None of the above."
+
+Ensure there is one clearly best answer (no ties or ambiguous best choices).
+
+correct_answer must be a single uppercase letter "A", "B", "C", or "D".
+
+difficulty must be one of "easy", "medium", or "hard".
+
+Cover a variety of subtopics across {domain} so the 15 questions are diverse.
+
+Language: concise, precise, professional; avoid slang and vague phrasing.
+
+Ensure JSON is valid UTF-8 and parsable.
+
+Example scenario templates (do not output examples in final result; these are guidelines for question style):
+
+“You have 4 tasks and 2 engineers; task A is blocking others and has highest ROI. Which do you assign first?”
+
+“A server shows CPU at 95% while response time doubles; which immediate action best restores throughput?”
+
+“Given these throughput numbers and a bottleneck stage, which optimization yields largest end-to-end gain?”
+
+Now generate 15 questions for the domain {domain} following the rules above and return EXACTLY the JSON array described."""
 
     response = invoke_hybrid_llm([
         SystemMessage(content=system_prompt),

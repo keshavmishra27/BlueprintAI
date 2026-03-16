@@ -4,7 +4,8 @@ from typing import List, Optional
 
 import requests as http_requests
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, HttpUrl, ValidationError
+from pydantic import BaseModel, HttpUrl, ValidationError, model_validator
+from typing import List, Optional
 
 router = APIRouter(prefix="/repo-judge", tags=["Repo Judge"])
 logger = logging.getLogger(__name__)
@@ -16,17 +17,17 @@ class AnalyzeRequest(BaseModel):
 
 
 class ScoreDetail(BaseModel):
-    score: float
+    score: float = 0.0
     weight: Optional[float] = 0.0
     reasons: List[str] = []
 
 class Scores(BaseModel):
-    functionality: ScoreDetail
-    code_quality: ScoreDetail
-    documentation: ScoreDetail
-    architecture: ScoreDetail
-    testing_ci: ScoreDetail
-    innovation_ux: ScoreDetail
+    functionality: ScoreDetail = ScoreDetail()
+    code_quality: ScoreDetail = ScoreDetail()
+    documentation: ScoreDetail = ScoreDetail()
+    architecture: ScoreDetail = ScoreDetail()
+    testing_ci: ScoreDetail = ScoreDetail()
+    innovation_ux: ScoreDetail = ScoreDetail()
 
 class IssueFile(BaseModel):
     path: str
@@ -34,9 +35,9 @@ class IssueFile(BaseModel):
     excerpt: Optional[str] = None
 
 class TopIssue(BaseModel):
-    severity: str
-    title: str
-    description: str
+    severity: str = "major"
+    title: str = "Issue"
+    description: str = "No description available"
     files: List[IssueFile] = []
     estimated_effort_hours: Optional[float] = 0.0
 
@@ -46,12 +47,27 @@ class GithubIssueTemplate(BaseModel):
     labels: List[str]
 
 class SecurityWarning(BaseModel):
-    type: str
-    evidence: str
-    remediation: str
+    type: Optional[str] = "unknown"
+    evidence: Optional[str] = "Not specified"
+    remediation: Optional[str] = "No remediation provided"
+
+    @model_validator(mode='before')
+    @classmethod
+    def map_fields(cls, data):
+        if isinstance(data, dict):
+            # Map 'title' to 'type' if type is missing
+            if 'title' in data and not data.get('type'):
+                data['type'] = data['title']
+            # Map 'lines' or 'description' to 'evidence' if evidence is missing
+            if not data.get('evidence'):
+                if 'lines' in data:
+                    data['evidence'] = f"Lines {data['lines']}"
+                elif 'description' in data:
+                    data['evidence'] = data['description']
+        return data
 
 class Reproducibility(BaseModel):
-    can_run: bool
+    can_run: bool = False
     run_commands: List[str] = []
     notes: str = ""
 
@@ -62,17 +78,17 @@ class RecommendedTest(BaseModel):
 
 class JudgeResult(BaseModel):
     repo_url: str
-    accessibility: str
+    accessibility: str = "public"
     languages: List[str] = []
-    scores: Scores
-    total_score: float
+    scores: Scores = Scores()
+    total_score: float = 0.0
     strengths: List[str] = []
     top_issues: List[TopIssue] = []
     suggested_github_issues: List[GithubIssueTemplate] = []
     security_warnings: List[SecurityWarning] = []
-    reproducibility: Reproducibility
+    reproducibility: Reproducibility = Reproducibility()
     recommended_tests: List[RecommendedTest] = []
-    mentor_notes: str
+    mentor_notes: str = "Analysis completed."
     # Keep compatibility with frontend if needed, or update frontend
     student_name: Optional[str] = None
 

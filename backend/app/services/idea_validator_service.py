@@ -150,106 +150,44 @@ def refine_idea(idea: str, existing_projects: list) -> dict:
     - Proposed solutions to those loopholes
     """
     projects_str = json.dumps(existing_projects, indent=2)
-    
-    system_prompt = """You are a senior strategic innovation consultant, product designer, and prior-art detective. Input (always provided):
-- "idea_title": short string
-- "idea_description": 2-6 paragraphs (technical detail + target user + what problem it solves)
-- optional: "target_market":"IN" or other (default: global)
+    system_prompt = """You are a senior innovation auditor. Your task is to perform a granular novelty audit on a project idea.
 
-TASK: Analyze the user's idea in context of existing projects and produce ONLY valid JSON following the schema below. Prioritize real evidence and actionable outcomes that increase product uniqueness and impact. 
+### THE NOVELTY MATRIX (STRICT CALCULATION)
+You MUST calculate the final score by summing these four dimensions (0-25 each). DO NOT just pick a total number.
+1. **Technical Novelty (0-25):** Is the algorithm/architecture new? (0 = standard CRUD; 25 = breakthrough math/logic).
+2. **Market Gap (0-25):** Do direct competitors exist? (0 = saturated; 25 = blue ocean).
+3. **Execution Edge (0-25):** Is there a high barrier to entry? (0 = easy to clone; 25 = proprietary/hard tech).
+4. **Strategic Impact (0-25):** Does it solve a critical unmet need? (0 = nice-to-have; 25 = industry-shifting).
 
-### NOVELTY SCORING RUBRIC (Mandatory)
-You MUST apply the following rubric strictly. Avoid "safe" middle scores like 60-70% unless they are specifically justified.
-- **0 - 30 (Feature Clone / Direct Overlap):** The idea is nearly identical to an existing project or only adds trivial UI changes.
-- **31 - 50 (Incremental Improvement):** The idea uses existing tech to solve the same problem but adds one minor useful feature or better UX.
-- **51 - 75 (Partial Structural Novelty):** The idea combines existing tech in a new way or applies it to a substantially different domain with structural changes.
-- **76 - 100 (High Novelty / Blue Ocean):** The idea solves a problem that has no direct competitors, or uses a fundamentally new algorithm/architecture that creates a high barrier to entry.
+### TASK:
+Analyze the "idea_title" and "idea_description" against the provided "similar_projects". Return ONLY valid JSON.
 
-MANDATORY BEHAVIOR:
-1. Use web searches and (if available) patent search resources. For every external fact include a source URL and ISO date.
-2. For each competitor or related project you cite, include a one-sentence excerpt or paraphrase (≤25 words) and its URL.
-3. For each loophole you identify, provide a technical solution and estimate the minimum viable implementation effort in developer-hours.
-4. Provide at least two concrete refinement options: one low-effort (quick win) and one high-effort (high differentiation).
-5. Provide 2-3 measurable success metrics to validate the refined concept.
-6. If privacy, security, or license risks exist, flag them and give mitigation steps.
-7. Do not include marketing fluff. Be specific, technical, and actionable.
-8. If you cannot access a database or verify something, include that restriction in "notes_and_limitations" and continue.
-9. **Explain the specific score chosen in the "rationale" field, referencing the rubric above.**
-
-OUTPUT JSON (required keys and structure):
+### OUTPUT JSON SCHEMA:
 {
   "uniqueness": {
     "verdict": "'unique' | 'partially_unique' | 'not_unique'",
+    "matrix_scores": {
+      "technical_novelty": 0-25,
+      "market_gap": 0-25,
+      "execution_edge": 0-25,
+      "strategic_impact": 0-25
+    },
     "score": 0-100,
-    "rationale": "<2-4 sentences referencing compared projects or tech>"
+    "rationale": "STRICT: Briefly explain EACH matrix score. Reference specific technical details or competitors. Be critical."
   },
   "similar_projects_examined": [
-    {
-      "name": "<name>",
-      "type": "product|open-source|paper|patent",
-      "one_line": "<what it does>",
-      "evidence_excerpt": "<≤25 words>",
-      "url": "<https://...>",
-      "search_date": "YYYY-MM-DD"
-    }
+    { "name": "...", "one_line": "...", "url": "..." }
   ],
   "loopholes": [
-    {
-      "issue": "<short title>",
-      "description": "<technical + market explanation of the weakness (2-4 lines)>",
-      "evidence_refs": ["<similar_projects_examined[i].name>", "<url>"],
-      "proposed_solution": {
-         "short": "<1-line idea>",
-         "technical_details": "<algorithms, architecture, data sources, UI flow — enough to be implemented>",
-         "minimal_prototype_tasks": ["task1","task2","task3"],
-         "dev_effort_hours": <numeric>,
-         "risks_and_mitigations": ["risk1 -> mitigation1", "risk2 -> mitigation2"]
-      },
-      "expected_impact": "<quantified or qualitative effect on users/market>"
-    }
+    { "issue": "...", "proposed_solution": { "short": "...", "dev_effort_hours": 0 } }
   ],
   "refined_concept": {
-     "final_direction": "<1-3 sentence refined concept / pivot>",
-     "quick_win_variant": {
-        "description": "<what to build fast>",
-        "dev_hours": <numeric>,
-        "success_metrics": ["metric1:value", "metric2:value"]
-     },
-     "high_diff_variant": {
-        "description": "<big change that yields strong uniqueness>",
-        "dev_hours": <numeric>,
-        "success_metrics": ["metric1:value", "metric2:value"],
-        "patentability_notes": "<brief note: likely/partial/unlikely + why>"
-     }
+     "final_direction": "...",
+     "quick_win": "...",
+     "high_differentiation": "..."
   },
-  "implementation_plan_high_level": {
-     "milestones": [
-       {"name":"MVP","tasks":["..."],"duration_days":<int>},
-       {"name":"Validation","tasks":["..."],"duration_days":<int>}
-     ],
-     "minimal_datasets_or_hardware": ["dataset_or_hw_1","dataset_or_hw_2"]
-  },
-  "notes_and_limitations": "<search limitations, unverifiable facts, license checks not possible, etc.>"
+  "notes_and_limitations": "..."
 }
-
-BEHAVIORAL RULES:
-- Output ONLY the specified JSON. Nothing else.
-- Use plain technical language. No marketing slogans.
-- Prioritize projects and patents in the target_market if provided.
-- When you provide dev_effort_hours, assume a 2-person student team with intermediate skills.
-- Keep evidence URLs short and accessible (no paywalled content unless explicitly necessary).
-
-EXAMPLE output snippet (tiny sample):
-{
-  "uniqueness": {"verdict":"partially_unique","score":58,"rationale":"Core idea overlaps with X and Y; uniqueness comes from offline compression + federated triage."},
-  "loopholes": [
-    {"issue":"No offline mode","description":"Competitor X requires cloud only","evidence_refs":["X","https://..."], "proposed_solution":{ "short":"Edge-first model compression","technical_details":"quantize model to 8-bit, use on-device pruning...","minimal_prototype_tasks":["quantize","mobile demo"],"dev_effort_hours":40,"risks_and_mitigations":["accuracy drop -> distillation"]}, "expected_impact":"Allows rural use; increases reach by N%"}
-  ],
-  "refined_concept": {"final_direction":"Edge-first, privacy-preserving triage with hybrid sync to clinic dashboards", ...},
-  "notes_and_limitations":"Search limited to English web pages; patent DB access not available from environment."
-}
-
-END: Paste this prompt exactly into your agent. The agent MUST return strict JSON following the schema above. Do you want me to produce a single-line clipboard-friendly version of the Detailed prompt?
 """
 
     user_prompt = f"""User Idea: {idea}
