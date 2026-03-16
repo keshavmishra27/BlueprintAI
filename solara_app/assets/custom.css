@@ -1,9 +1,16 @@
 /* Global Vuetify Override for Group Maker Themes */
 
 /* Completely wipe out Vuetify backgrounds down the DOM tree */
-html, body, #app, .v-application, .v-application--wrap, .v-main, .v-main__wrap {
-    background: transparent !important;
-    background-color: transparent !important;
+html, body, #app, .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-sheet {
+    background-color: #030812 !important;
+    background: #030812 !important;
+    color: #ffffff !important;
+}
+
+/* Specifically target Vuetify's light theme sheets which often cause the gaps */
+.theme--light.v-sheet {
+    background-color: #030812 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 @keyframes gradientBG {
@@ -26,4 +33,67 @@ html, body, #app, .v-application, .v-application--wrap, .v-main, .v-main__wrap {
 .v-card:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.25) !important;
+}
+
+/* ========================================= */
+/* Eye-catchy animated Nav bar (AppLayout)   */
+/* ========================================= */
+.v-application .v-app-bar.v-toolbar.primary,
+.v-application header.v-app-bar {
+    /* Cool creative animated gradient */
+    background: linear-gradient(90deg, #0A0F1C, #0F2046, #0A0F1C, #1A3673) !important;
+    background-color: transparent !important;
+    background-size: 300% 300% !important;
+    animation: gradientBG 8s ease infinite !important;
+    box-shadow: 0 4px 20px rgba(15, 32, 70, 0.6) !important;
+    border-bottom: 2px solid rgba(0, 240, 255, 0.15) !important;
+}
+
+/* Make the title ultra-premium */
+.v-application .v-app-bar .v-toolbar__title {
+    font-size: 1.5rem !important;
+    font-weight: 900 !important;
+    background: linear-gradient(to right, #ffffff, #00f0ff) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    text-shadow: none !important;
+    filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5)) !important;
+    letter-spacing: 1.5px !important;
+}
+
+/* Navigation tabs in the app bar */
+.v-application .v-app-bar .v-tab {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.5px !important;
+    transition: all 0.3s ease !important;
+    text-transform: uppercase !important;
+}
+
+/* Active tab styling */
+.v-application .v-app-bar .v-tab--active {
+    color: #ffffff !important;
+    text-shadow: 0 0 15px rgba(0, 240, 255, 0.8) !important;
+    background: rgba(0, 240, 255, 0.05) !important;
+}
+
+/* Hover effect for tabs */
+.v-application .v-app-bar .v-tab:hover {
+    color: #ffffff !important;
+    background: rgba(0, 240, 255, 0.1) !important;
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
+}
+
+/* Eye-catching neon cyan slider under active tab */
+.v-application .v-app-bar .v-tabs-slider {
+    background: linear-gradient(90deg, transparent, #00f0ff, transparent) !important; 
+    height: 3px !important;
+    box-shadow: 0 0 15px #00f0ff, 0 0 5px #00f0ff !important;
+}
+
+/* Toolbar items generally, like buttons */
+.v-application .v-app-bar .v-btn {
+    color: white !important;
+    font-weight: bold !important;
 }

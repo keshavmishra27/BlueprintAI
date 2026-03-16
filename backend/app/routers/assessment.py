@@ -1,8 +1,24 @@
+"""
+assessment.py  (router)
+-----------------------
+FastAPI router for the MCQ-based assessment.
+Prefix: /assess   Tag: Assessment
+
+Endpoints
+---------
+GET  /assess/domains       — list available domains
+POST /assess/generate-mcq  — generate 15 MCQs for a domain
+POST /assess/submit-mcq    — grade user answers and return percentile
+GET  /assess/results        — list all past sessions
+GET  /assess/results/{id}   — get one session result
+DELETE /assess/sessions/{id}
+"""
+
 import os
 from datetime import datetime, timezone
-from typing import List, Optional
-import requests as http_requests
+from typing import Dict, List, Optional
 
+import requests as http_requests
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -18,38 +34,42 @@ AVAILABLE_DOMAINS = [
     "Cybersecurity",
     "Cloud Computing",
     "App Development",
-    "Agentic AI"
+    "Agentic AI",
 ]
 
 
-class StartSessionRequest(BaseModel):
+# ── Request / Response schemas ──────────────────────────────────────
+
+class GenerateMCQRequest(BaseModel):
     student_name: str
     domains: List[str]
 
 
-class StartSessionResponse(BaseModel):
+class QuestionOut(BaseModel):
+    """Question sent to the frontend — NO correct_answer."""
+    index: int
+    question: str
+    options: List[str]
+    difficulty: str
+
+
+class GenerateMCQResponse(BaseModel):
     session_id: int
     student_name: str
     domains: List[str]
-    message: str 
+    questions: List[QuestionOut]
 
 
-class ChatRequest(BaseModel):
+class SubmitMCQRequest(BaseModel):
     session_id: int
-    student_message: str
+    answers: Dict[str, str]   # {"0": "A", "1": "C", ...}
 
 
-class ChatResponse(BaseModel):
-    agent_reply: str
-    turn_count: int
-
-
-class ScoreResponse(BaseModel):
+class SubmitMCQResponse(BaseModel):
     session_id: int
     student_name: str
     domains: List[str]
     scores: dict
-    turn_count: int
 
 
 class SessionSummary(BaseModel):
@@ -61,22 +81,23 @@ class SessionSummary(BaseModel):
     created_at: str
 
 
-
+# ── Helpers ─────────────────────────────────────────────────────────
 
 def _check_ollama():
-    """Verify Ollama is running and the configured model is available."""
+    """Verify Ollama is running, but skip if Gemini is configured."""
+    google_key = os.getenv("GOOGLE_API_KEY")
+    if google_key and google_key != "your_gemini_api_key_here":
+        return  # Hybrid approach will use Gemini
+
     base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    model    = os.getenv("OLLAMA_MODEL", "llama3.2")
+    model = os.getenv("OLLAMA_MODEL", "llama3.2")
     try:
         r = http_requests.get(f"{base_url}/api/tags", timeout=3)
         models = [m["name"] for m in r.json().get("models", [])]
         if not any(m.startswith(model.split(":")[0]) for m in models):
             raise HTTPException(
                 status_code=503,
-                detail=(
-                    f"Model '{model}' not found in Ollama. "
-                    f"Run: ollama pull {model}"
-                ),
+                detail=f"Model '{model}' not found in Ollama. Run: ollama pull {model}",
             )
     except HTTPException:
         raise
@@ -87,6 +108,7 @@ def _check_ollama():
         )
 
 
+
 def _get_session(session_id: int, db: Session) -> AssessmentSession:
     session = db.query(AssessmentSession).filter(AssessmentSession.id == session_id).first()
     if not session:
@@ -94,6 +116,7 @@ def _get_session(session_id: int, db: Session) -> AssessmentSession:
     return session
 
 
+# ── Endpoints ───────────────────────────────────────────────────────
 
 @router.get(
     "/domains",
@@ -101,127 +124,86 @@ def _get_session(session_id: int, db: Session) -> AssessmentSession:
     summary="List available assessment domains",
 )
 def list_domains():
-    """Returns all domains a student can choose for their assessment."""
     return AVAILABLE_DOMAINS
 
 
 @router.post(
-    "/start",
-    response_model=StartSessionResponse,
-    summary="Start a new assessment session",
-    description="Create a new session for a student. Returns the agent's opening message.",
+    "/generate-mcq",
+    response_model=GenerateMCQResponse,
+    summary="Generate 15 MCQ questions for a domain",
+    description=(
+        "Provide student name and a domain. The AI generates 15 MCQs "
+        "(5 easy, 5 medium, 5 hard). Questions are returned WITHOUT "
+        "correct answers — those are stored server-side for grading."
+    ),
 )
-def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
-    _check_ollama()
-
+def generate_mcq(req: GenerateMCQRequest, db: Session = Depends(get_db)):
     if not req.student_name.strip():
         raise HTTPException(status_code=400, detail="student_name cannot be empty.")
     if not req.domains:
-        raise HTTPException(status_code=400, detail="Select at least one domain.")
+        raise HTTPException(status_code=400, detail="domains cannot be empty.")
 
-    from backend.app.services.crew_service import get_interviewer_response
+    _check_ollama()
 
-    opening = get_interviewer_response(
-        student_name=req.student_name.strip(),
-        domains=req.domains,
-        conversation_history=[],
-        student_message="Hello, I'm ready to start.",
-    )
+    from backend.app.services.mcq_service import generate_mcq as run_generate
 
-    initial_transcript = [
-        {"role": "student", "content": "Hello, I'm ready to start."},
-        {"role": "agent",   "content": opening},
-    ]
+    try:
+        domain_str = ", ".join(req.domains)
+        questions = run_generate(domain=domain_str)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"MCQ generation failed: {e}")
 
+    # Save to DB — transcript stores the full questions (with answers)
     session = AssessmentSession(
         student_name=req.student_name.strip(),
         domains=req.domains,
-        transcript=initial_transcript,
+        transcript=questions,          # full questions with correct_answer
         status="active",
     )
     db.add(session)
     db.commit()
     db.refresh(session)
 
-    return StartSessionResponse(
+    # Return questions WITHOUT correct_answer
+    questions_out = [
+        QuestionOut(
+            index=i,
+            question=q.get("question", ""),
+            options=q.get("options", []),
+            difficulty=q.get("difficulty", "medium"),
+        )
+        for i, q in enumerate(questions)
+    ]
+
+    return GenerateMCQResponse(
         session_id=session.id,
         student_name=session.student_name,
-        domains=session.domains,
-        message=opening,
+        domains=req.domains,
+        questions=questions_out,
     )
 
 
 @router.post(
-    "/chat",
-    response_model=ChatResponse,
-    summary="Send a message and get the agent's reply",
+    "/submit-mcq",
+    response_model=SubmitMCQResponse,
+    summary="Submit MCQ answers and get score + percentile",
 )
-def chat(req: ChatRequest, db: Session = Depends(get_db)):
-    _check_ollama()
+def submit_mcq(req: SubmitMCQRequest, db: Session = Depends(get_db)):
     session = _get_session(req.session_id, db)
 
     if session.status == "scored":
-        raise HTTPException(status_code=400, detail="This session has already been scored.")
-
-    if not req.student_message.strip():
-        raise HTTPException(status_code=400, detail="student_message cannot be empty.")
-
-    from backend.app.services.crew_service import get_interviewer_response
-
-    reply = get_interviewer_response(
-        student_name=session.student_name,
-        domains=session.domains,
-        conversation_history=session.transcript,
-        student_message=req.student_message.strip(),
-    )
-
-    updated = list(session.transcript)
-    updated.append({"role": "student", "content": req.student_message.strip()})
-    updated.append({"role": "agent",   "content": reply})
-    session.transcript = updated
-    db.commit()
-
-    return ChatResponse(
-        agent_reply=reply,
-        turn_count=len([t for t in updated if t["role"] == "student"]),
-    )
-
-
-@router.post(
-    "/score/{session_id}",
-    response_model=ScoreResponse,
-    summary="End session and generate productivity score",
-    description=(
-        "Triggers the CrewAI scorer to analyze the full transcript "
-        "and return a structured productivity score with feedback."
-    ),
-)
-def score_session(session_id: int, db: Session = Depends(get_db)):
-    _check_ollama()
-    session = _get_session(session_id, db)
-
-    if session.status == "scored":
-        return ScoreResponse(
+        return SubmitMCQResponse(
             session_id=session.id,
             student_name=session.student_name,
-            domains=session.domains,
+            domains=session.domains or [],
             scores=session.scores,
-            turn_count=len([t for t in session.transcript if t["role"] == "student"]),
         )
 
-    student_turns = [t for t in session.transcript if t["role"] == "student"]
-    if len(student_turns) < 2:
-        raise HTTPException(
-            status_code=400,
-            detail="Not enough conversation to score. Have at least 2 exchanges with the agent.",
-        )
+    from backend.app.services.mcq_service import grade_answers
 
-    from backend.app.services.crew_service import score_session as run_scorer
-
-    scores = run_scorer(
-        student_name=session.student_name,
-        domains=session.domains,
-        conversation_history=session.transcript,
+    scores = grade_answers(
+        questions=session.transcript,
+        answers=req.answers,
     )
 
     session.scores = scores
@@ -229,12 +211,11 @@ def score_session(session_id: int, db: Session = Depends(get_db)):
     session.completed_at = datetime.now(timezone.utc)
     db.commit()
 
-    return ScoreResponse(
+    return SubmitMCQResponse(
         session_id=session.id,
         student_name=session.student_name,
-        domains=session.domains,
+        domains=session.domains or [],
         scores=scores,
-        turn_count=len(student_turns),
     )
 
 
@@ -255,7 +236,7 @@ def list_results(db: Session = Depends(get_db)):
             student_name=s.student_name,
             domains=s.domains,
             status=s.status,
-            total_score=s.scores.get("total") if s.scores else None,
+            total_score=s.scores.get("correct") if s.scores else None,
             created_at=s.created_at.isoformat() if s.created_at else "",
         )
         for s in sessions
@@ -264,19 +245,18 @@ def list_results(db: Session = Depends(get_db)):
 
 @router.get(
     "/results/{session_id}",
-    response_model=ScoreResponse,
-    summary="Get full result for one session",
+    response_model=SubmitMCQResponse,
+    summary="Get result for one session",
 )
 def get_result(session_id: int, db: Session = Depends(get_db)):
     session = _get_session(session_id, db)
     if session.status != "scored":
         raise HTTPException(status_code=400, detail="This session has not been scored yet.")
-    return ScoreResponse(
+    return SubmitMCQResponse(
         session_id=session.id,
         student_name=session.student_name,
-        domains=session.domains,
+        domains=session.domains or [],
         scores=session.scores,
-        turn_count=len([t for t in session.transcript if t["role"] == "student"]),
     )
 
 

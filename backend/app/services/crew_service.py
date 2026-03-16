@@ -10,14 +10,11 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 os.environ["CREWAI_DISABLE_TELEMETRY"] = "true"
 
 
+from .llm_factory import invoke_hybrid_llm, get_hybrid_crew_llm
+
 def _get_llm():
-    """Configure CrewAI to use Ollama via its OpenAI-compatible endpoint."""
-    from crewai import LLM
-    return LLM(
-        model=OLLAMA_MODEL,
-        base_url=f"{OLLAMA_BASE_URL}/v1",
-        api_key="ollama",  
-    )
+    """Configure CrewAI to use best available LLM via factory."""
+    return get_hybrid_crew_llm()
 
 
 
@@ -64,12 +61,7 @@ Start by introducing yourself briefly and asking the first domain-specific quest
             messages.append(AIMessage(content=turn["content"]))
     messages.append(HumanMessage(content=student_message))
 
-    llm = ChatOllama(
-        model=OLLAMA_MODEL,
-        base_url=OLLAMA_BASE_URL,
-        temperature=0.7,
-    )
-    response = llm.invoke(messages)
+    response = invoke_hybrid_llm(messages, temperature=0.7)
     return response.content
 
 
@@ -112,16 +104,10 @@ Return ONLY this JSON object (no other text, no markdown):
   "areas_to_improve": ["<area 1>", "<area 2>"]
 }}"""
 
-    llm = ChatOllama(
-        model=OLLAMA_MODEL,
-        base_url=OLLAMA_BASE_URL,
-        temperature=0.3,   
-    )
-
-    response = llm.invoke([
+    response = invoke_hybrid_llm([
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt),
-    ])
+    ], temperature=0.3)
     raw = response.content.strip()
 
     if "```json" in raw:
