@@ -41,6 +41,17 @@ class TopIssue(BaseModel):
     files: List[IssueFile] = []
     estimated_effort_hours: Optional[float] = 0.0
 
+    @model_validator(mode='before')
+    @classmethod
+    def handle_string_input(cls, data):
+        if isinstance(data, str):
+            return {
+                "title": "Concern",
+                "description": data,
+                "severity": "major"
+            }
+        return data
+
 class GithubIssueTemplate(BaseModel):
     title: str
     body: str
@@ -54,6 +65,12 @@ class SecurityWarning(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def map_fields(cls, data):
+        if isinstance(data, str):
+            return {
+                "type": "security_concern",
+                "evidence": data,
+                "remediation": "Review the flagged code for security implications."
+            }
         if isinstance(data, dict):
             # Map 'title' to 'type' if type is missing
             if 'title' in data and not data.get('type'):

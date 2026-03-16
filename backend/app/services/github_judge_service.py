@@ -155,15 +155,25 @@ The JSON must strictly follow this structure:
     {
       "severity": "major",
       "title": "Title",
-      "description": "Fix info",
-      "files": [{"path":"...","lines":"..."}],
+      "description": "Detailed explanation and fix info",
+      "files": [{"path":"filename.py","lines":"10-15"}],
       "estimated_effort_hours": 1.0
     }
   ],
-  "security_warnings": [],
+  "security_warnings": [
+    {
+      "type": "secret_leak",
+      "evidence": "file path or code snippet",
+      "remediation": "how to fix"
+    }
+  ],
   "reproducibility": {"can_run": true, "notes": ""},
   "mentor_notes": "Constructive feedback (50-100 words)."
 }
+
+### CRITICAL: STRUCTURAL INTEGRITY
+- "top_issues" and "security_warnings" MUST be lists of OBJECTS, not strings.
+- Even for sparse repositories, provide structured objects.
 
 ### SCORING GUIDANCE
 - 9-10: Production-grade; clean; tested; documented.
