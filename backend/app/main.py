@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from backend.app.routers import members, assessment, repo_judge, project_suggest, idea_validator
+from backend.app.routers import assessment, repo_judge, project_suggest, idea_validator
 from fastapi.middleware.cors import CORSMiddleware 
 
 from backend.app.database import engine
@@ -28,7 +28,7 @@ app.add_middleware(
     allow_methods=["*"],        
     allow_headers=["*"],        
 )
-app.include_router(members.router)
+
 app.include_router(assessment.router)
 app.include_router(repo_judge.router)
 app.include_router(project_suggest.router)

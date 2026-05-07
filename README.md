@@ -14,11 +14,10 @@
 
 | Feature | Description |
 |---|---|
-|  **Premium Home Page** | Landing page with highly creative glassmorphism flashcards, glowing orbs, and grid overlays |
-|  **Member Management** | Full CRUD for members with domain assignment. Dynamic themed UI that changes per skill domain |
-| **Idea Refiner** | Patent-level gap analysis, novelty scoring (0-100), and technical refinement options |
+| **Idea Refiner** | patent level gap analysis, novelty scoring (0-100), and technical refinement options |
 |  **Repo Judge** | Submit any GitHub repo URL and our AI performs deep codebase analysis and delivers a hackathon style verdict with mentor feedback |
-|  **Multi Domain** | Comprehensive support for Web/App Dev, ML, AI, Cloud, and Cybersecurity across all features |
+|  **Project Suggestion** | get project suggestion for hackathons and your resume on the basis of your intrest.  |
+|  **Worldwide comparison** | takes your quiz and on  the basis of it compares you with developers worldwide |
 
 
 ```mermaid
@@ -77,37 +76,32 @@ sequenceDiagram
     participant A as  AI Engine
     participant D as  Database
 
-    Note over U,D:  End-to-End Premium Assessment Flow 
+    Note over U,D:  End-to-End Worldwide Comparison (Quiz) Flow 
 
-    U->>+S: Start Assessment (Select Domains)
-    S->>+F: Initialize Session Request
-    F->>+A: Craft AI Intro Persona
-    A-->>-F: Personalized Opening
-    F->>+D: Log Active Session
-    D-->>-F: Session Stored
-    F-->>-S: Session ID + AI Greeting
-    S-->>-U: Show Dynamic Chat Interface
+    U->>+S: Select Domain for Quiz
+    S->>+F: POST /assess/generate-mcq
+    F->>+A: Request AI-generated MCQs
+    A-->>-F: 15 Questions with answers
+    F->>+D: Save Session (questions + metadata)
+    D-->>-F: Session ID
+    F-->>-S: 15 Questions (without answers)
+    S-->>-U: Display Interactive Quiz
 
     rect rgb(30, 27, 75)
-        Note right of U: Interactive Real-Time Loop
-        U->>+S: Send Response / Question
-        S->>+F: Process Message
-        F->>+A: Analyze Context & Generate
-        A-->>-F: Intelligent Agent Reply
-        F->>+D: Update Transcript
-        D-->>-F: Saved
-        F-->>-S: Agent Text
-        S-->>-U: Smooth UI Update
+        Note right of U: Real-Time Quiz Participation
+        U->>+S: Answer Questions
+        S->>+U: Local State Update
     end
 
-    U->>+S: Complete Evaluation
-    S->>+F: Request Final Scoring
-    F->>+A: Deep Multi-Domain Analysis
-    A-->>-F: Structured KPI Data (JSON)
-    F->>+D: Mark Scored & Save Results
+    U->>+S: Submit Final Answers
+    S->>+F: POST /assess/submit-mcq (Answers)
+    F->>+D: Fetch Session Questions
+    D-->>-F: Questions with Answers
+    F->>F: Grade Answers & Calculate Percentile
+    F->>+D: Update Session (Score & Status)
     D-->>-F: Confirmed
-    F-->>-S: Final Report
-    S-->>-U: 🎉 Display Astonishing Scorecard
+    F-->>-S: Final Score + Comparison Data
+    S-->>-U: 🎉 Show Detailed Scorecard & Percentile
 ```
 
 
@@ -120,11 +114,8 @@ group_maker/
 │   └── app/
 │       ├── main.py                
 │       ├── models.py               
-│       ├── schemas.py             
-│       ├── crud.py                
 │       ├── database.py            
 │       ├── routers/
-│       │   ├── members.py        
 │       │   ├── assessment.py      
 │       │   ├── repo_judge.py      
 │       │   ├── project_suggest.py 
@@ -137,7 +128,6 @@ group_maker/
 │   │   └── custom.css             
 │   └── pages/
 │       ├── home.py               
-│       ├── members.py             
 │       ├── assessment.py          
 │       ├── project_suggest.py    
 │       ├── repo_judge.py           
@@ -158,7 +148,6 @@ group_maker/
 | **Frontend** | Solara (Python native reactive UI) |
 | **AI / LLM** | **Hybrid Model Factory** (Gemini 2.0 Flash via OpenRouter  Ollama Local) |
 | **Agents** | CrewAI, LangChain |
-| **Deployment** | Render.com (Blueprint via `render.yaml`) |
 
 ---
 
@@ -180,7 +169,6 @@ pip install -r requirements.txt
 Create a `.env` file in the project root:
 
 ```env
-DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<db>
 OLLAMA_MODEL=qwen2.5:3b
 OLLAMA_BASE_URL=http://localhost:11434
 OPENROUTER_API_KEY=your_key_here
@@ -188,7 +176,6 @@ OPENROUTER_MODEL=google/gemini-2.0-flash-001
 API_URL=http://localhost:8000
 ```
 
-> **Tip:** Omit `DATABASE_URL` to auto-fallback to local SQLite (`group_maker.db`).
 
 ### 3. Pull the Ollama model
 
@@ -219,26 +206,16 @@ solara run solara_app/app.py
 
 ##  API Endpoints
 
-### Members
+### Worldwide Comparison
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/members/` | List all members (optional `?domain_id=`) |
-| `GET` | `/members/domains` | List all domains |
-| `GET` | `/members/by-domain` | Members grouped by domain |
-| `POST` | `/members/` | Create a member with domain assignments |
-| `POST` | `/members/bulk` | Bulk create members |
-| `PUT` | `/members/{id}` | Update a member |
-| `DELETE` | `/members/{id}` | Delete a member |
-
-### Assessment
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/assess/start` | Start a new AI assessment session |
-| `POST` | `/assess/chat` | Send a student message, get AI reply |
-| `POST` | `/assess/score/{id}` | End session & get CrewAI generated scores |
-| `GET` | `/assess/domains` | List available assessment domains |
+| `GET` | `/assess/domains` | List available quiz domains |
+| `POST` | `/assess/generate-mcq` | Generate 15 AI-powered MCQ questions |
+| `POST` | `/assess/submit-mcq` | Submit answers and get score + percentile comparison |
+| `GET` | `/assess/results` | List all past quiz results |
+| `GET` | `/assess/results/{id}` | Get detailed result for a specific session |
+| `DELETE` | `/assess/sessions/{id}` | Delete a specific quiz session |
 
 ### Repo Judge
 
@@ -257,26 +234,9 @@ solara run solara_app/app.py
 | `POST` | `/idea-validator/refine` | Get patent level refinement & novelty scoring |
 
 
-**Services deployed:**
-- **`group-maker-api`** → FastAPI backend
-- **`group-maker-ui`** → Solara frontend
-
-**Required env vars (set in Render dashboard):**
-
-| Variable | Service | Description |
-|---|---|---|
-| `DATABASE_URL` | API | PostgreSQL connection string |
-| `OPENAI_API_KEY` | API | For AI features (if using OpenAI) |
-| `VAPI_API_KEY` | API | Vapi calling agent key (optional) |
-| `API_URL` | UI | Points to deployed backend URL |
-
----
 
 ##  Database Models
 
 | Model | Description |
 |---|---|
-| **`Member`** | Name, category (senior/intermediate/junior), linked domains |
-| **`Domain`** | Skill domain (e.g. Web Dev, ML, Cybersecurity) |
-| **`MemberDomain`** | Many to many join table |
 | **`AssessmentSession`** | Student name, domains tested, chat transcript, scores, status |
