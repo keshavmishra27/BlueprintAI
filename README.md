@@ -17,7 +17,7 @@
 | **Idea Refiner** | patent level gap analysis, novelty scoring (0-100), and technical refinement options |
 |  **Repo Judge** | Submit any GitHub repo URL and our AI performs deep codebase analysis and delivers a hackathon style verdict with mentor feedback |
 |  **Project Suggestion** | get project suggestion for hackathons and your resume on the basis of your intrest.  |
-|  **Worldwide comparison** | takes your quiz and on  the basis of it compares you with developers worldwide |
+|  **Coder comparison** | takes your quiz and on  the basis of it compares you with developers worldwide |
 
 
 ```mermaid
@@ -211,7 +211,7 @@ solara run solara_app/app.py
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/assess/domains` | List available quiz domains |
-| `POST` | `/assess/generate-mcq` | Generate 15 AI-powered MCQ questions |
+| `POST` | `/assess/generate-mcq` | Generate 15 AI powered MCQ questions |
 | `POST` | `/assess/submit-mcq` | Submit answers and get score + percentile comparison |
 | `GET` | `/assess/results` | List all past quiz results |
 | `GET` | `/assess/results/{id}` | Get detailed result for a specific session |
