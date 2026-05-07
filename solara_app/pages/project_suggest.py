@@ -256,7 +256,7 @@ def FormScreen(selected_domains, error_msg, loading, loading_step, submit_fn):
                     style={"font-size": "13px", "color": "rgba(255,255,255,0.5)", "display": "block", "margin-bottom": "8px"},
                 )
                 with solara.v.Html(tag="div", style_="display:flex; flex-wrap:wrap; gap:8px;"):
-                    for suggestion in ["Artificial Intelligence", "FinTech", "Healthcare", "Web3 / Blockchain", "EdTech", "Sustainability", "Cybersecurity", "IoT"]:
+                    for suggestion in ["Artificial Intelligence", "FinTech", "Healthcare", "Web3 / Blockchain", "EdTech", "Sustainability", "Cybersecurity", "IoT", "DSA","ambulance","hospital"]:
                         
                         def toggle_domain(s=suggestion):
                             current = list(selected_domains.value)

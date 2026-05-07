@@ -7,6 +7,8 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/project-suggest", tags=["Project Suggest"])
 
+from ..services.llm_factory import check_llm_availability
+
 
 # ── Request / Response schemas ──────────────────────────────────────
 
@@ -30,29 +32,6 @@ class SuggestResult(BaseModel):
 
 # ── Helpers ─────────────────────────────────────────────────────────
 
-def _check_ollama():
-    """Verify Ollama is running, but skip if Gemini is configured."""
-    google_key = os.getenv("GOOGLE_API_KEY")
-    if google_key and google_key != "your_gemini_api_key_here":
-        return  # Hybrid approach will use Gemini
-
-    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    model = os.getenv("OLLAMA_MODEL", "llama3.2")
-    try:
-        r = http_requests.get(f"{base_url}/api/tags", timeout=3)
-        models = [m["name"] for m in r.json().get("models", [])]
-        if not any(m.startswith(model.split(":")[0]) for m in models):
-            raise HTTPException(
-                status_code=503,
-                detail=f"Model '{model}' not found in Ollama. Run: ollama pull {model}",
-            )
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Ollama is not running. Start it with: ollama serve  ({e})",
-        )
 
 
 
@@ -71,7 +50,7 @@ def health():
     description=(
         """You are an expert mentor and product designer tasked with generating resume-grade projects and hackathon winners for students.
 
-Input: a single theme/domain string (examples: "AI", "FinTech", "Healthcare", "ClimateTech", "EdTech").
+Input: a single theme/domain string (examples: "AI", "FinTech", "Healthcare", "DSA", "EdTech").
 
 Goal: produce **5 industry-grade resume project ideas** and **5 hackathon-winning project ideas** that are original, feasible, and solve concrete real-world problems or fix notable shortcomings in existing solutions. Each idea must include evidence of novelty (explicitly name 1–3 existing projects/products and describe their limitations), step-by-step MVP plan, success metrics, a realistic tech stack, data plan, demo script, estimated time & team size, and a short mentorship checklist.
 
@@ -159,7 +138,7 @@ def suggest_projects(req: SuggestRequest):
     if not theme_str:
         raise HTTPException(status_code=400, detail="no valid themes provided.")
 
-    _check_ollama()
+    check_llm_availability()
 
     from ..services.project_suggest_service import suggest_projects as run_suggest
 

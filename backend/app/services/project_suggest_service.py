@@ -97,7 +97,7 @@ def suggest_projects(theme: str) -> dict:
 }
 """
 
-    user_prompt = f"""Use this prompt with an LLM to generate high-quality project ideas. Replace {theme} with the actual theme(s) you want (e.g., "edge ML", "sustainable manufacturing", "fintech", "healthcare AI").
+    user_prompt = f"""Use this prompt with an LLM to generate high-quality project ideas. Replace {theme} with the actual theme(s) you want (e.g., "edge ML", "DSA", "fintech", "healthcare AI").
 
 ---
 You are a creative, practical project-idea generator and career/hackathon mentor. For the theme(s): {theme}, generate **5 resume-grade projects** and **5 hackathon-winning projects** that are realistic, high-impact, and tailored to either (a) appear on a FAANG-level resume or (b) win major international hackathons.

@@ -10,6 +10,8 @@ from typing import List, Optional
 router = APIRouter(prefix="/repo-judge", tags=["Repo Judge"])
 logger = logging.getLogger(__name__)
 
+from ..services.llm_factory import check_llm_availability
+
 class AnalyzeRequest(BaseModel):
 
     github_url: str
@@ -110,29 +112,6 @@ class JudgeResult(BaseModel):
     student_name: Optional[str] = None
 
 
-def _check_ollama():
-    """Verify Ollama is running, but skip if Gemini is configured."""
-    google_key = os.getenv("GOOGLE_API_KEY")
-    if google_key and google_key != "your_gemini_api_key_here":
-        return  # Hybrid approach will use Gemini
-
-    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    model    = os.getenv("OLLAMA_MODEL",    "llama3.2")
-    try:
-        r = http_requests.get(f"{base_url}/api/tags", timeout=3)
-        models = [m["name"] for m in r.json().get("models", [])]
-        if not any(m.startswith(model.split(":")[0]) for m in models):
-            raise HTTPException(
-                status_code=503,
-                detail=f"Model '{model}' not found in Ollama. Run: ollama pull {model}",
-            )
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Ollama is not running. Start it with: ollama serve  ({e})",
-        )
 
 
 
@@ -268,7 +247,7 @@ def analyze_repo(req: AnalyzeRequest):
     if not req.student_name.strip():
         raise HTTPException(status_code=400, detail="student_name cannot be empty.")
 
-    _check_ollama()
+    check_llm_availability()
 
     from ..services.github_judge_service import analyze_repo as run_analysis
 

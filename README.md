@@ -1,6 +1,6 @@
-# 🧑‍🤝‍🧑 Group Maker
+#  Groupify
 
-> An AI-powered platform to manage team members, run interactive skill assessments, and evaluate GitHub repositories — built with **FastAPI** + **Solara**.
+> Groupify is a platform which solves the  tedious task of doing the SWOT analysis of your project as well your idea.It also  let you analyse your coding style along with telling you how much ahead  you are as compared to another developers.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi&logoColor=white)
@@ -10,16 +10,16 @@
 
 ---
 
-## ✨ Features
+##  Features
 
 | Feature | Description |
 |---|---|
-| 🏠 **Premium Home Page** | Landing page with highly creative glassmorphism flashcards, glowing orbs, and grid overlays |
-| 👥 **Member Management** | Full CRUD for members with domain assignment. Dynamic themed UI that changes per skill domain |
-| 💡 **Idea Refiner** | Patent-level gap analysis, novelty scoring (0-100), and technical refinement options |
-| 🧑‍⚖️ **Repo Judge** | Submit any GitHub repo URL — AI performs deep codebase analysis and delivers a hackathon-style verdict with mentor feedback |
-| 🧑‍💻 **Multi-Domain** | Comprehensive support for Web/App Dev, ML, AI, Cloud, and Cybersecurity across all features |
-| 🌌 **Astonishing Dark Theme** | Seamless deep-dark aesthetic (#030812) with electric-b## 🏛️ Technical Architecture
+|  **Premium Home Page** | Landing page with highly creative glassmorphism flashcards, glowing orbs, and grid overlays |
+|  **Member Management** | Full CRUD for members with domain assignment. Dynamic themed UI that changes per skill domain |
+| **Idea Refiner** | Patent-level gap analysis, novelty scoring (0-100), and technical refinement options |
+|  **Repo Judge** | Submit any GitHub repo URL and our AI performs deep codebase analysis and delivers a hackathon style verdict with mentor feedback |
+|  **Multi Domain** | Comprehensive support for Web/App Dev, ML, AI, Cloud, and Cybersecurity across all features |
+
 
 ```mermaid
 graph TD
@@ -30,23 +30,23 @@ graph TD
     classDef db fill:#1e1b4b,stroke:#10b981,stroke-width:4px,color:#fff,rx:15,ry:15;
     classDef cloud fill:#1e1b4b,stroke:#f59e0b,stroke-width:4px,color:#fff,rx:15,ry:15;
 
-    subgraph UserZone ["👤 User Interface"]
-        UI["🎨 <b>Reactive Frontend</b><br/>(Solara / Python)"]:::frontend
+    subgraph UserZone [" User Interface"]
+        UI[" <b>Reactive Frontend</b><br/>(Solara / Python)"]:::frontend
     end
 
-    subgraph ServiceZone ["⚙️ Backend Logic"]
-        API["🚀 <b>FastAPI Layer</b><br/>(Endpoints)"]:::backend
-        Biz["🧠 <b>Core Services</b><br/>(Business Logic)"]:::backend
+    subgraph ServiceZone [" Backend Logic"]
+        API["<b>FastAPI Layer</b><br/>(Endpoints)"]:::backend
+        Biz[" <b>Core Services</b><br/>(Business Logic)"]:::backend
     end
 
-    subgraph IntelligenceZone ["🤖 AI Multi-Model"]
-        Ollama["🏠 <b>Local LLM</b><br/>(Ollama)"]:::ai
-        Gemini["☁️ <b>Cloud AI</b><br/>(Gemini 2.0)"]:::ai
+    subgraph IntelligenceZone [" AI Multi-Model"]
+        Ollama[" <b>Local LLM</b><br/>(Ollama)"]:::ai
+        Gemini[" <b>Cloud AI</b><br/>(Gemini 2.0)"]:::ai
     end
 
-    subgraph DataZone ["📊 Persistent Storage"]
-        PG["🐘 <b>PostgreSQL</b><br/>(Main DB)"]:::db
-        SQL["📂 <b>SQLite</b><br/>(Fallback)"]:::db
+    subgraph DataZone ["Persistent Storage"]
+        PG["<b>PostgreSQL</b><br/>(Main DB)"]:::db
+        SQL[" <b>SQLite</b><br/>(Fallback)"]:::db
     end
 
     %% Flow Connections with Neon Styling
@@ -64,20 +64,20 @@ graph TD
 
 ---
 
-## 🔄 Feature Workflow
+## Feature Workflow
 
 ```mermaid
 sequenceDiagram
     autonumber
     
     %% Premium Participants
-    participant U as 👤 User
-    participant S as 🎨 Solara UI
-    participant F as 🚀 FastAPI
-    participant A as 🤖 AI Engine
-    participant D as 🐘 Database
+    participant U as  User
+    participant S as  Solara UI
+    participant F as  FastAPI
+    participant A as  AI Engine
+    participant D as  Database
 
-    Note over U,D: ⚡ End-to-End Premium Assessment Flow ⚡
+    Note over U,D:  End-to-End Premium Assessment Flow 
 
     U->>+S: Start Assessment (Select Domains)
     S->>+F: Initialize Session Request
@@ -110,77 +110,59 @@ sequenceDiagram
     S-->>-U: 🎉 Display Astonishing Scorecard
 ```
 
----
 
-## 🎨 UI Showcase — Dynamic Domain Themes
 
-The Members page features **7 unique visual themes** that change automatically when you select a domain:
-
-| Domain | Theme | Accent |
-|---|---|---|
-| 🌐 All Domains | Dark Navy / Indigo | Cyan |
-| 💻 Web Development | Matrix Green | Emerald |
-| 📱 App Development | Purple Space | Violet + Orange |
-| 🤖 Machine Learning | Robotic Steel | Teal / Cyan |
-| 🧠 Agentic AI | Neon Futuristic | Hot Pink |
-| ☁️ Cloud Computing | Sky Blue | Blue |
-| 🔒 Cybersecurity | Hacker Terminal | Matrix Green |
-
-**Visual effects include:** an animated black/blue navigation system with glowing cyan indicators, animated gradient backgrounds, electric blue input text fields, floating particles, shooting stars, grid overlays, glassmorphism cards, neon button glow pulses, custom gradient scrollbar, and hover lift animations—all seamlessly integrated into a premium, astonishing dark aesthetic.
-
----
-
-## 🏗️ Project Structure
+##  Project Structure
 
 ```
 group_maker/
 ├── backend/
 │   └── app/
-│       ├── main.py                # FastAPI entry point + CORS config
-│       ├── models.py              # SQLAlchemy models (Member, Domain, AssessmentSession)
-│       ├── schemas.py             # Pydantic request/response schemas
-│       ├── crud.py                # Database helpers
-│       ├── database.py            # DB engine (PostgreSQL / SQLite fallback)
+│       ├── main.py                
+│       ├── models.py               
+│       ├── schemas.py             
+│       ├── crud.py                
+│       ├── database.py            
 │       ├── routers/
-│       │   ├── members.py         # CRUD endpoints for members & domains
-│       │   ├── assessment.py      # AI assessment session endpoints
-│       │   ├── repo_judge.py      # GitHub repo evaluation endpoint
-│       │   ├── project_suggest.py # Endpoint for AI project suggestions
-│       │   └── idea_validator.py  # AI Idea refinement and gap analysis
-│       └── services/              # Business logic & AI service wrappers
-│           └── llm_factory.py     # Hybrid LLM priority & fallback logic
+│       │   ├── members.py        
+│       │   ├── assessment.py      
+│       │   ├── repo_judge.py      
+│       │   ├── project_suggest.py 
+│       │   └── idea_validator.py 
+│       └── services/              
+│           └── llm_factory.py     
 ├── solara_app/
-│   ├── app.py                     # Solara app layout, routing & global CSS
+│   ├── app.py                     
 │   ├── assets/
-│   │   └── custom.css             # Global Vuetify overrides & glassmorphism
+│   │   └── custom.css             
 │   └── pages/
-│       ├── home.py                # Landing page with interactive flashcards
-│       ├── members.py             # Members UI — dynamic themed CRUD page
-│       ├── assessment.py          # AI Assessment — setup → chat → results
-│       ├── project_suggest.py     # Multi-domain project idea generation
-│       ├── repo_judge.py          # Repo Judge — form → AI analysis → verdict
-│       └── idea_refiner.py        # Patent-level idea validation & refinement
+│       ├── home.py               
+│       ├── members.py             
+│       ├── assessment.py          
+│       ├── project_suggest.py    
+│       ├── repo_judge.py           
+│       └── idea_refiner.py       
 ├── requirements.txt
-├── render.yaml                # Render.com deployment blueprint
-└── .env                       # Environment variables (not committed)
+├── render.yaml                
+└── .env                       
 ```
 
 ---
 
-## ⚙️ Tech Stack
+##  Tech Stack
 
 | Layer | Technology |
 |---|---|
 | **Backend** | FastAPI, SQLAlchemy, Pydantic |
-| **Database** | PostgreSQL (Supabase) — auto-fallback to SQLite |
-| **Frontend** | Solara (Python-native reactive UI) |
-| **AI / LLM** | **Hybrid Model Factory** (Gemini 2.0 Flash via OpenRouter ↔️ Ollama Local) |
+| **Database** | PostgreSQL (Supabase)  auto fallback to SQLite |
+| **Frontend** | Solara (Python native reactive UI) |
+| **AI / LLM** | **Hybrid Model Factory** (Gemini 2.0 Flash via OpenRouter  Ollama Local) |
 | **Agents** | CrewAI, LangChain |
 | **Deployment** | Render.com (Blueprint via `render.yaml`) |
 
 ---
 
-## 🚀 Getting Started (Local)
+##  Getting Started (Local)
 
 ### 1. Clone & install
 
@@ -188,8 +170,9 @@ group_maker/
 git clone https://github.com/keshavmishra27/group_maker.git
 cd group_maker
 python -m venv venv
-venv\Scripts\activate        # Windows
-pip install -r requirements.txt
+venv\Scripts\activate #for windows
+source venv/bin/activate #for linux/mac
+pip install -r requirements.txt 
 ```
 
 ### 2. Configure environment
@@ -234,7 +217,7 @@ solara run solara_app/app.py
 
 ---
 
-## 📡 API Endpoints
+##  API Endpoints
 
 ### Members
 
@@ -254,7 +237,7 @@ solara run solara_app/app.py
 |---|---|---|
 | `POST` | `/assess/start` | Start a new AI assessment session |
 | `POST` | `/assess/chat` | Send a student message, get AI reply |
-| `POST` | `/assess/score/{id}` | End session & get CrewAI-generated scores |
+| `POST` | `/assess/score/{id}` | End session & get CrewAI generated scores |
 | `GET` | `/assess/domains` | List available assessment domains |
 
 ### Repo Judge
@@ -268,10 +251,10 @@ solara run solara_app/app.py
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/project-suggest/suggest` | Get AI-generated project ideas for multiple domains |
+| `POST` | `/project-suggest/suggest` | Get AI generated project ideas for multiple domains |
 | `GET` | `/project-suggest/health` | Project suggestion health check |
 | `POST` | `/idea-validator/check` | Check idea similarity vs current market |
-| `POST` | `/idea-validator/refine` | Get patent-level refinement & novelty scoring |
+| `POST` | `/idea-validator/refine` | Get patent level refinement & novelty scoring |
 
 
 **Services deployed:**
@@ -289,15 +272,11 @@ solara run solara_app/app.py
 
 ---
 
-## 🗄️ Database Models
+##  Database Models
 
 | Model | Description |
 |---|---|
 | **`Member`** | Name, category (senior/intermediate/junior), linked domains |
 | **`Domain`** | Skill domain (e.g. Web Dev, ML, Cybersecurity) |
-| **`MemberDomain`** | Many-to-many join table |
+| **`MemberDomain`** | Many to many join table |
 | **`AssessmentSession`** | Student name, domains tested, chat transcript, scores, status |
-
-<p align="center">
-  Built with ❤️ by <a href="https://github.com/keshavmishra27">Keshav Mishra</a>
-</p>

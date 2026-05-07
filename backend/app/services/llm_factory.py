@@ -13,6 +13,48 @@ load_dotenv(override=True)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def check_llm_availability():
+    """
+    Centralized check for LLM availability.
+    Returns early if a valid cloud API key is found.
+    Otherwise, verifies if Ollama is running and the specified model is available.
+    """
+    # 1. Check for Cloud Providers first
+    google_key = os.getenv("GOOGLE_API_KEY")
+    if google_key and google_key != "your_gemini_api_key_here":
+        logger.info("Cloud LLM (Google Gemini) detected via GOOGLE_API_KEY.")
+        return
+
+    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    if openrouter_key and openrouter_key != "your_openrouter_api_key_here":
+        logger.info("Cloud LLM (OpenRouter) detected via OPENROUTER_API_KEY.")
+        return
+
+    # 2. Fall back to Ollama check
+    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    model = os.getenv("OLLAMA_MODEL", "llama3.2")
+    
+    try:
+        import requests
+        r = requests.get(f"{base_url}/api/tags", timeout=3)
+        if r.status_code != 200:
+             raise Exception(f"Ollama returned status {r.status_code}")
+             
+        models = [m["name"] for m in r.json().get("models", [])]
+        if not any(m.startswith(model.split(":")[0]) for m in models):
+            from fastapi import HTTPException
+            raise HTTPException(
+                status_code=503,
+                detail=f"Model '{model}' not found in Ollama. Run: ollama pull {model}",
+            )
+    except Exception as e:
+        from fastapi import HTTPException
+        logger.error(f"Ollama check failed: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail=f"Ollama is not running and no cloud API keys were found. Start Ollama with: ollama serve ({e})",
+        )
+
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-001")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
