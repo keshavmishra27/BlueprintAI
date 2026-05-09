@@ -1,8 +1,4 @@
 from pathlib import Path
-"""
-home.py — Landing page for Group Maker
-Horizontal layout flashcards matching the project suggestion theme.
-"""
 import solara
 from solara_app.components import CountdownTerminal
 
@@ -24,7 +20,7 @@ HOME_CSS = """
 }
 
 .text-gradient {
-    background: linear-gradient(to right bottom, #ffffff 20%, #94a3b8);
+    background: linear-gradient(to right bottom, #1e293b 20%, #64748b);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -35,13 +31,12 @@ HOME_CSS = """
     filter: drop-shadow(0 0 15px rgba(0,255,204,0.4));
 }
 
-/* 🎇 Premium Background Animations */
 .bg-grid {
     position: fixed; inset: 0; z-index: -2;
     background-size: 40px 40px;
     background-image: 
-        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
     mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
     -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
 }
@@ -54,13 +49,12 @@ HOME_CSS = """
 .glowing-orb {
     position: fixed; border-radius: 50%; filter: blur(80px);
     z-index: -1; animation: float 10s ease-in-out infinite;
-    opacity: 0.6;
+    opacity: 0.3;
 }
-.orb-1 { width: 300px; height: 300px; background: rgba(0, 255, 204, 0.4); top: 10%; left: 15%; animation-delay: 0s; }
-.orb-2 { width: 400px; height: 400px; background: rgba(0, 136, 255, 0.3); bottom: 10%; right: 10%; animation-delay: -5s; }
-.orb-3 { width: 250px; height: 250px; background: rgba(139, 92, 246, 0.3); top: 40%; left: 50%; transform: translateX(-50%); animation: float 15s ease-in-out infinite reverse; }
+.orb-1 { width: 300px; height: 300px; background: rgba(0, 255, 204, 0.2); top: 10%; left: 15%; animation-delay: 0s; }
+.orb-2 { width: 400px; height: 400px; background: rgba(0, 136, 255, 0.15); bottom: 10%; right: 10%; animation-delay: -5s; }
+.orb-3 { width: 250px; height: 250px; background: rgba(139, 92, 246, 0.15); top: 40%; left: 50%; transform: translateX(-50%); animation: float 15s ease-in-out infinite reverse; }
 
-/* 🚀 Hero Elements */
 .pill-badge {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 6px 16px; border-radius: 30px;
@@ -84,8 +78,8 @@ HOME_CSS = """
     background: linear-gradient(135deg, #33ffdb 0%, #33a1ff 100%);
 }
 .cta-secondary {
-    background: rgba(255,255,255,0.05); color: #fff;
-    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.05); color: #1e293b;
+    border: 1px solid rgba(0,0,0,0.1);
     backdrop-filter: blur(10px);
 }
 .cta-secondary:hover {
@@ -97,7 +91,6 @@ HOME_CSS = """
 
 @solara.component
 def FeatureSection(index: int, title: str, description: str, highlight_text: str, accent: str, route: str):
-    """A clean feature section without card styling."""
     with solara.v.Html(
         tag="div",
         class_="feature-section fade-in-up",
@@ -110,32 +103,30 @@ def FeatureSection(index: int, title: str, description: str, highlight_text: str
             "background: transparent;"
         ),
     ):
-        # Feature Name as Heading
+       
         solara.v.Html(
             tag="h2",
             style_=f"font-size:32px; font-weight:800; color:{accent}; margin-bottom:16px; letter-spacing:-0.5px;",
             children=[title]
         )
         
-        # Description
         solara.v.Html(
             tag="p",
-            style_="font-size:18px; color:rgba(255,255,255,0.8); line-height:1.6; margin-bottom:24px; max-width:800px;",
+            style_="font-size:18px; color:#475569; line-height:1.6; margin-bottom:24px; max-width:800px;",
             children=[description]
         )
         
-        # Why it is unique
         with solara.v.Html(
             tag="div",
         ):
             solara.v.Html(
                 tag="h3",
-                style_="font-size:20px; font-weight:700; color:#ffffff; margin-bottom:12px;",
+                style_="font-size:20px; font-weight:700; color:#1e293b; margin-bottom:12px;",
                 children=["Why it's unique:"]
             )
             solara.v.Html(
                 tag="p",
-                style_="font-size:16px; color:rgba(255,255,255,0.7); line-height:1.6; max-width:800px;",
+                style_="font-size:16px; color:#64748b; line-height:1.6; max-width:800px;",
                 children=[highlight_text]
             )
 
@@ -147,13 +138,13 @@ def Page():
 
     solara.HTML(tag="style", unsafe_innerHTML=f"""
         .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-sheet {{
-            background-color: #030812 !important;
-            background: #030812 !important;
+            background-color: #A4C3B2 !important;
+            background: #A4C3B2 !important;
         }}
-        .theme--light.v-sheet {{ background-color: #030812 !important; }}
+        .theme--light.v-sheet {{ background-color: #A4C3B2 !important; }}
         body {{
-            background-color: #030812 !important;
-            background: #030812 !important;
+            background-color: #A4C3B2 !important;
+            background: #A4C3B2 !important;
             margin: 0;
             min-height: 100vh;
         }}
@@ -164,16 +155,15 @@ def Page():
         tag="div",
         style_=(
             "min-height:100vh;"
-            "background: #030812;"
+            "background: #A4C3B2;"
             "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"
-            "color:#ffffff;"
+            "color:#1e293b;"
             "padding-bottom:100px;"
             "box-sizing:border-box;"
             "position:relative;"
             "overflow-x:hidden;"
         ),
     ):
-        # Background Elements
         solara.v.Html(tag="div", class_="bg-grid")
         solara.v.Html(tag="div", class_="glowing-orb orb-1")
         solara.v.Html(tag="div", class_="glowing-orb orb-2")
@@ -181,38 +171,33 @@ def Page():
 
         with solara.v.Html(tag="div", style_="max-width:1000px; margin:0 auto; padding:80px 24px 40px; position:relative; z-index:1;"):
             
-            # 🚀 Hero section
             with solara.v.Html(tag="div", style_="text-align:center; margin-bottom:80px;", class_="fade-in-up", attributes={"style": "animation-delay: 0.1s;"}):
-                # Pill Badge
+                
                 with solara.v.Html(tag="div", class_="pill-badge"):
-                    solara.v.Html(tag="span", children=["✨"])
                     solara.v.Html(tag="span", children=["The Ultimate AI Engineering Platform"])
                 
-                # Massive Heading
                 with solara.v.Html(tag="h1", style_="font-size: clamp(48px, 8vw, 84px); font-weight: 800; line-height: 1.1; margin-bottom: 24px; letter-spacing:-1px;"):
                     solara.v.Html(tag="span", class_="text-gradient", children=["Build Better Teams. "])
                     solara.v.Html(tag="br")
                     solara.v.Html(tag="span", class_="text-gradient-teal", children=["Ship Faster Code."])
                 
-                # Description
                 solara.Text(
                     "Manage top developer profiles, auto-grade technical skills with our AI Assessment, "
                     "and review complex codebases instantly just like a real hackathon judge.",
                     style={
-                        "color": "rgba(255,255,255,0.7)", "font-size": "clamp(18px, 2vw, 22px)",
+                        "color": "#475569", "font-size": "clamp(18px, 2vw, 22px)",
                         "line-height": "1.6", "margin-bottom": "40px", "display": "block",
                         "max-width": "800px", "margin-left": "auto", "margin-right": "auto",
                         "font-weight": "400"
                     },
                 )
                 
-                # CTA Buttons
                 with solara.v.Html(tag="div", style_="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;"):
                     solara.v.Html(
                         tag="button",
                         class_="cta-button cta-primary",
                         attributes={"onclick": "window.location.href='/assessment'"},
-                        children=["Start Your Assessment 🚀"]
+                        children=["Start Your Assessment "]
                     )
                     solara.v.Html(
                         tag="button",
@@ -221,12 +206,11 @@ def Page():
                         children=["Explore Member Hub"]
                     )
 
-            # 🧭 Features Section Transition
             with solara.v.Html(
                 tag="div",
                 style_=(
                     "display:flex; align-items:center; gap:16px; margin-bottom:32px;"
-                    "padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.1);"
+                    "padding-bottom:16px; border-bottom:1px solid rgba(0,0,0,0.05);"
                 ),
                 class_="fade-in-up",
                 attributes={"style": "animation-delay: 0.3s;"}
@@ -240,17 +224,8 @@ def Page():
                         "display:flex; align-items:center; justify-content:center;"
                         "font-size:28px; box-shadow: 0 0 20px rgba(0, 255, 204, 0.2) inset;"
                     ),
-                    # children=["⚡"]
+                   
                 )
-                # with solara.v.Html(tag="div"):
-                #     solara.Text(
-                #         "Powerful Features",
-                #         style={"font-size": "28px", "font-weight": "800", "color": "#ffffff", "display": "block", "letter-spacing":"-0.5px"},
-                #     )
-                #     solara.Text(
-                #         "Everything you need to run high-efficiency hackathons and engineering sprints.",
-                #         style={"font-size": "15px", "color": "rgba(255,255,255,0.6)", "display": "block"},
-                #     )
 
             with solara.v.Html(tag="div", style_="display:flex; flex-direction:column; gap:8px; margin-top:40px;"):
                 FeatureSection(
@@ -258,7 +233,7 @@ def Page():
                     title="AI MCQ Assessment",
                     description="Test developer skills accurately. Our LLM generates 15 questions across 3 difficulty levels based on the selected domain.",
                     highlight_text="Instantly computes a global developer percentile based on a weighted scoring curve, replacing subjective interviews with objective metrics.",
-                    accent="#0088ff", # Blue
+                    accent="#0088ff", 
                     route="/assessment"
                 )
 
@@ -267,7 +242,7 @@ def Page():
                     title="Member Management",
                     description="Organise perfect hackathon teams. Create profiles and assign domains to sync your entire team's skills in one place.",
                     highlight_text="Acts as a central nervous system for your hackathon, cleanly separating frontend, backend, and AI specialists.",
-                    accent="#00ffcc", # Teal
+                    accent="#00ffcc",
                     route="/members"
                 )
 
@@ -276,7 +251,7 @@ def Page():
                     title="Repo Judge",
                     description="Share your GitHub repository and get an international hackathon judge's critical feedback. Understand exactly where your code needs improvement.",
                     highlight_text="Simulates a real hackathon judge's perspective, pointing out exact architectural flaws and code quality issues before you submit.",
-                    accent="#0088ff", # Blue
+                    accent="#0088ff", 
                     route="/repo-judge"
                 )
                 
@@ -285,6 +260,6 @@ def Page():
                     title="Project Ideas Generator",
                     description="Stuck on what to build? Enter a theme and get the top 5 industry-standard resume projects and 5 winning hackathon ideas instantly.",
                     highlight_text="Uses LangChain and Ollama to guarantee highly relevant, structured, and technically impressive ideas tailored precisely to your input.",
-                    accent="#00ffcc", # Teal
+                    accent="#00ffcc",
                     route="/project-suggest"
                 )

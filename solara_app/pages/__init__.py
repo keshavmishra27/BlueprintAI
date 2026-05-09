@@ -1,11 +1,7 @@
-"""
-file needed for modules
-"""
 import solara
 from pathlib import Path
 
 NAV_CSS = """
-/* Eye-catchy animated Nav bar */
 #app header.v-app-bar,
 .v-application header.v-app-bar,
 .v-application .primary.v-app-bar {
@@ -60,19 +56,16 @@ NAV_CSS = """
     font-weight: bold !important;
 }
 
-/* Base custom styles if needed globally */
 .custom-nav-bar {
 }
 
-/* Fix white background gaps across the app */
 html, body, #app, .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-sheet {
-    background-color: #030812 !important;
-    background: #030812 !important;
+    background-color: #A4C3B2 !important;
+    background: #A4C3B2 !important;
 }
 
-/* Specifically target Vuetify's light theme sheets which often cause the gaps */
 .theme--light.v-sheet {
-    background-color: #030812 !important;
+    background-color: #A4C3B2 !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
 }
 """
@@ -80,7 +73,6 @@ html, body, #app, .v-application, .v-application--wrap, .v-main, .v-main__wrap, 
 @solara.component
 def Layout(children=[]):
     solara.HTML(tag="style", unsafe_innerHTML=NAV_CSS)
-    # Also load the existing custom.css if it exists
     assets_dir = Path(__file__).parent.parent / "assets"
     if (assets_dir / "custom.css").exists():
         solara.Style(assets_dir / "custom.css")

@@ -10,12 +10,11 @@ from solara_app.pages import home, assessment, repo_judge, project_suggest, idea
 from pathlib import Path
 
 NAV_CSS = """
-/* Eye-catchy animated Nav bar */
 #app header.v-app-bar,
 .v-application header.v-app-bar,
 .v-application .primary.v-app-bar {
     background: linear-gradient(90deg, #FF0076, #590FB7, #256EFF) !important;
-    background-color: transparent !important;
+    background-color: #F6FFF8 !important;
     background-size: 200% 200% !important;
     animation: gradientBG 6s ease infinite !important;
     box-shadow: 0 4px 20px rgba(89, 15, 183, 0.4) !important;
@@ -55,7 +54,7 @@ NAV_CSS = """
 }
 
 #app header.v-app-bar .v-tabs-slider {
-    background-color: #00FFD1 !important; 
+    background-color: #F6FFF8 !important; 
     height: 4px !important;
     box-shadow: 0 0 15px #00FFD1, 0 0 5px #00FFD1 !important;
 }
@@ -102,5 +101,3 @@ routes = [
         label="💡 Idea Refiner",
     ),
 ]
-
-# Trigger reload
