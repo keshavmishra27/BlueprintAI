@@ -3,13 +3,10 @@ import os
 import json
 from pydantic import BaseModel, ValidationError
 from typing import List
-
-# Mock the Pydantic models from repo_judge.py
 class Improvement(BaseModel):
     file: str
     issue: str
     fix: str
-
 class JudgeResult(BaseModel):
     student_name: str
     repository: str
@@ -24,8 +21,6 @@ class JudgeResult(BaseModel):
     improvements: List[Improvement] = []
     standout_files: List[str] = []
     problem_areas: List[str] = []
-
-# This is what github_judge_service.py now returns on error
 error_result = {
     "overall_score": 0,
     "code_quality_score": 0,
@@ -47,7 +42,6 @@ error_result = {
     "repository": "https://github.com/test/repo",
     "student_name": "Test Student",
 }
-
 print("Attempting to validate new error_result with JudgeResult model...")
 try:
     JudgeResult(**error_result)

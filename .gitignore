@@ -34,3 +34,5 @@ htmlcov/
 # you don't want to commit migrations
 # ===============================
 # ale
+scratch/
+tmp/

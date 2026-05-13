@@ -1,30 +1,12 @@
-"""
-project_suggest_service.py
---------------------------
-Given a theme / domain, asks the local Ollama LLM to return
-structured JSON with:
-  • 5 industry-grade resume project ideas
-  • 5 hackathon-winning project ideas
-"""
-
 import os
 import json
 from dotenv import load_dotenv
-
 load_dotenv()
-
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-
-
 def suggest_projects(theme: str) -> dict:
-    """
-    Call Ollama to generate project suggestions for the given theme.
-    Returns a dict with keys `resume_projects` and `hackathon_projects`.
-    """
     from .llm_factory import invoke_hybrid_llm
     from langchain_core.messages import SystemMessage, HumanMessage
-
     system_prompt = """{
 "resume_projects": [
 {
@@ -96,14 +78,10 @@ def suggest_projects(theme: str) -> dict:
 ]
 }
 """
-
     user_prompt = f"""Use this prompt with an LLM to generate high-quality project ideas. Replace {theme} with the actual theme(s) you want (e.g., "edge ML", "DSA", "fintech", "healthcare AI").
-
 ---
 You are a creative, practical project-idea generator and career/hackathon mentor. For the theme(s): {theme}, generate **5 resume-grade projects** and **5 hackathon-winning projects** that are realistic, high-impact, and tailored to either (a) appear on a FAANG-level resume or (b) win major international hackathons.
-
 Return ONLY this exact JSON structure (no extra text, no commentary):
-
 {{
   "resume_projects": [
     {{
@@ -124,7 +102,6 @@ Return ONLY this exact JSON structure (no extra text, no commentary):
     // 5 objects total
   ]
 }}
-
 Strict content rules (must follow these exactly):
 1. Output must be valid JSON UTF-8, parseable, and match the schema above. No extra keys, no comments.
 2. Each list must contain exactly 5 objects.
@@ -143,29 +120,22 @@ Strict content rules (must follow these exactly):
    - Do not use filler options like "TBD" or "many options".
 6. Tone & language: concise, professional, unambiguous. Use active verbs and measurable outcomes.
 7. Example replacements: if {theme} is multi-topic (e.g., "edge ML + privacy") spread the 10 projects across those subthemes.
-
 Do not output anything other than the JSON object above."""
-
     response = invoke_hybrid_llm([
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt),
     ], temperature=0.7)
     raw = response.content.strip()
-
-    # Strip markdown fences if the model wraps them
     if "```json" in raw:
         raw = raw.split("```json")[1].split("```")[0].strip()
     elif "```" in raw:
         raw = raw.split("```")[1].split("```")[0].strip()
-
     try:
         data = json.loads(raw)
         if "resume_projects" in data and "hackathon_projects" in data:
             return data
     except Exception:
         pass
-
-    # Fallback when parsing fails
     return {
         "resume_projects": [
             {

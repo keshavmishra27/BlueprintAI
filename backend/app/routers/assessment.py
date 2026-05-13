@@ -1,35 +1,14 @@
-"""
-assessment.py  (router)
------------------------
-FastAPI router for the MCQ-based assessment.
-Prefix: /assess   Tag: Assessment
-
-Endpoints
----------
-GET  /assess/domains       — list available domains
-POST /assess/generate-mcq  — generate 15 MCQs for a domain
-POST /assess/submit-mcq    — grade user answers and return percentile
-GET  /assess/results        — list all past sessions
-GET  /assess/results/{id}   — get one session result
-DELETE /assess/sessions/{id}
-"""
-
 import os
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
-
 import requests as http_requests
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
 from backend.app.database import get_db
 from backend.app.models import AssessmentSession
-
 router = APIRouter(prefix="/assess", tags=["Assessment"])
-
 from ..services.llm_factory import check_llm_availability
-
 AVAILABLE_DOMAINS = [
     "Web Development",
     "Machine Learning",
@@ -38,42 +17,27 @@ AVAILABLE_DOMAINS = [
     "App Development",
     "Agentic AI",
 ]
-
-
-# ── Request / Response schemas ──────────────────────────────────────
-
 class GenerateMCQRequest(BaseModel):
     student_name: str
     domains: List[str]
-
-
 class QuestionOut(BaseModel):
-    """Question sent to the frontend — NO correct_answer."""
     index: int
     question: str
     options: List[str]
     difficulty: str
-
-
 class GenerateMCQResponse(BaseModel):
     session_id: int
     student_name: str
     domains: List[str]
     questions: List[QuestionOut]
-
-
 class SubmitMCQRequest(BaseModel):
     session_id: int
-    answers: Dict[str, str]   # {"0": "A", "1": "C", ...}
-
-
+    answers: Dict[str, str]
 class SubmitMCQResponse(BaseModel):
     session_id: int
     student_name: str
     domains: List[str]
     scores: dict
-
-
 class SessionSummary(BaseModel):
     id: int
     student_name: str
@@ -81,22 +45,11 @@ class SessionSummary(BaseModel):
     status: str
     total_score: Optional[int]
     created_at: str
-
-
-# ── Helpers ─────────────────────────────────────────────────────────
-
-
-
-
 def _get_session(session_id: int, db: Session) -> AssessmentSession:
     session = db.query(AssessmentSession).filter(AssessmentSession.id == session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail=f"Session {session_id} not found.")
     return session
-
-
-# ── Endpoints ───────────────────────────────────────────────────────
-
 @router.get(
     "/domains",
     response_model=List[str],
@@ -104,8 +57,6 @@ def _get_session(session_id: int, db: Session) -> AssessmentSession:
 )
 def list_domains():
     return AVAILABLE_DOMAINS
-
-
 @router.post(
     "/generate-mcq",
     response_model=GenerateMCQResponse,
@@ -121,29 +72,22 @@ def generate_mcq(req: GenerateMCQRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="student_name cannot be empty.")
     if not req.domains:
         raise HTTPException(status_code=400, detail="domains cannot be empty.")
-
     check_llm_availability()
-
     from backend.app.services.mcq_service import generate_mcq as run_generate
-
     try:
         domain_str = ", ".join(req.domains)
         questions = run_generate(domain=domain_str)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"MCQ generation failed: {e}")
-
-    # Save to DB — transcript stores the full questions (with answers)
     session = AssessmentSession(
         student_name=req.student_name.strip(),
         domains=req.domains,
-        transcript=questions,          # full questions with correct_answer
+        transcript=questions,
         status="active",
     )
     db.add(session)
     db.commit()
     db.refresh(session)
-
-    # Return questions WITHOUT correct_answer
     questions_out = [
         QuestionOut(
             index=i,
@@ -153,15 +97,12 @@ def generate_mcq(req: GenerateMCQRequest, db: Session = Depends(get_db)):
         )
         for i, q in enumerate(questions)
     ]
-
     return GenerateMCQResponse(
         session_id=session.id,
         student_name=session.student_name,
         domains=req.domains,
         questions=questions_out,
     )
-
-
 @router.post(
     "/submit-mcq",
     response_model=SubmitMCQResponse,
@@ -169,7 +110,6 @@ def generate_mcq(req: GenerateMCQRequest, db: Session = Depends(get_db)):
 )
 def submit_mcq(req: SubmitMCQRequest, db: Session = Depends(get_db)):
     session = _get_session(req.session_id, db)
-
     if session.status == "scored":
         return SubmitMCQResponse(
             session_id=session.id,
@@ -177,27 +117,21 @@ def submit_mcq(req: SubmitMCQRequest, db: Session = Depends(get_db)):
             domains=session.domains or [],
             scores=session.scores,
         )
-
     from backend.app.services.mcq_service import grade_answers
-
     scores = grade_answers(
         questions=session.transcript,
         answers=req.answers,
     )
-
     session.scores = scores
     session.status = "scored"
     session.completed_at = datetime.now(timezone.utc)
     db.commit()
-
     return SubmitMCQResponse(
         session_id=session.id,
         student_name=session.student_name,
         domains=session.domains or [],
         scores=scores,
     )
-
-
 @router.get(
     "/results",
     response_model=List[SessionSummary],
@@ -220,8 +154,6 @@ def list_results(db: Session = Depends(get_db)):
         )
         for s in sessions
     ]
-
-
 @router.get(
     "/results/{session_id}",
     response_model=SubmitMCQResponse,
@@ -237,8 +169,6 @@ def get_result(session_id: int, db: Session = Depends(get_db)):
         domains=session.domains or [],
         scores=session.scores,
     )
-
-
 @router.delete(
     "/sessions/{session_id}",
     summary="Delete an assessment session",

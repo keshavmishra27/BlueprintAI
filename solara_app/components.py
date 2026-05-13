@@ -1,29 +1,22 @@
 import solara
 import threading
 import time
-
 @solara.component
 def CountdownTerminal():
     count = solara.use_reactive(3)
     visible = solara.use_reactive(True)
-
     def start_countdown():
         if not visible.value:
             return
-            
         def run():
             for i in range(3, 0, -1):
                 count.set(i)
                 time.sleep(1)
             visible.set(False)
-            
         threading.Thread(target=run, daemon=True).start()
-
     solara.use_effect(start_countdown, [])
-
     if not visible.value:
         return solara.v.Html(tag="span")
-
     solara.HTML(tag="style", unsafe_innerHTML="""
         .countdown-container {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -62,7 +55,6 @@ def CountdownTerminal():
             100% { transform: scale(1); opacity: 1; }
         }
     """)
-
     with solara.v.Html(tag="div", class_="countdown-container"):
         with solara.v.Html(tag="div", class_="countdown-window"):
             with solara.v.Html(tag="div", class_="countdown-header"):
@@ -70,7 +62,6 @@ def CountdownTerminal():
                 solara.v.Html(tag="div", class_="term-dot yellow")
                 solara.v.Html(tag="div", class_="term-dot green")
                 solara.Text("system@group_maker: ~", style={"color": "#a0aec0", "font-size": "14px", "margin-left": "10px"})
-            
             with solara.v.Html(tag="div", class_="countdown-body"):
                 solara.Text("Initializing Secure Environment...", style={"display": "block", "font-weight": "bold", "margin-bottom": "8px"})
                 solara.Text("Starting in", style={"display": "block"})

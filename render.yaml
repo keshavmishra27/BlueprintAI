@@ -1,14 +1,5 @@
-# render.yaml
-# -----------
-# Defines both services on Render:
-#   1. FastAPI backend  → https://group-maker-api.onrender.com
-#   2. Solara frontend  → https://group-maker-ui.onrender.com
-#
-# Deploy with: connect this repo to Render → "New Blueprint"
 
 services:
-
-  # ── FastAPI Backend ──────────────────────────────────────────────────────
   - type: web
     name: group-maker-api
     runtime: python
@@ -19,21 +10,15 @@ services:
     startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
-        sync: false          # set manually in Render dashboard
-
-      # Vapi calling agent
+        sync: false          
       - key: VAPI_API_KEY
         sync: false
       - key: VAPI_PHONE_NUMBER_ID
         sync: false
       - key: WEBHOOK_URL
-        # After first deploy, set this to:
-        # https://group-maker-api.onrender.com/call/webhook
         sync: false
       - key: OPENAI_API_KEY
         sync: false
-
-  # ── Solara Frontend ──────────────────────────────────────────────────────
   - type: web
     name: group-maker-ui
     runtime: python
@@ -43,6 +28,5 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: solara run solara_app/app.py --host 0.0.0.0 --port $PORT
     envVars:
-      # Point Solara at the live FastAPI backend
       - key: API_URL
         value: https://group-maker-api.onrender.com

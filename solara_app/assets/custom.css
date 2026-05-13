@@ -3,18 +3,15 @@ html, body, #app, .v-application, .v-application--wrap, .v-main, .v-main__wrap, 
     background: #A4C3B2 !important;
     color: #1e293b !important;
 }
-
 .theme--light.v-sheet {
     background-color: #A4C3B2 !important;
     border-color: rgba(0, 0, 0, 0.1) !important;
 }
-
 @keyframes gradientBG {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
-
 .v-card {
     background: rgba(255, 255, 255, 0.75) !important;
     backdrop-filter: blur(12px) !important;
@@ -24,12 +21,10 @@ html, body, #app, .v-application, .v-application--wrap, .v-main, .v-main__wrap, 
     border: 1px solid rgba(255, 255, 255, 0.8) !important;
     transition: transform 0.3s ease, box-shadow 0.3s ease !important;
 }
-
 .v-card:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.25) !important;
 }
-
 .v-application .v-app-bar.v-toolbar.primary,
 .v-application header.v-app-bar {
     background: linear-gradient(90deg, #0A0F1C, #0F2046, #0A0F1C, #1A3673) !important;
@@ -39,7 +34,6 @@ html, body, #app, .v-application, .v-application--wrap, .v-main, .v-main__wrap, 
     box-shadow: 0 4px 20px rgba(15, 32, 70, 0.6) !important;
     border-bottom: 2px solid rgba(0, 240, 255, 0.15) !important;
 }
-
 .v-application .v-app-bar .v-toolbar__title {
     font-size: 1.5rem !important;
     font-weight: 900 !important;
@@ -51,7 +45,6 @@ html, body, #app, .v-application, .v-application--wrap, .v-main, .v-main__wrap, 
     filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5)) !important;
     letter-spacing: 1.5px !important;
 }
-
 .v-application .v-app-bar .v-tab {
     color: rgba(255, 255, 255, 0.6) !important;
     font-weight: 700 !important;
@@ -59,25 +52,21 @@ html, body, #app, .v-application, .v-application--wrap, .v-main, .v-main__wrap, 
     transition: all 0.3s ease !important;
     text-transform: uppercase !important;
 }
-
 .v-application .v-app-bar .v-tab--active {
     color: #ffffff !important;
     text-shadow: 0 0 15px rgba(0, 240, 255, 0.8) !important;
     background: rgba(0, 240, 255, 0.05) !important;
 }
-
 .v-application .v-app-bar .v-tab:hover {
     color: #ffffff !important;
     background: rgba(0, 240, 255, 0.1) !important;
     text-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
 }
-
 .v-application .v-app-bar .v-tabs-slider {
     background: linear-gradient(90deg, transparent, #00f0ff, transparent) !important; 
     height: 3px !important;
     box-shadow: 0 0 15px #00f0ff, 0 0 5px #00f0ff !important;
 }
-
 .v-application .v-app-bar .v-btn {
     color: white !important;
     font-weight: bold !important;

@@ -4,11 +4,8 @@ import requests
 import os
 import threading
 from solara_app.components import CountdownTerminal
-
 API = os.getenv("API_URL", "http://localhost:8000")
-
 SESSION_STATES = {}
-
 def get_session_state():
     sid = solara.get_session_id()
     if sid not in SESSION_STATES:
@@ -22,26 +19,20 @@ def get_session_state():
             "initialized": solara.reactive(False),
         }
     return SESSION_STATES[sid]
-
-
 def _parse_error(r) -> str:
     try:
         return r.json().get("detail", r.text) or r.text
     except Exception:
         return r.text or f"HTTP {r.status_code}"
-
-
 def _run_suggest(sid: str):
     state = SESSION_STATES.get(sid)
     if not state: return
-    
     themes = state["selected_domains"].value
     loading_step = state["loading_step"]
     result = state["result"]
     screen = state["screen"]
     error_msg = state["error_msg"]
     loading = state["loading"]
-
     try:
         loading_step.set("🧠 AI is brainstorming project ideas…")
         r = requests.post(
@@ -59,28 +50,21 @@ def _run_suggest(sid: str):
     finally:
         loading.set(False)
         loading_step.set("")
-
-
 def submit():
     sid = solara.get_session_id()
     state = SESSION_STATES.get(sid)
     if not state: return
-
     error_msg = state["error_msg"]
     domains = state["selected_domains"].value
     loading = state["loading"]
     loading_step = state["loading_step"]
-
     error_msg.set("")
     if not domains:
         error_msg.set("Please select at least one theme or domain.")
         return
-    
     loading.set(True)
     loading_step.set("🔌 Connecting to backend…")
     threading.Thread(target=_run_suggest, args=(sid,), daemon=True).start()
-
-
 def reset():
     sid = solara.get_session_id()
     state = SESSION_STATES.get(sid)
@@ -90,15 +74,12 @@ def reset():
     state["result"].set(None)
     state["loading"].set(False)
     state["screen"].set("form")
-
-
 CARD_STYLE = (
     "background:rgba(164, 195, 178, 0.8); backdrop-filter:blur(20px);"
     "border:1px solid rgba(0, 0, 0, 0.05); border-radius:16px;"
     "padding:24px; box-shadow:0 8px 32px rgba(0, 0, 0, 0.1);"
     "transition:transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;"
 )
-
 CARD_HOVER_CSS = """
 .project-card:hover {
     transform: translateY(-4px) !important;
@@ -106,7 +87,6 @@ CARD_HOVER_CSS = """
     border-color: rgba(0, 255, 204, 0.5) !important;
 }
 .project-card { transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; }
-
 .tech-chip {
     display: inline-block;
     background: rgba(0, 136, 255, 0.1);
@@ -119,20 +99,16 @@ CARD_HOVER_CSS = """
     font-weight: 600;
     letter-spacing: 0.3px;
 }
-
 @keyframes fadeInUp {
     from { opacity:0; transform:translateY(20px); }
     to   { opacity:1; transform:translateY(0); }
 }
 .fade-in-up { animation: fadeInUp 0.5s ease forwards; }
-
 @keyframes pulse-glow {
     0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 204, 0.3); }
     50%      { box-shadow: 0 0 30px rgba(0, 255, 204, 0.6); }
 }
 """
-
-
 @solara.component
 def TechChips(techs: list):
     with solara.v.Html(tag="div", style_="display:flex; flex-wrap:wrap; gap:4px; margin-top:10px;"):
@@ -142,8 +118,6 @@ def TechChips(techs: list):
                 class_="tech-chip",
                 children=[tech],
             )
-
-
 @solara.component
 def ProjectCard(index: int, title: str, description: str, tech_stack: list, highlight_label: str, highlight_text: str, accent: str):
     with solara.v.Html(
@@ -170,15 +144,12 @@ def ProjectCard(index: int, title: str, description: str, tech_stack: list, high
                 title,
                 style={"font-size": "18px", "font-weight": "700", "color": "#1e293b", "line-height": "1.3"},
             )
-
         solara.Text(
             description,
             style={"font-size": "14px", "color": "#475569", "line-height": "1.6", "display": "block", "margin-bottom": "8px"},
         )
-
         if tech_stack:
             TechChips(tech_stack)
-
         if highlight_text:
             with solara.v.Html(
                 tag="div",
@@ -195,8 +166,6 @@ def ProjectCard(index: int, title: str, description: str, tech_stack: list, high
                     highlight_text,
                     style={"font-size": "13px", "color": "#334155", "line-height": "1.5", "display": "block"},
                 )
-
-
 @solara.component
 def FormScreen(selected_domains, error_msg, loading, loading_step, submit_fn):
     with solara.v.Html(tag="div", style_="max-width:680px; margin:40px auto; padding:0 24px;"):
@@ -216,7 +185,6 @@ def FormScreen(selected_domains, error_msg, loading, loading_step, submit_fn):
                 "line-height": "1.6", "margin-bottom": "32px", "display": "block",
             },
         )
-
         with solara.v.Html(tag="div", style_=CARD_STYLE):
             solara.Text(
                 "Choose Your Theme",
@@ -225,7 +193,6 @@ def FormScreen(selected_domains, error_msg, loading, loading_step, submit_fn):
                     "margin-bottom": "20px", "display": "block",
                 },
             )
-
             with solara.v.Html(tag="div", style_="margin-bottom:20px;"):
                 solara.Text(
                     "Select one or more themes:",
@@ -233,15 +200,12 @@ def FormScreen(selected_domains, error_msg, loading, loading_step, submit_fn):
                 )
                 with solara.v.Html(tag="div", style_="display:flex; flex-wrap:wrap; gap:8px;"):
                     for suggestion in ["Artificial Intelligence", "FinTech", "Healthcare", "Web3 / Blockchain", "EdTech", "Sustainability", "Cybersecurity", "IoT", "DSA","ambulance","hospital"]:
-                        
                         def toggle_domain(s=suggestion):
                             current = list(selected_domains.value)
                             if s in current: current.remove(s)
                             else: current.append(s)
                             selected_domains.set(current)
-                            
                         is_selected = suggestion in selected_domains.value
-                        
                         solara.Button(
                             suggestion,
                             on_click=toggle_domain,
@@ -255,17 +219,15 @@ def FormScreen(selected_domains, error_msg, loading, loading_step, submit_fn):
                                 "padding:2px 14px; min-width:auto;"
                             ),
                         )
-
             if selected_domains.value:
                 with solara.v.Html(tag="div", style_="margin-bottom: 20px; padding: 10px; background: rgba(0, 136, 255, 0.05); border-radius: 8px; border: 1px solid rgba(0, 136, 255, 0.2);"):
                     solara.Text("Selected Domains: ", style={"font-weight": "600", "color": "#0369a1", "margin-right": "8px"})
                     for d in selected_domains.value:
                         solara.v.Html(
-                            tag="span", 
-                            children=[d], 
+                            tag="span",
+                            children=[d],
                             style_="background: rgba(0, 255, 204, 0.1); color: #0891b2; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-right: 6px; display: inline-block; margin-bottom: 4px; border: 1px solid rgba(0, 255, 204, 0.2);"
                         )
-
             if error_msg.value:
                 with solara.v.Html(
                     tag="div",
@@ -276,7 +238,6 @@ def FormScreen(selected_domains, error_msg, loading, loading_step, submit_fn):
                     ),
                 ):
                     solara.Text(f"Error: {error_msg.value}")
-
             solara.Button(
                 "✨ Generate Project Ideas" if not loading.value else "⏳ Thinking… (may take 1–2 min)",
                 color="primary",
@@ -289,7 +250,6 @@ def FormScreen(selected_domains, error_msg, loading, loading_step, submit_fn):
                     "border:none; color:#fff;"
                 ),
             )
-
         if loading.value:
             with solara.v.Html(
                 tag="div",
@@ -307,8 +267,6 @@ def FormScreen(selected_domains, error_msg, loading, loading_step, submit_fn):
                     "This usually takes 1–2 minutes — please keep this tab open!",
                     style={"color": "#475569", "font-size": "13px", "margin-top": "6px", "display": "block"},
                 )
-
-
 @solara.component
 def ResultsScreen(result, reset_fn):
     r = result.value
@@ -318,11 +276,9 @@ def ResultsScreen(result, reset_fn):
             solara.Text(f"Expected a dictionary but received: {type(r).__name__}", style={"color": "rgba(255,255,255,0.7)", "margin-bottom": "24px", "display": "block"})
             solara.Button("Back to Form", on_click=reset_fn, color="primary")
         return
-
     theme = r.get("theme", r.get("themes", ["Unknown"])[0] if isinstance(r.get("themes"), list) else "Unknown")
     resume_projects = r.get("resume_projects", [])
     hackathon_projects = r.get("hackathon_projects", [])
-
     with solara.v.Html(tag="div", style_="max-width:900px; margin:40px auto; padding:0 24px;"):
         solara.Text(
             f"🚀 Project Ideas for: {theme}",
@@ -335,35 +291,27 @@ def ResultsScreen(result, reset_fn):
             f"{len(resume_projects)} resume projects  •  {len(hackathon_projects)} hackathon ideas",
             style={"color": "#0891b2", "font-size": "14px", "display": "block", "margin-bottom": "32px"},
         )
-
         with solara.v.Html(tag="div", style_="margin-bottom:40px;"):
             with solara.v.Html(tag="div", style_="display:flex; align-items:center; gap:12px; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid rgba(0,136,255,0.1);"):
                 solara.v.Html(tag="div", style_="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg, #0088ff, #00bbff); display:flex; align-items:center; justify-content:center; font-size:20px;", children=["🏢"])
                 with solara.v.Html(tag="div"):
                     solara.Text("Industry Resume Projects", style={"font-size": "22px", "font-weight": "700", "color": "#1e293b", "display": "block"})
                     solara.Text("Projects that impress recruiters and demonstrate real engineering skills", style={"font-size": "13px", "color": "#64748b", "display": "block"})
-
             for i, proj in enumerate(resume_projects):
                 ProjectCard(index=i, title=proj.get("title", "Untitled"), description=proj.get("description", ""), tech_stack=proj.get("tech_stack", []), highlight_label="💼 Why Great for Resume", highlight_text=proj.get("why_great_for_resume", ""), accent="#0088ff")
-
         with solara.v.Html(tag="div", style_="margin-bottom:40px;"):
             with solara.v.Html(tag="div", style_="display:flex; align-items:center; gap:12px; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid rgba(0,255,204,0.1);"):
                 solara.v.Html(tag="div", style_="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg, #00ffcc, #00ff66); display:flex; align-items:center; justify-content:center; font-size:20px;", children=["🏆"])
                 with solara.v.Html(tag="div"):
                     solara.Text("Hackathon Winning Projects", style={"font-size": "22px", "font-weight": "700", "color": "#1e293b", "display": "block"})
                     solara.Text("Creative ideas with wow-factor that judges love to pick as winners", style={"font-size": "13px", "color": "#64748b", "display": "block"})
-
             for i, proj in enumerate(hackathon_projects):
                 ProjectCard(index=i, title=proj.get("title", "Untitled"), description=proj.get("description", ""), tech_stack=proj.get("tech_stack", []), highlight_label="🏆 Why It Wins", highlight_text=proj.get("why_it_wins", ""), accent="#00ffcc")
-
         with solara.v.Html(tag="div", style_="margin-top:16px;"):
             solara.Button("🚀 Try Another Theme", color="primary", on_click=reset_fn, style="width:100%; padding:14px; font-weight:700; letter-spacing:0.5px; border-radius:8px; background:linear-gradient(90deg, #0088ff, #00ffcc); border:none; color:#fff;")
-
-
 @solara.component
 def Page():
     solara.Title("Project Ideas")
-    
     state = get_session_state()
     selected_domains = state["selected_domains"]
     error_msg        = state["error_msg"]
@@ -372,19 +320,16 @@ def Page():
     result           = state["result"]
     screen           = state["screen"]
     initialized      = state["initialized"]
-
     def on_init():
         if not initialized.value:
-            def set_init(): 
+            def set_init():
                 import time
                 time.sleep(3.5)
                 initialized.set(True)
             threading.Thread(target=set_init, daemon=True).start()
     solara.use_effect(on_init, [])
-
     if not initialized.value:
         CountdownTerminal()
-
     solara.HTML(tag="style", unsafe_innerHTML=f"""
         .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-sheet {{ background-color: #A4C3B2 !important; background: #A4C3B2 !important; }}
         .theme--light.v-sheet {{ background-color: #A4C3B2 !important; }}
@@ -393,7 +338,6 @@ def Page():
         .v-text-field .v-label {{ color: rgba(0,0,0,0.6) !important; }}
         {CARD_HOVER_CSS}
     """)
-
     with solara.v.Html(tag="div", style_="min-height:100vh; background: #A4C3B2; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#1e293b; padding-bottom:60px; box-sizing:border-box;"):
         if screen.value == "form":
             FormScreen(selected_domains, error_msg, loading, loading_step, submit)
