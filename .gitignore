@@ -28,11 +28,6 @@ Thumbs.db
 htmlcov/
 .pytest_cache/
 
-# ===============================
-# Migrations (optional)
-# Uncomment if using Alembic and
-# you don't want to commit migrations
-# ===============================
-# ale
+
 scratch/
 tmp/
