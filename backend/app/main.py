@@ -1,29 +1,39 @@
+import logging
+
 from fastapi import FastAPI
-from backend.app.routers import assessment, repo_judge, project_suggest, idea_validator
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.database import engine
-from backend.app import models
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+
+from backend.app.config import get_settings
+from backend.app.database import ensure_schema
+from backend.app.middleware.auth import APIKeyMiddleware
+from backend.app.middleware.rate_limit import limiter
+from backend.app.routers import assessment, repo_judge, project_suggest, idea_validator, swot
+
+logging.basicConfig(level=logging.INFO)
+
 try:
-    models.Base.metadata.create_all(bind=engine)
+    ensure_schema()
 except Exception as e:
-    import logging
-    logging.warning(f"Could not connect to database at startup: {e}")
-    logging.warning("The app will start, but DB-dependent endpoints will fail until the database is reachable.")
-app = FastAPI()
-origins = [
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
-    "http://localhost:3000",
-    "*"
-]
+    logging.warning("Schema setup issue at startup: %s", e)
+
+settings = get_settings()
+app = FastAPI(title="Groupify API", version="2.0.0")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["*"],
 )
+app.add_middleware(APIKeyMiddleware)
+
 app.include_router(assessment.router)
 app.include_router(repo_judge.router)
 app.include_router(project_suggest.router)
 app.include_router(idea_validator.router)
+app.include_router(swot.router)

@@ -1,10 +1,8 @@
 from pathlib import Path
 import solara
-import requests
-import os
 import threading
+from solara_app.api_client import api_post
 from solara_app.components import CountdownTerminal
-API = os.getenv("API_URL", "http://localhost:8000")
 SESSION_STATES = {}
 def get_session_state():
     sid = solara.get_session_id()
@@ -36,13 +34,13 @@ def _run_analysis(sid: str):
     screen = state["screen"]
     error_msg = state["error_msg"]
     try:
-        loading_step.set(" Fast-Scraping repository archive...")
-        r = requests.post(
-            f"{API}/repo-judge/analyze",
-            json={"github_url": url, "student_name": name},
-            timeout=None,
+        loading_step.set("Downloading repo + running static analysis (ruff/bandit)…")
+        r = api_post(
+            "/repo-judge/analyze",
+            {"github_url": url, "student_name": name},
+            timeout=300,
         )
-        loading_step.set(" AI is deep-reading the code (takes 1-3 mins)...")
+        loading_step.set("CrewAI agents reviewing code (1–3 min)…")
         if r.status_code == 200:
             result.set(r.json())
             screen.set("results")

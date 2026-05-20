@@ -1,10 +1,8 @@
 from pathlib import Path
 import solara
-import requests
-import os
 import threading
+from solara_app.api_client import api_post
 from solara_app.components import CountdownTerminal
-API = os.getenv("API_URL", "http://localhost:8000")
 SESSION_STATES = {}
 def get_session_state():
     sid = solara.get_session_id()
@@ -35,11 +33,7 @@ def _run_suggest(sid: str):
     loading = state["loading"]
     try:
         loading_step.set("🧠 AI is brainstorming project ideas…")
-        r = requests.post(
-            f"{API}/project-suggest/suggest",
-            json={"themes": themes},
-            timeout=None,
-        )
+        r = api_post("/project-suggest/suggest", {"themes": themes}, timeout=180)
         if r.status_code == 200:
             result.set(r.json())
             screen.set("results")

@@ -2,13 +2,15 @@ import os
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 import requests as http_requests
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from backend.app.database import get_db
+from backend.app.middleware.rate_limit import limiter
 from backend.app.models import AssessmentSession
-router = APIRouter(prefix="/assess", tags=["Assessment"])
 from ..services.llm_factory import check_llm_availability
+
+router = APIRouter(prefix="/assess", tags=["Assessment"])
 AVAILABLE_DOMAINS = [
     "Web Development",
     "Machine Learning",
@@ -67,7 +69,8 @@ def list_domains():
         "correct answers — those are stored server-side for grading."
     ),
 )
-def generate_mcq(req: GenerateMCQRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def generate_mcq(request: Request, req: GenerateMCQRequest, db: Session = Depends(get_db)):
     if not req.student_name.strip():
         raise HTTPException(status_code=400, detail="student_name cannot be empty.")
     if not req.domains:
@@ -82,7 +85,7 @@ def generate_mcq(req: GenerateMCQRequest, db: Session = Depends(get_db)):
     session = AssessmentSession(
         student_name=req.student_name.strip(),
         domains=req.domains,
-        transcript=questions,
+        questions_json=questions,
         status="active",
     )
     db.add(session)
@@ -118,9 +121,13 @@ def submit_mcq(req: SubmitMCQRequest, db: Session = Depends(get_db)):
             scores=session.scores,
         )
     from backend.app.services.mcq_service import grade_answers
+    questions = session.questions_json or []
     scores = grade_answers(
-        questions=session.transcript,
+        questions=questions,
         answers=req.answers,
+        db=db,
+        domains=session.domains or [],
+        session_id=session.id,
     )
     session.scores = scores
     session.status = "scored"

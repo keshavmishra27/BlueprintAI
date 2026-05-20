@@ -1,10 +1,8 @@
 import solara
 import threading
-import requests
-import os
 from pathlib import Path
+from solara_app.api_client import api_post
 from solara_app.components import CountdownTerminal
-API = os.getenv("API_URL", "http://localhost:8000")
 SESSION_STATES = {}
 def get_session_state():
     sid = solara.get_session_id()
@@ -24,7 +22,7 @@ def _call_check_idea(sid: str):
     if not state: return
     idea = state["user_idea"].value
     try:
-        r = requests.post(f"{API}/idea-validator/check", json={"idea": idea}, timeout=60)
+        r = api_post("/idea-validator/check", {"idea": idea}, timeout=120)
         if r.status_code == 200:
             data = r.json()
             state["similar_projects"].set(data.get("similar_projects", []))
@@ -40,7 +38,7 @@ def _call_refine_idea(sid: str):
     if not state: return
     idea = state["user_idea"].value
     try:
-        r = requests.post(f"{API}/idea-validator/refine", json={"idea": idea}, timeout=90)
+        r = api_post("/idea-validator/refine", {"idea": idea}, timeout=180)
         if r.status_code == 200:
             data = r.json()
             state["refinement"].set(data)

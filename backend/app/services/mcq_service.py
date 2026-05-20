@@ -1,66 +1,29 @@
-import os
 import json
 import math
-from dotenv import load_dotenv
-load_dotenv()
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+
+from backend.app.services.crews.mcq_crew import run_mcq_crew
+
+
 def generate_mcq(domain: str) -> list[dict]:
-    from .llm_factory import invoke_hybrid_llm
+    questions = run_mcq_crew(domain)
+    if questions:
+        return questions
+    return generate_mcq_legacy(domain)
+
+
+def generate_mcq_legacy(domain: str) -> list[dict]:
+    from backend.app.services.llm_factory import invoke_hybrid_llm
     from langchain_core.messages import SystemMessage, HumanMessage
-    system_prompt = """You are an expert technical interviewer and subject matter expert.
-    Your task is to generate 15 high-quality multiple-choice questions (MCQs) for a specific technical domain.
-    The questions must be divided exactly as follows:
-    - 5 Easy questions: Testing basic concepts and syntax.
-    - 5 Medium questions: Testing logic, integration, and common libraries.
-    - 5 Hard questions: Testing architecture, edge cases, and performance optimization.
-    Each question must have:
-    - A clear question statement.
-    - 4 distinct options labeled A, B, C, D.
-    - The correct answer letter (A, B, C, or D).
-    - The assigned difficulty.
-    Return ONLY a valid JSON list of objects."""
-    user_prompt = f"""You are a subject-matter MCQ generator. Given a domain string {domain} (replace this placeholder with the actual domain, e.g., "networking", "data science", "manufacturing"), produce 15 technical, scenario-based multiple-choice questions that evaluate a student’s ability to apply domain knowledge to realistic, productivity-focused situations (decision making, prioritization, troubleshooting, optimization, time/resource tradeoffs), not just recall facts.
-Output format (required) — Return ONLY this JSON array (no commentary, no extra text):
-[
-{{
-"question": "short scenario + stem",
-"options": ["A) ...", "B) ...", "C) ...", "D) ..."],
-"correct_answer": "A",
-"difficulty": "easy"
-}},
-...
-]
-(15 objects total)
-Question-writing rules
-Each item must be self-contained. Begin with a concise scenario (≤35 words), then a clear question stem asking for the best action, likely outcome, or best explanation in that scenario. Total length ≲2 sentences.
-Focus on application/productivity: prefer "what will you do next?", "which choice maximizes throughput/minimizes downtime?", "which action best mitigates risk under these constraints?", "which sequence optimizes output given X?", or small calculations that measure effectiveness.
-Use real-world constraints (time, cost, resources, deadlines, system capacity). If numeric reasoning is required, include all numbers and units needed to solve it.
-Include a mix of cognitive skills: prioritization, troubleshooting, root-cause identification, small calculations, tool-selection, trade-off analysis, and best-next-step decisions.
-Avoid pure memorization questions (no definitions-only recall).
-Difficulty distribution: 6 easy, 6 medium, 3 hard.
-easy: basic applied decisions or simple one-step calculations.
-medium: multi-step reasoning or comparing tradeoffs.
-hard: require combining concepts, multi-stage planning, or nontrivial calculations.
-Options: always four options labeled exactly as "A) ...", "B) ...", "C) ...", "D) ...".
-Keep each option concise (≤20 words).
-Make distractors plausible and domain-relevant.
-Do not use "All of the above" or "None of the above."
-Ensure there is one clearly best answer (no ties or ambiguous best choices).
-correct_answer must be a single uppercase letter "A", "B", "C", or "D".
-difficulty must be one of "easy", "medium", or "hard".
-Cover a variety of subtopics across {domain} so the 15 questions are diverse.
-Language: concise, precise, professional; avoid slang and vague phrasing.
-Ensure JSON is valid UTF-8 and parsable.
-Example scenario templates (do not output examples in final result; these are guidelines for question style):
-“You have 4 tasks and 2 engineers; task A is blocking others and has highest ROI. Which do you assign first?”
-“A server shows CPU at 95% while response time doubles; which immediate action best restores throughput?”
-“Given these throughput numbers and a bottleneck stage, which optimization yields largest end-to-end gain?”
-Now generate 15 questions for the domain {domain} following the rules above and return EXACTLY the JSON array described."""
-    response = invoke_hybrid_llm([
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=user_prompt),
-    ], temperature=0.7)
+
+    system_prompt = """You are an expert technical interviewer.
+Generate exactly 15 MCQs: 5 easy, 5 medium, 5 hard.
+Each question: question, options (A-D), correct_answer (A|B|C|D), difficulty.
+Return ONLY a valid JSON array."""
+    user_prompt = f"Generate 15 scenario-based MCQs for domain: {domain}"
+    response = invoke_hybrid_llm(
+        [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)],
+        temperature=0.7,
+    )
     raw = response.content.strip()
     if "```json" in raw:
         raw = raw.split("```json")[1].split("```")[0].strip()
@@ -85,7 +48,9 @@ Now generate 15 questions for the domain {domain} following the rules above and 
             "difficulty": "easy",
         }
     ]
-def grade_answers(questions: list[dict], answers: dict[str, str]) -> dict:
+
+
+def grade_answers(questions: list[dict], answers: dict[str, str], db=None, domains=None, session_id=None) -> dict:
     easy_c = easy_t = med_c = med_t = hard_c = hard_t = 0
     details = []
     for i, q in enumerate(questions):
@@ -118,7 +83,14 @@ def grade_answers(questions: list[dict], answers: dict[str, str]) -> dict:
     correct = easy_c + med_c + hard_c
     weighted = easy_c * 1 + med_c * 2 + hard_c * 3
     max_weighted = easy_t * 1 + med_t * 2 + hard_t * 3
-    percentile = compute_percentile(weighted, max_weighted)
+
+    percentile_info = {"percentile": 50, "percentile_source": "default", "cohort_size": 0, "message": ""}
+    if db is not None:
+        from backend.app.services.percentile_service import compute_real_percentile
+        percentile_info = compute_real_percentile(
+            db, domains or [], weighted, max_weighted, exclude_session_id=session_id
+        )
+
     return {
         "total": total,
         "correct": correct,
@@ -131,14 +103,9 @@ def grade_answers(questions: list[dict], answers: dict[str, str]) -> dict:
         "hard_total": hard_t,
         "weighted_score": weighted,
         "max_weighted": max_weighted,
-        "percentile": percentile,
+        "percentile": percentile_info["percentile"],
+        "percentile_source": percentile_info["percentile_source"],
+        "cohort_size": percentile_info["cohort_size"],
+        "percentile_message": percentile_info["message"],
         "details": details,
     }
-def compute_percentile(weighted: int, max_weighted: int) -> int:
-    if max_weighted == 0:
-        return 50
-    ratio = weighted / max_weighted
-    k = 10
-    raw = 1.0 / (1.0 + math.exp(-k * (ratio - 0.5)))
-    percentile = int(2 + raw * 97)
-    return min(99, max(1, percentile))

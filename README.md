@@ -9,10 +9,11 @@ Groupify is a platform which solves the  tedious task of doing the SWOT analysis
 ##  Features
 | Feature | Description |
 |---|---|
-| **Idea Refiner** | patent level gap analysis, novelty scoring (0-100), and technical refinement options |
-|  **Repo Judge** | Submit any GitHub repo URL and our AI performs deep codebase analysis and delivers a hackathon style verdict with mentor feedback |
-|  **Project Suggestion** | get project suggestion for hackathons and your resume on the basis of your intrest.  |
-|  **Coder comparison** | takes your quiz and on  the basis of it compares you with developers worldwide |
+| **SWOT Analysis** | CrewAI strategist + reviewer with live web search for projects and ideas |
+| **Idea Refiner** | CrewAI market researcher (DuckDuckGo + GitHub search) + gap analyst; results persisted |
+| **Repo Judge** | GitHub zip ingest, ruff/bandit static checks, CrewAI code/security/mentor agents |
+| **Project Suggestion** | CrewAI resume + hackathon mentors with web search for competitor context |
+| **Coder comparison** | CrewAI MCQ author + reviewer; percentile vs real scored sessions in the same domain |
 ```mermaid
 graph TD
     classDef frontend fill:#1e1b4b,stroke:#0ea5e9,stroke-width:4px,color:#fff,rx:15,ry:15;
@@ -90,9 +91,17 @@ group_maker/
 │       │   ├── assessment.py      
 │       │   ├── repo_judge.py      
 │       │   ├── project_suggest.py 
-│       │   └── idea_validator.py 
-│       └── services/              
-│           └── llm_factory.py     
+│       │   ├── idea_validator.py 
+│       │   └── swot.py
+│       └── services/
+│           ├── crews/          # CrewAI Agent + Task + Crew per feature
+│           ├── llm_factory.py
+│           ├── search_service.py
+│           └── static_analysis_service.py
+│       └── middleware/         # API key auth, rate limits
+├── alembic/                    # DB migrations
+├── tests/                      # pytest suite
+├── .github/workflows/ci.yml
 ├── solara_app/
 │   ├── app.py                     
 │   ├── assets/
@@ -115,7 +124,9 @@ group_maker/
 | **Database** | PostgreSQL (Supabase)  auto fallback to SQLite |
 | **Frontend** | Solara (Python native reactive UI) |
 | **AI / LLM** | **Hybrid Model Factory** (Gemini 2.0 Flash via OpenRouter  Ollama Local) |
-| **Agents** | CrewAI, LangChain |
+| **Agents** | CrewAI (multi-agent crews per feature), LangChain LLM fallback |
+| **Security** | Optional `API_KEY`, slowapi rate limits, tightened CORS |
+| **CI** | GitHub Actions + pytest |
 ---
 ##  Getting Started (Local)
 ### 1. Clone & install
@@ -134,8 +145,14 @@ OLLAMA_MODEL=qwen2.5:3b
 OLLAMA_BASE_URL=http://localhost:11434
 OPENROUTER_API_KEY=your_key_here
 OPENROUTER_MODEL=google/gemini-2.0-flash-001
+GOOGLE_API_KEY=optional_gemini_key
+API_KEY=dev-local-key-change-me
 API_URL=http://localhost:8000
+GITHUB_TOKEN=optional_for_higher_rate_limits
+SEARCH_ENABLED=true
 ```
+
+Copy `.env.example` for the full list. Set the same `API_KEY` in the Solara UI process so requests include `X-API-Key`.
 ### 3. Pull the Ollama model
 Make sure [Ollama](https://ollama.com/) is installed and running:
 ```bash
@@ -173,7 +190,9 @@ solara run solara_app/app.py
 | `POST` | `/project-suggest/suggest` | Get AI generated project ideas for multiple domains |
 | `GET` | `/project-suggest/health` | Project suggestion health check |
 | `POST` | `/idea-validator/check` | Check idea similarity vs current market |
-| `POST` | `/idea-validator/refine` | Get patent level refinement & novelty scoring |
+| `POST` | `/idea-validator/refine` | CrewAI refinement & novelty scoring (market research, not legal advice) |
+| `POST` | `/swot/analyze` | SWOT analysis for a project or idea (CrewAI + web search) |
+| `GET` | `/swot/results` | List saved SWOT analyses |
 ##  Database Models
 | Model | Description |
 |---|---|

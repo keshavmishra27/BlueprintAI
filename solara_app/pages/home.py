@@ -207,8 +207,8 @@ def Page():
                 FeatureSection(
                     index=1,
                     title="AI MCQ Assessment",
-                    description="Test developer skills accurately. Our LLM generates 15 questions across 3 difficulty levels based on the selected domain.",
-                    highlight_text="Instantly computes a global developer percentile based on a weighted scoring curve, replacing subjective interviews with objective metrics.",
+                    description="CrewAI writes and reviews 15 MCQs (5 easy / 5 medium / 5 hard) for your domain.",
+                    highlight_text="Percentile is computed against real prior quiz scores in the same domain—not a fake formula.",
                     accent="#0088ff",
                     route="/assessment"
                 )
@@ -223,16 +223,24 @@ def Page():
                 FeatureSection(
                     index=3,
                     title="Repo Judge",
-                    description="Share your GitHub repository and get an international hackathon judge's critical feedback. Understand exactly where your code needs improvement.",
-                    highlight_text="Simulates a real hackathon judge's perspective, pointing out exact architectural flaws and code quality issues before you submit.",
+                    description="GitHub archive + ruff/bandit static analysis, then a 3-agent CrewAI jury (code, security, mentor).",
+                    highlight_text="Static-only review with persisted results—includes coding-style summary in the verdict JSON.",
                     accent="#0088ff",
                     route="/repo-judge"
                 )
                 FeatureSection(
                     index=4,
                     title="Project Ideas Generator",
-                    description="Stuck on what to build? Enter a theme and get the top 5 industry-standard resume projects and 5 winning hackathon ideas instantly.",
-                    highlight_text="Uses LangChain and Ollama to guarantee highly relevant, structured, and technically impressive ideas tailored precisely to your input.",
+                    description="CrewAI resume and hackathon mentors search the web for competitors, then propose 5+5 ideas.",
+                    highlight_text="Structured JSON with tech stacks and differentiation vs named existing products.",
                     accent="#00ffcc",
                     route="/project-suggest"
+                )
+                FeatureSection(
+                    index=5,
+                    title="SWOT Analysis",
+                    description="Run a CrewAI SWOT for your startup idea or portfolio project with live search context.",
+                    highlight_text="Strategist + reviewer agents produce strengths, weaknesses, opportunities, threats, and action items.",
+                    accent="#7c3aed",
+                    route="/swot"
                 )

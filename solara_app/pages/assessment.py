@@ -1,7 +1,7 @@
 from pathlib import Path
 import solara
-import requests
 import os
+from solara_app.api_client import api_get, api_post
 import threading
 from solara_app.components import CountdownTerminal
 API = os.getenv("API_URL", "http://localhost:8000")
@@ -26,7 +26,7 @@ def get_session_state():
     return SESSION_STATES[sid]
 def load_domains(all_domains, setup_error):
     try:
-        r = requests.get(f"{API}/assess/domains", timeout=5)
+        r = api_get("/assess/domains", timeout=5)
         r.raise_for_status()
         all_domains.set(r.json())
     except Exception as e:
@@ -50,11 +50,7 @@ def _run_generate(sid: str):
     loading_step = state["loading_step"]
     try:
         loading_step.set(" AI is crafting 15 questions for you…")
-        r = requests.post(
-            f"{API}/assess/generate-mcq",
-            json={"student_name": name, "domains": domains},
-            timeout=None,
-        )
+        r = api_post("/assess/generate-mcq", {"student_name": name, "domains": domains}, timeout=180)
         if r.status_code == 200:
             data = r.json()
             session_id.set(data["session_id"])
@@ -80,11 +76,7 @@ def _run_submit(sid: str):
     loading_step = state["loading_step"]
     try:
         loading_step.set("Grading your answers…")
-        r = requests.post(
-            f"{API}/assess/submit-mcq",
-            json={"session_id": session_id_val, "answers": user_answers_val},
-            timeout=60,
-        )
+        r = api_post("/assess/submit-mcq", {"session_id": session_id_val, "answers": user_answers_val}, timeout=60)
         if r.status_code == 200:
             scores.set(r.json()["scores"])
             screen.set("results")
@@ -194,7 +186,7 @@ def SetupScreen(student_name, selected_domains, all_domains, setup_error, loadin
         solara.Text("⚡ AI Developer Assessment", style={"font-size": "36px", "font-weight": "900", "color": "#1e293b", "margin-bottom": "16px", "display": "block", "letter-spacing": "-1px"})
         solara.Text(
             "Select a domain to generate an adaptive, 15-question technical exam. "
-            "Our AI will grade your responses and calculate your global percentile.",
+            "CrewAI generates your quiz; your percentile is computed against others in the same domain.",
             style={"font-size": "16px", "color": "#475569", "line-height": "1.6"}
         )
         with solara.v.Html(tag="div", style_="background:#A4C3B2; backdrop-filter:blur(20px); border:1px solid rgba(0,0,0,0.05); border-radius:16px; padding:32px; box-shadow:0 10px 40px rgba(0,0,0,0.1); margin-top:36px;"):
@@ -345,11 +337,13 @@ def ResultsScreen(scores, student_name_val, restart_fn):
     details = s.get("details", [])
     pct_score = int((correct / total) * 100) if total > 0 else 0
     color = "#34d399" if pct_score >= 80 else "#f59e0b" if pct_score >= 50 else "#ef4444"
+    src = s.get("percentile_source", "database_cohort")
+    cohort = s.get("cohort_size", 0)
+    note = s.get("percentile_message", "")
     pctile_msg = (
-        f" You're better than {pctile}% of developers worldwide! Elite level!" if pctile >= 90 else
-        f" You're better than {pctile}% of developers worldwide! Impressive!" if pctile >= 70 else
-        f" You're better than {pctile}% of developers worldwide! Above average!" if pctile >= 50 else
-        f" You're better than {pctile}% of developers worldwide. Keep learning!"
+        f"You rank above {pctile}% of {cohort} scored quiz taker(s) in this domain."
+        if src == "database_cohort" and cohort
+        else note or f"Estimated score percentile: {pctile}% (more quiz data needed for cohort ranking)."
     )
     with solara.v.Html(tag="div", style_="max-width:760px; margin:0 auto; padding:40px 24px;"):
         solara.v.Html(
@@ -363,7 +357,7 @@ def ResultsScreen(scores, student_name_val, restart_fn):
             solara.Text(f"{pct_score}% correct", style={"color": color, "font-size": "18px", "font-weight": "700", "display": "block", "margin-bottom": "16px"})
         pctile_color = "#0891b2" if pctile >= 70 else "#b45309" if pctile >= 40 else "#be123c"
         with solara.v.Html(tag="div", style_=f"margin-top:20px; text-align:center; padding:32px; background:#A4C3B2; backdrop-filter:blur(20px); border:1px solid rgba(0,0,0,0.05); border-radius:20px; box-shadow:0 8px 32px rgba(0, 0, 0, 0.05);"):
-            solara.Text("Developer Percentile", style={"color": "#64748b", "font-size": "13px", "text-transform": "uppercase", "letter-spacing": "1px", "display": "block"})
+            solara.Text("Domain Percentile (real cohort)", style={"color": "#64748b", "font-size": "13px", "text-transform": "uppercase", "letter-spacing": "1px", "display": "block"})
             solara.Text(f"{pctile}%", style={"font-size": "56px", "font-weight": "900", "color": pctile_color, "display": "block", "margin": "8px 0"})
             solara.Text(pctile_msg, style={"color": "#1e293b", "font-size": "16px", "font-weight": "600", "display": "block"})
         with solara.v.Html(tag="div", style_="margin-top:24px; display:flex; gap:16px; flex-wrap:wrap;"):

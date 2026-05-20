@@ -1,10 +1,12 @@
 import os
 from typing import List
 import requests as http_requests
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
-router = APIRouter(prefix="/project-suggest", tags=["Project Suggest"])
+from backend.app.middleware.rate_limit import limiter
 from ..services.llm_factory import check_llm_availability
+
+router = APIRouter(prefix="/project-suggest", tags=["Project Suggest"])
 class SuggestRequest(BaseModel):
     themes: List[str]
 class ProjectItem(BaseModel):
@@ -102,7 +104,8 @@ Behavioral rules and constraints:
 """
     ),
 )
-def suggest_projects(req: SuggestRequest):
+@limiter.limit("5/minute")
+def suggest_projects(request: Request, req: SuggestRequest):
     if not req.themes:
         raise HTTPException(status_code=400, detail="themes list cannot be empty.")
     theme_str = ", ".join([t.strip() for t in req.themes if t.strip()])

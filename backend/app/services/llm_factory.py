@@ -43,11 +43,7 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-001")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-logger.info(f"LLM Factory initialized.")
-logger.info(f"DEBUG: OPENROUTER_API_KEY is {'SET' if OPENROUTER_API_KEY else 'NOT SET'}")
-if OPENROUTER_API_KEY:
-    logger.info(f"DEBUG: Key length: {len(OPENROUTER_API_KEY)}")
-    logger.info(f"DEBUG: Key starts with: {OPENROUTER_API_KEY[:10]}...")
+logger.info("LLM Factory initialized (OpenRouter=%s)", "yes" if OPENROUTER_API_KEY else "no")
 def extract_json_from_text(text: str) -> dict:
     if not text:
         return {}
@@ -82,8 +78,24 @@ def extract_json_from_text(text: str) -> dict:
                 except:
                     pass
     return {}
+def _google_llm(temperature=0.7):
+    google_key = os.getenv("GOOGLE_API_KEY")
+    if not google_key or google_key == "your_gemini_api_key_here":
+        return None
+    try:
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        model = os.getenv("GOOGLE_MODEL", "gemini-2.0-flash")
+        return ChatGoogleGenerativeAI(model=model, google_api_key=google_key, temperature=temperature)
+    except Exception as e:
+        logger.warning("Google Gemini init failed: %s", e)
+        return None
+
+
 def get_hybrid_llm(temperature=0.7):
     llms = []
+    gemini = _google_llm(temperature)
+    if gemini:
+        llms.append(gemini)
     has_key = bool(OPENROUTER_API_KEY) and OPENROUTER_API_KEY != "your_openrouter_api_key_here"
     if has_key:
         try:
@@ -139,6 +151,11 @@ def invoke_hybrid_llm(messages, temperature=0.7, max_retries=3):
                 continue
     raise last_exception or Exception("All LLMs failed to respond after multiple retries")
 def get_hybrid_crew_llm():
+    google_key = os.getenv("GOOGLE_API_KEY")
+    if google_key and google_key != "your_gemini_api_key_here":
+        model = os.getenv("GOOGLE_MODEL", "gemini-2.0-flash")
+        logger.info("Configuring CrewAI for Google Gemini (%s)", model)
+        return LLM(model=f"gemini/{model}", api_key=google_key)
     has_key = bool(OPENROUTER_API_KEY) and OPENROUTER_API_KEY != "your_openrouter_api_key_here"
     if has_key:
         logger.info(f"Configuring CrewAI for OpenRouter ({OPENROUTER_MODEL})")
