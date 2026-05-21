@@ -11,7 +11,10 @@ PUBLIC_PATHS = {
     "/repo-judge/health",
     "/project-suggest/health",
     "/idea-validator/health",
-    "/swot/health",
+    "/webhooks/health",
+    "/webhooks/github",       # GitHub can't send API keys
+    "/tasks/health",
+    "/automation/health",
 }
 
 

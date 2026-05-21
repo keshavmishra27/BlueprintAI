@@ -236,11 +236,3 @@ def Page():
                     accent="#00ffcc",
                     route="/project-suggest"
                 )
-                FeatureSection(
-                    index=5,
-                    title="SWOT Analysis",
-                    description="Run a CrewAI SWOT for your startup idea or portfolio project with live search context.",
-                    highlight_text="Strategist + reviewer agents produce strengths, weaknesses, opportunities, threats, and action items.",
-                    accent="#7c3aed",
-                    route="/swot"
-                )

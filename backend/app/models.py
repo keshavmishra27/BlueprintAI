@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Float, Integer, JSON, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Float, Integer, JSON, String, Text
 from sqlalchemy.orm import synonym
 
 from .database import Base
@@ -44,12 +44,42 @@ class IdeaValidation(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
-class SwotAnalysis(Base):
-    __tablename__ = "swot_analyses"
+# ── Option B: Async background task tracker ──────────────────────────────────
+class BackgroundTask(Base):
+    """Tracks async CrewAI job status so the UI can poll for results."""
+    __tablename__ = "background_tasks"
+
+    id = Column(String, primary_key=True)          # uuid
+    task_type = Column(String, nullable=False)      # "repo_judge" | "mcq" | ...
+    status = Column(String, default="pending")      # pending | running | done | failed
+    payload_json = Column(JSON, nullable=True)      # input params
+    result_json = Column(JSON, nullable=True)       # crew output
+    error = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                        onupdate=lambda: datetime.now(timezone.utc))
+
+
+# ── Option A: GitHub Webhook registered repos ─────────────────────────────────
+class WebhookRepo(Base):
+    """A repo registered to receive automatic CrewAI analysis on every push."""
+    __tablename__ = "webhook_repos"
 
     id = Column(Integer, primary_key=True, index=True)
-    subject_name = Column(String, nullable=False)
-    subject_type = Column(String, nullable=False)  # "project" | "idea"
-    description = Column(Text, nullable=False)
-    result_json = Column(JSON, nullable=False, default=dict)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    github_url = Column(String, nullable=False, unique=True)
+    student_name = Column(String, nullable=False)
+    secret = Column(String, nullable=True)         # optional HMAC secret
+    active = Column(Boolean, default=True)
+    last_push_sha = Column(String, nullable=True)
+    last_task_id = Column(String, nullable=True)   # FK-like to BackgroundTask.id
+    registered_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+# ── Option C: Scheduled skill-gap report ─────────────────────────────────────
+class SkillGapReport(Base):
+    """Nightly curator-agent report: skill gaps + recommended project ideas."""
+    __tablename__ = "skill_gap_reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    report_json = Column(JSON, nullable=False, default=dict)
+    generated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

@@ -122,12 +122,25 @@ def analyze_repo_llm_only(
 ) -> dict:
     """Direct LLM fallback when Crew fails."""
     from backend.app.services.llm_factory import invoke_hybrid_llm, extract_json_from_text
+    from backend.app.routers.repo_judge import JUDGE_JSON_SCHEMA
     from langchain_core.messages import SystemMessage, HumanMessage
     import json
 
-    system_prompt = """You are a hackathon judge. Static analysis + code sample provided.
-Return ONLY JSON with scores, total_score, strengths, top_issues, security_warnings,
-reproducibility, mentor_notes, coding_style_summary."""
+    system_prompt = (
+        "You are a hackathon judge. Static analysis + code sample provided.\n"
+        "Return ONLY valid JSON — no markdown fences, no explanation, no extra text.\n\n"
+        "CRITICAL TYPE RULES (violating these causes a system crash):\n"
+        "- \"accessibility\" must be a STRING (e.g. \"public\"), never a dict\n"
+        "- \"mentor_notes\" must be a STRING paragraph, never a list\n"
+        "- \"coding_style_summary\" must be a STRING paragraph, never a list\n"
+        "- Each score in \"scores\" must be an OBJECT with keys \"score\" (number), "
+        "\"weight\" (number), and \"reasons\" (LIST of strings, never a single string)\n"
+        "- \"reproducibility\" must be an OBJECT with \"can_run\" (bool), "
+        "\"run_commands\" (list of strings), and \"notes\" (string)\n"
+        "- \"files\" inside top_issues must be a list of OBJECTS with \"path\" and \"lines\" keys, "
+        "never plain strings\n\n"
+        f"EXACT JSON SCHEMA TO FOLLOW:\n{JUDGE_JSON_SCHEMA}"
+    )
     user_prompt = (
         f"Repo: {github_url}\nStudent: {student_name}\n"
         f"STATIC:\n{json.dumps(static_summary)[:6000]}\n\nCODE:\n{code_dump[:30000]}"

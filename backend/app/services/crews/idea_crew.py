@@ -10,6 +10,71 @@ from backend.app.services.search_service import search_for_idea
 logger = logging.getLogger(__name__)
 
 
+IDEA_CHECK_SCHEMA = """\
+{
+  "similar_projects": [
+    {
+      "name": "Project Name",
+      "type": "open-source tool",
+      "overview": "Brief description of the project.",
+      "evidence": [
+        {"quote": "Exact quote from source", "source_url": "https://example.com", "date": "2024-01-15"}
+      ],
+      "comparison": "How this compares to the user's idea.",
+      "relevance_score": 75
+    }
+  ],
+  "gap_and_loopholes": "Paragraph describing gaps in the market.",
+  "search_queries_and_sources_used": ["query 1", "query 2"],
+  "notes_and_limitations": "Paragraph about limitations of this research."
+}"""
+
+IDEA_REFINE_SCHEMA = """\
+{
+  "uniqueness": {
+    "verdict": "moderately_unique",
+    "score": 65,
+    "rationale": "Paragraph explaining the uniqueness assessment."
+  },
+  "similar_projects_examined": ["Project A", "Project B"],
+  "loopholes": [
+    {
+      "issue": "Short title of the gap",
+      "description": "Detailed description of the gap.",
+      "proposed_solution": {
+        "short": "One-line fix summary",
+        "technical_details": "Detailed technical explanation of the fix.",
+        "dev_effort_hours": 8
+      }
+    }
+  ],
+  "refined_concept": {
+    "final_direction": "Paragraph describing the recommended pivot direction.",
+    "quick_win_variant": {"description": "Easy-to-implement version."},
+    "high_diff_variant": {"description": "Maximum differentiation version."}
+  },
+  "recommended_novel_modifications": [
+    {
+      "short_title": "Feature name",
+      "technical_description": "What to build and why it's novel.",
+      "potential_claims_legal_style": ["Claim 1 text"]
+    }
+  ],
+  "patentability_assessment": {
+    "novelty_summary": "Assessment of novelty.",
+    "inventive_step_summary": "Assessment of inventive step.",
+    "industrial_applicability": "Assessment of applicability.",
+    "blocking_prior_art": [{"patent_id": "US1234567", "summary": "Brief summary"}]
+  },
+  "implementation_plan_high_level": {
+    "milestones": [
+      {"name": "MVP", "duration_days": 14, "tasks": ["task 1", "task 2"]}
+    ]
+  },
+  "notes_and_limitations": "Paragraph about limitations."
+}"""
+
+
 def run_idea_check_crew(idea: str, search_context: str, sources: list) -> dict:
     researcher = Agent(
         role="Market & Prior-Art Researcher",
@@ -29,19 +94,24 @@ def run_idea_check_crew(idea: str, search_context: str, sources: list) -> dict:
         description=(
             f"User idea:\n{idea}\n\n"
             f"LIVE SEARCH RESULTS (use these; cite URLs):\n{search_context}\n\n"
-            "Use Web Search tool if results are thin. Return JSON with: similar_projects "
-            "(name, type, overview, evidence with quote+url+date, comparison, relevance_score), "
-            "gap_and_loopholes, search_queries_and_sources_used, notes_and_limitations. "
-            "Do NOT claim patentability — this is market research only."
+            "Use Web Search tool if results are thin. Return ONLY valid JSON.\n\n"
+            "CRITICAL TYPE RULES (violating these causes a system crash):\n"
+            "- \"evidence\" MUST be a LIST of objects, each with \"quote\" (string), "
+            "\"source_url\" (string), \"date\" (string). NEVER a plain string.\n"
+            "- \"similar_projects\" MUST be a LIST of objects. NEVER a plain string.\n"
+            "- \"relevance_score\" must be a NUMBER (0-100), not a string.\n\n"
+            "Do NOT claim patentability — this is market research only.\n\n"
+            f"EXACT JSON SCHEMA TO FOLLOW:\n{IDEA_CHECK_SCHEMA}"
         ),
-        expected_output="JSON market research report",
+        expected_output="JSON market research report matching the schema exactly",
         agent=researcher,
     )
     t2 = Task(
         description=(
             "Refine the research into actionable gaps. Add patentability_assessment with "
             "disclaimer: 'Not legal advice — consult a patent attorney.' "
-            "Output ONLY the full JSON schema from the researcher plus recommended_novel_modifications."
+            "Output ONLY the full JSON schema from the researcher plus recommended_novel_modifications.\n\n"
+            "CRITICAL: All type rules from the previous task MUST be preserved."
         ),
         expected_output="Complete JSON check result",
         agent=analyst,
@@ -83,10 +153,19 @@ def run_idea_refine_crew(idea: str, check_result: dict) -> dict:
     task = Task(
         description=(
             f"Idea:\n{idea}\n\nPrior research:\n{json.dumps(check_result, indent=2)[:12000]}\n\n"
-            "Return JSON: uniqueness (verdict, matrix_scores, score, rationale), "
-            "similar_projects_examined, loopholes, refined_concept, notes_and_limitations."
+            "Return ONLY valid JSON — no markdown, no explanation, no extra text.\n\n"
+            "CRITICAL TYPE RULES (violating these causes a system crash):\n"
+            "- \"loopholes\" MUST be a LIST of OBJECTS. Each object MUST have:\n"
+            "  \"issue\" (string), \"description\" (string), and \"proposed_solution\" (OBJECT with "
+            "\"short\" (string), \"technical_details\" (string), \"dev_effort_hours\" (number))\n"
+            "- \"uniqueness\" MUST be an OBJECT with \"verdict\" (string), \"score\" (number), \"rationale\" (string)\n"
+            "- \"refined_concept\" MUST be an OBJECT with \"final_direction\" (string)\n"
+            "- \"recommended_novel_modifications\" MUST be a LIST of OBJECTS\n"
+            "- \"implementation_plan_high_level.milestones\" MUST be a LIST of OBJECTS\n"
+            "- NEVER return a plain string where a list or object is expected\n\n"
+            f"EXACT JSON SCHEMA TO FOLLOW:\n{IDEA_REFINE_SCHEMA}"
         ),
-        expected_output="JSON refinement report",
+        expected_output="JSON refinement report matching the schema exactly",
         agent=refiner,
     )
     try:

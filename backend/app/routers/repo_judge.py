@@ -12,6 +12,51 @@ from backend.app.models import RepoAnalysis
 
 router = APIRouter(prefix="/repo-judge", tags=["Repo Judge"])
 logger = logging.getLogger(__name__)
+
+# ── Strict JSON schema example for LLM prompts ─────────────────────────
+# Imported by repo_crew.py and github_judge_service.py so every call site
+# shows the LLM the exact same contract.
+JUDGE_JSON_SCHEMA = """\
+{
+  "repo_url": "<github_url>",
+  "accessibility": "public",
+  "languages": ["Python", "JavaScript"],
+  "scores": {
+    "functionality": {"score": 7.0, "weight": 0.25, "reasons": ["reason 1", "reason 2"]},
+    "code_quality":  {"score": 6.0, "weight": 0.20, "reasons": ["reason 1"]},
+    "documentation": {"score": 5.0, "weight": 0.15, "reasons": ["reason 1"]},
+    "architecture":  {"score": 7.0, "weight": 0.15, "reasons": ["reason 1"]},
+    "testing_ci":    {"score": 3.0, "weight": 0.10, "reasons": ["reason 1"]},
+    "innovation_ux": {"score": 6.0, "weight": 0.15, "reasons": ["reason 1"]}
+  },
+  "total_score": 56.5,
+  "strengths": ["strength 1", "strength 2"],
+  "top_issues": [
+    {
+      "severity": "major",
+      "title": "Issue title",
+      "description": "Detailed description",
+      "files": [{"path": "src/app.py", "lines": "10-25", "excerpt": "optional code snippet"}],
+      "estimated_effort_hours": 2.0
+    }
+  ],
+  "suggested_github_issues": [
+    {"title": "Issue title", "body": "Issue body markdown", "labels": ["bug", "priority"]}
+  ],
+  "security_warnings": [
+    {"type": "hardcoded_secret", "evidence": "API key in config.py line 5", "remediation": "Use env vars"}
+  ],
+  "reproducibility": {
+    "can_run": true,
+    "run_commands": ["pip install -r requirements.txt", "python main.py"],
+    "notes": "Runs after installing dependencies"
+  },
+  "recommended_tests": [
+    {"name": "test_login", "description": "Test user login flow", "file": "tests/test_auth.py"}
+  ],
+  "mentor_notes": "Overall feedback paragraph as a single string.",
+  "coding_style_summary": "Paragraph about naming, modularity, consistency."
+}"""
 from ..services.llm_factory import check_llm_availability
 class AnalyzeRequest(BaseModel):
     github_url: str
@@ -20,6 +65,18 @@ class ScoreDetail(BaseModel):
     score: float = 0.0
     weight: Optional[float] = 0.0
     reasons: List[str] = []
+    @model_validator(mode='before')
+    @classmethod
+    def coerce_primitive(cls, data):
+        # LLM sometimes returns just a number e.g. 7
+        if isinstance(data, (int, float)):
+            return {"score": float(data)}
+        # LLM sometimes returns reasons as a single string
+        if isinstance(data, dict):
+            reasons = data.get('reasons')
+            if isinstance(reasons, str):
+                data['reasons'] = [reasons]
+        return data
 class Scores(BaseModel):
     functionality: ScoreDetail = ScoreDetail()
     code_quality: ScoreDetail = ScoreDetail()
@@ -29,8 +86,14 @@ class Scores(BaseModel):
     innovation_ux: ScoreDetail = ScoreDetail()
 class IssueFile(BaseModel):
     path: str
-    lines: str
+    lines: str = ""
     excerpt: Optional[str] = None
+    @model_validator(mode='before')
+    @classmethod
+    def coerce_string_to_issue_file(cls, data):
+        if isinstance(data, str):
+            return {"path": data, "lines": ""}
+        return data
 class TopIssue(BaseModel):
     severity: str = "major"
     title: str = "Issue"
@@ -77,6 +140,13 @@ class Reproducibility(BaseModel):
     can_run: bool = False
     run_commands: List[str] = []
     notes: str = ""
+    @model_validator(mode='before')
+    @classmethod
+    def coerce_string(cls, data):
+        # LLM sometimes returns a plain string description
+        if isinstance(data, str):
+            return {"notes": data, "can_run": False}
+        return data
 class RecommendedTest(BaseModel):
     name: str
     description: str
@@ -95,6 +165,23 @@ class JudgeResult(BaseModel):
     recommended_tests: List[RecommendedTest] = []
     mentor_notes: str = "Analysis completed."
     student_name: Optional[str] = None
+    @model_validator(mode='before')
+    @classmethod
+    def coerce_fields(cls, data):
+        if isinstance(data, dict):
+            # accessibility: dict -> str
+            acc = data.get('accessibility')
+            if isinstance(acc, dict):
+                data['accessibility'] = (
+                    acc.get('rating') or acc.get('description') or 'public'
+                )
+            # mentor_notes: list -> newline-joined str
+            notes = data.get('mentor_notes')
+            if isinstance(notes, list):
+                data['mentor_notes'] = '\n'.join(str(n) for n in notes)
+            elif notes is not None and not isinstance(notes, str):
+                data['mentor_notes'] = str(notes)
+        return data
 @router.get(
     "/health",
     summary="Repo Judge health check",

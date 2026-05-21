@@ -5,6 +5,7 @@ from crewai import Agent, Task
 
 from backend.app.services.crews.base import parse_json_output, run_crew
 from backend.app.services.llm_factory import extract_json_from_text, invoke_hybrid_llm
+from backend.app.routers.repo_judge import JUDGE_JSON_SCHEMA
 from langchain_core.messages import SystemMessage, HumanMessage
 
 logger = logging.getLogger(__name__)
@@ -59,15 +60,22 @@ def run_repo_judge_crew(
     )
     t3 = Task(
         description=(
-            "Merge prior analyses into ONE JSON object with keys: repo_url, accessibility, "
-            "languages, scores (functionality, code_quality, documentation, architecture, "
-            "testing_ci, innovation_ux — each score 0-10 with reasons), total_score, "
-            "strengths, top_issues (objects with severity, title, description, files), "
-            "security_warnings, reproducibility, mentor_notes, coding_style_summary "
-            "(dedicated paragraph on naming, modularity, consistency). "
-            f'Set repo_url to "{github_url}". Return ONLY JSON.'
+            "Merge prior analyses into ONE JSON object. "
+            "Return ONLY valid JSON — no markdown, no explanation, no extra text.\n\n"
+            "CRITICAL TYPE RULES (violating these causes a system crash):\n"
+            "- \"accessibility\" must be a STRING (e.g. \"public\"), never a dict\n"
+            "- \"mentor_notes\" must be a STRING paragraph, never a list\n"
+            "- \"coding_style_summary\" must be a STRING paragraph, never a list\n"
+            "- Each score in \"scores\" must be an OBJECT with keys \"score\" (number), "
+            "\"weight\" (number), and \"reasons\" (LIST of strings, never a single string)\n"
+            "- \"reproducibility\" must be an OBJECT with \"can_run\" (bool), "
+            "\"run_commands\" (list of strings), and \"notes\" (string)\n"
+            "- \"files\" inside top_issues must be a list of OBJECTS with \"path\" and \"lines\" keys, "
+            "never plain strings\n\n"
+            f'Set repo_url to "{github_url}".\n\n'
+            f"EXACT JSON SCHEMA TO FOLLOW:\n{JUDGE_JSON_SCHEMA}"
         ),
-        expected_output="Single JSON verdict object",
+        expected_output="Single JSON verdict object matching the schema exactly",
         agent=mentor,
         context=[t1, t2],
     )

@@ -62,8 +62,16 @@ def ProjectCard(project):
                     solara.Text(f"{project['relevance_score']}% Match", style={"font-size":"12px", "font-weight":"800", "color":"#0891b2"})
         solara.Text(project.get("overview", ""), style={"font-size":"14px", "color":"#475569", "display":"block", "margin-bottom":"12px", "line-height":"1.6"})
         if project.get("evidence"):
+            evidence = project["evidence"]
+            # Coerce: if LLM returned a plain string, wrap it in a list
+            if isinstance(evidence, str):
+                evidence = [{"quote": evidence}]
+            elif not isinstance(evidence, list):
+                evidence = [{"quote": str(evidence)}]
             solara.Text("EVIDENCE:", style={"font-size":"10px", "font-weight":"900", "color":"#64748b", "display":"block", "margin-bottom":"4px"})
-            for ev in project["evidence"]:
+            for ev in evidence:
+                if isinstance(ev, str):
+                    ev = {"quote": ev}
                 with solara.v.Html(tag="div", style_="margin-bottom:8px; padding-left:12px; border-left:2px solid rgba(0,0,0,0.05);"):
                     solara.Text(f'"{ev.get("quote","")}"', style={"font-size":"12px", "color":"#64748b", "font-style":"italic"})
                     if ev.get("source_url"):
@@ -109,14 +117,21 @@ def RefinementView(ref):
                         with solara.v.Html(tag="div", style_="flex:1; min-width:150px;"):
                             solara.Text(label, style={"font-size":"11px", "font-weight":"900", "color":"#be123c", "display":"block"})
                             solara.Text(pa.get(key,""), style={"font-size":"13px", "color":"#1e293b"})
-                if pa.get("blocking_prior_art"):
+                prior_art = pa.get("blocking_prior_art")
+                if prior_art:
+                    if isinstance(prior_art, str): prior_art = [{"patent_id": "Note", "summary": prior_art}]
+                    elif not isinstance(prior_art, list): prior_art = [{"patent_id": "Note", "summary": str(prior_art)}]
                     solara.Text("Potential Blocks:", style={"font-size":"11px", "font-weight":"900", "color":"#be123c", "display":"block", "margin-top":"16px", "margin-bottom":"4px"})
-                    for art in pa["blocking_prior_art"]:
+                    for art in prior_art:
+                        if isinstance(art, str): art = {"patent_id": "Note", "summary": art}
                         solara.Text(f"• {art.get('patent_id', 'N/A')}: {art.get('summary','')}", style={"font-size":"12px", "color":"#1e293b"})
         mods = ref.get("recommended_novel_modifications")
         if mods:
+            if isinstance(mods, str): mods = [{"short_title": "Modification", "technical_description": mods}]
+            elif not isinstance(mods, list): mods = [{"short_title": "Modification", "technical_description": str(mods)}]
             solara.Text(" Technical Claims to Build", style={"font-size":"20px", "font-weight":"800", "color":"#d97706", "display":"block", "margin-bottom":"20px"})
             for mod in mods:
+                if isinstance(mod, str): mod = {"short_title": "Modification", "technical_description": mod}
                 with solara.v.Html(tag="div", style_="margin-bottom:20px; padding:20px; border-radius:12px; background:rgba(217,119,6,0.05); border-left:5px solid #d97706;"):
                     solara.Text(mod.get("short_title",""), style={"font-size":"16px", "font-weight":"800", "color":"#1e293b", "display":"block", "margin-bottom":"8px"})
                     solara.Text(mod.get("technical_description",""), style={"font-size":"14px", "color":"#475569", "margin-bottom":"12px", "display":"block"})
@@ -125,24 +140,38 @@ def RefinementView(ref):
                         solara.Text(mod.get("potential_claims_legal_style", [""])[0] if isinstance(mod.get("potential_claims_legal_style"), list) else mod.get("potential_claims_legal_style",""), style={"font-size":"12px", "color":"#1e293b", "font-family":"monospace"})
         loops = ref.get("loopholes")
         if loops:
+            if isinstance(loops, str): loops = [{"issue": "Gap", "description": loops}]
+            elif not isinstance(loops, list): loops = [{"issue": "Gap", "description": str(loops)}]
             solara.Text(" Strategic Gaps Identified", style={"font-size":"20px", "font-weight":"800", "color":"#0284c7", "display":"block", "margin-bottom":"20px", "margin-top":"32px"})
             for loop in loops:
+                if isinstance(loop, str): loop = {"issue": "Gap", "description": loop}
                 with solara.v.Html(tag="div", style_="margin-bottom:16px; padding:20px; border-radius:12px; background:rgba(2,132,199,0.05); border-left:5px solid #0284c7;"):
                     solara.Text(loop.get("issue",""), style={"font-size":"15px", "font-weight":"800", "color":"#1e293b", "display":"block", "margin-bottom":"8px"})
                     solara.Text(loop.get("description",""), style={"font-size":"14px", "color":"#475569", "margin-bottom":"12px", "display":"block"})
-                    sol = loop.get("proposed_solution", {})
+                    # Try multiple key aliases the LLM might use
+                    sol = loop.get("proposed_solution") or loop.get("solution") or loop.get("fix") or loop.get("proposed_fix") or {}
                     if isinstance(sol, str): sol = {"short": sol}
-                    with solara.v.Html(tag="div", style_="padding:12px; background:rgba(16,185,129,0.05); border-radius:8px; border-left:3px solid #10b981;"):
-                        solara.Text("THE FIX:", style={"font-size":"11px", "font-weight":"900", "color":"#10b981", "display":"block", "margin-bottom":"4px"})
-                        solara.Text(sol.get("short",""), style={"font-size":"14px", "color":"#065f46", "font-weight":"700", "display":"block"})
-                        solara.Text(sol.get("technical_details",""), style={"font-size":"13px", "color":"#065f46"})
-                        if sol.get("dev_effort_hours"):
-                            solara.Text(f"Estimated Effort: {sol['dev_effort_hours']} hrs", style={"font-size":"11px", "color":"#10b981", "margin-top":"8px", "display":"block"})
+                    # Try multiple content key aliases
+                    fix_summary = sol.get("short") or sol.get("description") or sol.get("summary") or sol.get("solution") or sol.get("title") or ""
+                    fix_details = sol.get("technical_details") or sol.get("details") or sol.get("explanation") or ""
+                    if fix_summary or fix_details:
+                        with solara.v.Html(tag="div", style_="padding:12px; background:rgba(16,185,129,0.05); border-radius:8px; border-left:3px solid #10b981;"):
+                            solara.Text("THE FIX:", style={"font-size":"11px", "font-weight":"900", "color":"#10b981", "display":"block", "margin-bottom":"4px"})
+                            if fix_summary:
+                                solara.Text(fix_summary, style={"font-size":"14px", "color":"#065f46", "font-weight":"700", "display":"block"})
+                            if fix_details:
+                                solara.Text(fix_details, style={"font-size":"13px", "color":"#065f46"})
+                            if sol.get("dev_effort_hours"):
+                                solara.Text(f"Estimated Effort: {sol['dev_effort_hours']} hrs", style={"font-size":"11px", "color":"#10b981", "margin-top":"8px", "display":"block"})
         plan = ref.get("implementation_plan_high_level")
         if plan:
+            milestones = plan.get("milestones", [])
+            if isinstance(milestones, str): milestones = [{"name": milestones, "tasks": []}]
+            elif not isinstance(milestones, list): milestones = [{"name": str(milestones), "tasks": []}]
             with solara.v.Html(tag="div", style_="margin-top:32px; padding:24px; border-radius:16px; background:rgba(0,0,0,0.02); border:1px solid rgba(0,0,0,0.05);"):
                 solara.Text("Implementation Roadmap", style={"font-size":"18px", "font-weight":"800", "color":"#1e293b", "display":"block", "margin-bottom":"16px"})
-                for ms in plan.get("milestones", []):
+                for ms in milestones:
+                    if isinstance(ms, str): ms = {"name": ms, "tasks": []}
                     with solara.v.Html(tag="div", style_="display:flex; gap:16px; margin-bottom:12px;"):
                         solara.Text(f"{ms.get('duration_days', '?')}d", style={"font-size":"12px", "font-weight":"900", "color":"#64748b", "padding-top":"4px"})
                         with solara.v.Html(tag="div"):

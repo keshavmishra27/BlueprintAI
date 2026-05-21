@@ -1,5 +1,5 @@
 #  Groupify
-Groupify is a platform which solves the  tedious task of doing the SWOT analysis of your project as well your idea.It also  let you analyse your coding style along with telling you how much ahead  you are as compared to another developers.
+Groupify is a platform which lets you analyze your coding style along with telling you how much ahead you are as compared to other developers.
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi&logoColor=white)
 ![Solara](https://img.shields.io/badge/Solara-Reactive_UI-6366f1)
@@ -9,11 +9,13 @@ Groupify is a platform which solves the  tedious task of doing the SWOT analysis
 ##  Features
 | Feature | Description |
 |---|---|
-| **SWOT Analysis** | CrewAI strategist + reviewer with live web search for projects and ideas |
 | **Idea Refiner** | CrewAI market researcher (DuckDuckGo + GitHub search) + gap analyst; results persisted |
 | **Repo Judge** | GitHub zip ingest, ruff/bandit static checks, CrewAI code/security/mentor agents |
 | **Project Suggestion** | CrewAI resume + hackathon mentors with web search for competitor context |
 | **Coder comparison** | CrewAI MCQ author + reviewer; percentile vs real scored sessions in the same domain |
+| **🔄 GitHub Webhook Automation** | Register repos for zero-touch CrewAI code review on every `git push` |
+| **⚡ Async Background Tasks** | CrewAI crews run in background threads; UI polls `/tasks/{id}` for results |
+| **🕛 Nightly Skill-Gap Curator** | APScheduler cron job runs CrewAI analyst + coach agents to identify gaps & recommend projects |
 ```mermaid
 graph TD
     classDef frontend fill:#1e1b4b,stroke:#0ea5e9,stroke-width:4px,color:#fff,rx:15,ry:15;
@@ -91,14 +93,19 @@ group_maker/
 │       │   ├── assessment.py      
 │       │   ├── repo_judge.py      
 │       │   ├── project_suggest.py 
-│       │   ├── idea_validator.py 
-│       │   └── swot.py
+│       │   ├── idea_validator.py
+│       │   ├── tasks.py           # Option B: async task polling
+│       │   ├── webhooks.py        # Option A: GitHub webhook receiver
+│       │   └── automation.py      # Option C: scheduler + skill-gap reports
 │       └── services/
-│           ├── crews/          # CrewAI Agent + Task + Crew per feature
+│           ├── crews/             # CrewAI Agent + Task + Crew per feature
+│           │   └── skill_gap_crew.py  # Option C: analyst + curator agents
+│           ├── task_queue.py      # Option B: thread-based async runner
+│           ├── scheduler.py       # Option C: APScheduler nightly jobs
 │           ├── llm_factory.py
 │           ├── search_service.py
 │           └── static_analysis_service.py
-│       └── middleware/         # API key auth, rate limits
+│       └── middleware/            # API key auth, rate limits
 ├── alembic/                    # DB migrations
 ├── tests/                      # pytest suite
 ├── .github/workflows/ci.yml
@@ -191,9 +198,28 @@ solara run solara_app/app.py
 | `GET` | `/project-suggest/health` | Project suggestion health check |
 | `POST` | `/idea-validator/check` | Check idea similarity vs current market |
 | `POST` | `/idea-validator/refine` | CrewAI refinement & novelty scoring (market research, not legal advice) |
-| `POST` | `/swot/analyze` | SWOT analysis for a project or idea (CrewAI + web search) |
-| `GET` | `/swot/results` | List saved SWOT analyses |
+### 🔄 GitHub Webhooks (Option A)
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/webhooks/register` | Register a repo for automatic CrewAI analysis on push |
+| `GET` | `/webhooks/repos` | List all registered webhook repos |
+| `POST` | `/webhooks/github` | Receive GitHub push events (called by GitHub, not users) |
+### ⚡ Background Tasks (Option B)
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/tasks/{task_id}` | Poll status of a background CrewAI task |
+| `GET` | `/tasks` | List recent background tasks |
+### 🕛 Automation & Scheduler (Option C)
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/automation/scheduler` | Check scheduler status and next run times |
+| `POST` | `/automation/scheduler/run-now` | Manually trigger skill-gap analysis |
+| `GET` | `/automation/skill-gap-reports` | List recent skill-gap reports |
+| `GET` | `/automation/skill-gap-reports/{id}` | Get full skill-gap report JSON |
 ##  Database Models
 | Model | Description |
 |---|---|
 | **`AssessmentSession`** | Student name, domains tested, chat transcript, scores, status |
+| **`BackgroundTask`** | Async task tracker: id, type, status, payload, result, error |
+| **`WebhookRepo`** | Registered repos for auto-analysis: URL, student, secret, last SHA |
+| **`SkillGapReport`** | Nightly curator output: per-student gaps + project recommendations |

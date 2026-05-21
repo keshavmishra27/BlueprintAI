@@ -31,3 +31,6 @@ starlette>=0.41.0,<1.0
 # Testing
 pytest>=8.3.0,<9.0
 httpx>=0.28.0,<1.0
+
+# Scheduling (Option C – nightly skill-gap curator)
+apscheduler>=3.10.0,<4.0

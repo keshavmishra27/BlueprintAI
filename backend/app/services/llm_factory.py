@@ -7,6 +7,7 @@ from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
 from crewai import LLM
 load_dotenv(override=True)
+os.environ.setdefault("OPENAI_API_KEY", "dummy_key_to_prevent_crewai_crash")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 def check_llm_availability():
