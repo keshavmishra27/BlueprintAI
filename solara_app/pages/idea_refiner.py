@@ -12,6 +12,7 @@ def get_session_state():
             "loading": solara.reactive(False),
             "error_msg": solara.reactive(""),
             "similar_projects": solara.reactive([]),
+            "check_result": solara.reactive(None),
             "refinement": solara.reactive(None),
             "screen": solara.reactive("input"),
             "initialized": solara.reactive(False),
@@ -26,6 +27,7 @@ def _call_check_idea(sid: str):
         if r.status_code == 200:
             data = r.json()
             state["similar_projects"].set(data.get("similar_projects", []))
+            state["check_result"].set(data)
             state["screen"].set("results")
         else:
             state["error_msg"].set(f"Error: {r.text}")
@@ -84,6 +86,26 @@ def ProjectCard(project):
         if project.get("license_or_ip"):
             solara.Text(f"IP/License: {project['license_or_ip']}", style={"font-size":"11px", "color":"rgba(0,0,0,0.3)", "margin-top":"8px", "display":"block"})
 @solara.component
+def CheckResultView(result):
+    if not result: return
+    gap = result.get("gap_and_loopholes") or result.get("gaps_and_loopholes")
+    sources = result.get("search_queries_and_sources_used") or result.get("search_sources")
+    notes = result.get("notes_and_limitations")
+    with solara.v.Html(tag="div", style_="margin-top:24px; padding:24px; border-radius:16px; background:rgba(255,255,255,0.8); border:1px solid rgba(0,0,0,0.05); margin-bottom:24px;"):
+        solara.Text("Market Comparison Summary", style={"font-size":"18px", "font-weight":"800", "color":"#0891b2", "display":"block", "margin-bottom":"16px"})
+        if gap:
+            solara.Text("Market Gaps & Loopholes", style={"font-size":"13px", "font-weight":"700", "color":"#1e293b", "display":"block", "margin-bottom":"8px"})
+            solara.Text(str(gap), style={"font-size":"14px", "color":"#475569", "line-height":"1.7", "margin-bottom":"16px"})
+        if sources:
+            if isinstance(sources, list):
+                sources = "\n".join(str(s) for s in sources)
+            solara.Text("Search Queries and Sources", style={"font-size":"13px", "font-weight":"700", "color":"#1e293b", "display":"block", "margin-bottom":"8px"})
+            solara.Text(str(sources), style={"font-size":"13px", "color":"#475569", "white-space":"pre-wrap", "line-height":"1.6", "margin-bottom":"16px"})
+        if notes:
+            solara.Text("Notes & Limitations", style={"font-size":"13px", "font-weight":"700", "color":"#1e293b", "display":"block", "margin-bottom":"8px"})
+            solara.Text(str(notes), style={"font-size":"13px", "color":"#475569", "line-height":"1.6"})
+
+
 def RefinementView(ref):
     if not ref: return
     with solara.v.Html(tag="div", style_="margin-top:24px;"):
@@ -249,11 +271,13 @@ def Page():
                     solara.Text(state["user_idea"].value, style={"font-size":"16px", "color":"#1e293b", "font-style":"italic", "line-height":"1.6"})
                 if state["refinement"].value:
                     RefinementView(state["refinement"].value)
+                elif state["check_result"].value:
+                    CheckResultView(state["check_result"].value)
                 if state["similar_projects"].value:
                     solara.Text("Similar Existing Projects", style={"font-size":"20px", "font-weight":"800", "color":"#0ea5e9", "display":"block", "margin-bottom":"20px", "margin-top":"40px"})
                     for proj in state["similar_projects"].value:
                         ProjectCard(proj)
-                elif not state["refinement"].value:
+                elif not state["refinement"].value and not state["check_result"].value:
                     solara.Text("No similar projects found! Your idea might be very unique or too niche for the model's current knowledge.", style={"color":"#10b981", "font-style":"italic"})
                 if not state["refinement"].value:
                     solara.Button(

@@ -22,14 +22,14 @@ JUDGE_JSON_SCHEMA = """\
   "accessibility": "public",
   "languages": ["Python", "JavaScript"],
   "scores": {
-    "functionality": {"score": 7.0, "weight": 0.25, "reasons": ["reason 1", "reason 2"]},
-    "code_quality":  {"score": 6.0, "weight": 0.20, "reasons": ["reason 1"]},
-    "documentation": {"score": 5.0, "weight": 0.15, "reasons": ["reason 1"]},
-    "architecture":  {"score": 7.0, "weight": 0.15, "reasons": ["reason 1"]},
-    "testing_ci":    {"score": 3.0, "weight": 0.10, "reasons": ["reason 1"]},
-    "innovation_ux": {"score": 6.0, "weight": 0.15, "reasons": ["reason 1"]}
+    "functionality": {"score": 0, "weight": 0.25, "reasons": ["<your detailed analysis>"]},
+    "code_quality":  {"score": 0, "weight": 0.20, "reasons": ["<your detailed analysis>"]},
+    "documentation": {"score": 0, "weight": 0.15, "reasons": ["<your detailed analysis>"]},
+    "architecture":  {"score": 0, "weight": 0.15, "reasons": ["<your detailed analysis>"]},
+    "testing_ci":    {"score": 0, "weight": 0.10, "reasons": ["<your detailed analysis>"]},
+    "innovation_ux": {"score": 0, "weight": 0.15, "reasons": ["<your detailed analysis>"]}
   },
-  "total_score": 56.5,
+  "total_score": 0,
   "strengths": ["strength 1", "strength 2"],
   "top_issues": [
     {
@@ -57,6 +57,56 @@ JUDGE_JSON_SCHEMA = """\
   "mentor_notes": "Overall feedback paragraph as a single string.",
   "coding_style_summary": "Paragraph about naming, modularity, consistency."
 }"""
+
+SCORING_RUBRIC = """\
+SCORING RUBRIC — assign each score 1-10 based on ACTUAL code analysis. Do NOT default to mid-range scores.
+
+FUNCTIONALITY (weight 0.25):
+  1-3: Barely works, crashes, missing core features
+  4-5: Basic functionality present but incomplete or buggy
+  6-7: Core features work well, some edge cases missed
+  8-10: Fully functional, robust, handles edge cases
+
+CODE QUALITY (weight 0.20):
+  1-3: Messy spaghetti code, no patterns, poor naming
+  4-5: Some structure but inconsistent style, code smells
+  6-7: Clean code, follows conventions, reasonable patterns
+  8-10: Professional-grade, DRY, SOLID principles, best practices
+
+DOCUMENTATION (weight 0.15):
+  1-3: No README or docs at all
+  4-5: Minimal README, missing setup/usage instructions
+  6-7: Good README with setup guide, some inline comments
+  8-10: Comprehensive docs, API reference, architecture notes, examples
+
+ARCHITECTURE (weight 0.15):
+  1-3: Everything in one file, no separation of concerns
+  4-5: Basic file splitting but flat structure
+  6-7: Clear module boundaries, reasonable separation of concerns
+  8-10: Multi-layer architecture (routers/services/models), design patterns, scalable
+
+TESTING & CI (weight 0.10):
+  1-3: No tests at all, no CI
+  4-5: One or two tests or basic CI only
+  6-7: Decent test coverage, CI pipeline exists
+  8-10: Thorough tests, multiple test types, CI/CD pipeline
+
+INNOVATION & UX (weight 0.15):
+  1-3: Common tutorial clone (calculator, todo, tic-tac-toe), no originality
+  4-5: Minor twist on a well-known concept
+  6-7: Some novel aspects, solves a real need, decent UX
+  8-10: Creative solution to real problem, polished experience, original approach
+
+CALIBRATION — use these as anchors:
+- Single-file game (tic-tac-toe, snake, quiz): architecture 2-3, innovation 2-3, testing 1-2
+- Static website / portfolio: architecture 3-4, innovation 2-4
+- Multi-page CRUD app (blog, todo): architecture 4-6, innovation 3-5
+- Full-stack app with API + DB + frontend: architecture 6-8
+- Full-stack with AI/ML agents, background jobs, webhooks: architecture 7-9, innovation 7-9
+
+CRITICAL: Differentiate aggressively. A tic-tac-toe game CANNOT score the same as a full-stack AI platform.
+"""
+
 from ..services.llm_factory import check_llm_availability
 class AnalyzeRequest(BaseModel):
     github_url: str
@@ -181,6 +231,32 @@ class JudgeResult(BaseModel):
                 data['mentor_notes'] = '\n'.join(str(n) for n in notes)
             elif notes is not None and not isinstance(notes, str):
                 data['mentor_notes'] = str(notes)
+            # ── Recalculate total_score from weighted dimension scores ──
+            # Never trust the LLM to do arithmetic; compute server-side.
+            scores_data = data.get('scores')
+            if isinstance(scores_data, dict):
+                _default_weights = {
+                    'functionality': 0.25, 'code_quality': 0.20,
+                    'documentation': 0.15, 'architecture': 0.15,
+                    'testing_ci': 0.10, 'innovation_ux': 0.15,
+                }
+                w_sum = 0.0
+                ws_sum = 0.0
+                for dim, dw in _default_weights.items():
+                    val = scores_data.get(dim)
+                    if val is None:
+                        continue
+                    if isinstance(val, (int, float)):
+                        s, w = float(val), dw
+                    elif isinstance(val, dict):
+                        s = float(val.get('score', 0))
+                        w = float(val.get('weight', dw))
+                    else:
+                        continue
+                    ws_sum += s * w
+                    w_sum += w
+                if w_sum > 0:
+                    data['total_score'] = round((ws_sum / w_sum) * 10, 1)
         return data
 @router.get(
     "/health",

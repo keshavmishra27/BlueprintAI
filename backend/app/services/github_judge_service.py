@@ -22,7 +22,13 @@ PRIORITY_FILENAMES = {
     "dockerfile", "docker-compose.yml", "makefile",
 }
 MAX_FILE_SIZE_BYTES = 100_000
-MAX_TOTAL_CHARS = 40_000
+MAX_TOTAL_CHARS = 18_000
+
+
+def _truncate_text(text: str, max_chars: int) -> str:
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars] + "\n\n[...truncated due prompt size limit...]\n"
 
 
 def _parse_github_url(url: str) -> tuple[str, str]:
@@ -95,6 +101,133 @@ def _gather_code_from_zip(zip_bytes: bytes) -> str:
     return "".join(aggregated)
 
 
+def _summarize_repo_structure(zip_bytes: bytes) -> dict:
+    summary = {
+        "total_files": 0,
+        "source_files": 0,
+        "python_files": 0,
+        "has_readme": False,
+        "has_package_metadata": False,
+        "has_tests": False,
+        "has_ci": False,
+        "has_notebooks": False,
+        "top_level_scripts": 0,
+    }
+    zip_io = io.BytesIO(zip_bytes)
+    with zipfile.ZipFile(zip_io) as z:
+        for info in z.infolist():
+            if info.is_dir():
+                continue
+            path = info.filename
+            clean_path = path.split("/", 1)[1] if "/" in path else path
+            filename = os.path.basename(clean_path).lower()
+            ext = os.path.splitext(clean_path)[1].lower()
+            summary["total_files"] += 1
+            if ext in CODE_EXTENSIONS:
+                summary["source_files"] += 1
+            if filename.endswith(".py"):
+                summary["python_files"] += 1
+            if filename == "readme.md":
+                summary["has_readme"] = True
+            if filename in {"requirements.txt", "pyproject.toml", "setup.py", "package.json", "environment.yml", "conda.yml"}:
+                summary["has_package_metadata"] = True
+            if "/tests/" in clean_path.lower() or filename.startswith("test_") or filename.endswith("_test.py"):
+                summary["has_tests"] = True
+            if clean_path.lower().startswith(".github/workflows/") or filename in {"ci.yml", "ci.yaml", "azure-pipelines.yml", "circle.yml"}:
+                summary["has_ci"] = True
+            if ext == ".ipynb":
+                summary["has_notebooks"] = True
+            if "/" not in clean_path and filename.endswith(".py"):
+                summary["top_level_scripts"] += 1
+
+    likely_tutorial = (
+        summary["source_files"] <= 6
+        and not summary["has_tests"]
+        and not summary["has_ci"]
+        and not summary["has_package_metadata"]
+    )
+    summary["likely_tutorial"] = likely_tutorial
+    return summary
+
+
+def _format_repo_summary(info: dict) -> str:
+    lines = [
+        f"Total files: {info.get('total_files', 0)}",
+        f"Source files: {info.get('source_files', 0)}",
+        f"Python files: {info.get('python_files', 0)}",
+        f"Has README: {'yes' if info.get('has_readme') else 'no'}",
+        f"Has package metadata: {'yes' if info.get('has_package_metadata') else 'no'}",
+        f"Has tests: {'yes' if info.get('has_tests') else 'no'}",
+        f"Has CI/workflows: {'yes' if info.get('has_ci') else 'no'}",
+        f"Has notebooks: {'yes' if info.get('has_notebooks') else 'no'}",
+        f"Top-level Python scripts: {info.get('top_level_scripts', 0)}",
+    ]
+    if info.get("likely_tutorial"):
+        lines.append("Judgment: likely a small tutorial/miniproject.")
+    return "\n".join(lines)
+
+
+def _score_value(score_data):
+    if isinstance(score_data, dict):
+        return float(score_data.get("score", 0))
+    if isinstance(score_data, (int, float)):
+        return float(score_data)
+    return 0.0
+
+
+def _recalculate_total_score(scores: dict) -> float:
+    weights = {
+        'functionality': 0.25, 'code_quality': 0.20,
+        'documentation': 0.15, 'architecture': 0.15,
+        'testing_ci': 0.10, 'innovation_ux': 0.15,
+    }
+    ws_sum = 0.0
+    w_sum = 0.0
+    for dim, dw in weights.items():
+        value = scores.get(dim)
+        if value is None:
+            continue
+        score = _score_value(value)
+        weight = float(value.get('weight', dw)) if isinstance(value, dict) else dw
+        ws_sum += score * weight
+        w_sum += weight
+    return round((ws_sum / w_sum) * 10, 1) if w_sum > 0 else 0.0
+
+
+def _adjust_simple_project_scores(result: dict, repo_info: dict) -> dict:
+    if not repo_info.get("likely_tutorial"):
+        return result
+    scores = result.get("scores")
+    if not isinstance(scores, dict):
+        return result
+    caps = {
+        "architecture": 3.0,
+        "testing_ci": 1.0,
+        "innovation_ux": 2.0,
+        "documentation": 4.0,
+    }
+    adjusted = False
+    for key, cap in caps.items():
+        score_data = scores.get(key)
+        score_value = _score_value(score_data)
+        if score_value > cap:
+            adjusted = True
+            if isinstance(score_data, dict):
+                score_data["score"] = cap
+            else:
+                scores[key] = {"score": cap, "weight": caps.get(key, 0), "reasons": []}
+    if adjusted:
+        result["scores"] = scores
+        result["total_score"] = _recalculate_total_score(scores)
+        mentor_notes = result.get("mentor_notes", "")
+        note = (
+            "Note: repository metadata indicates a small tutorial/miniproject. "
+            "Dimension scores have been capped to reflect expected complexity."
+        )
+        result["mentor_notes"] = (mentor_notes + "\n\n" + note).strip() if mentor_notes else note
+    return result
+
+
 def analyze_repo(github_url: str, student_name: str) -> dict:
     owner, repo = _parse_github_url(github_url)
     zip_bytes = download_repo_zip(owner, repo)
@@ -106,12 +239,16 @@ def analyze_repo(github_url: str, student_name: str) -> dict:
     from backend.app.services.crews.repo_crew import run_repo_judge_crew
 
     static_summary = run_static_analysis(zip_bytes)
-    return run_repo_judge_crew(
+    repo_info = _summarize_repo_structure(zip_bytes)
+    repo_summary = _format_repo_summary(repo_info)
+    result = run_repo_judge_crew(
         github_url=github_url,
         student_name=student_name,
         code_dump=code_dump,
         static_summary=static_summary,
+        repo_summary=repo_summary,
     )
+    return _adjust_simple_project_scores(result, repo_info)
 
 
 def analyze_repo_llm_only(
@@ -119,12 +256,16 @@ def analyze_repo_llm_only(
     student_name: str,
     code_dump: str,
     static_summary: dict,
+    repo_summary: str = "",
+    repo_info: dict | None = None,
 ) -> dict:
     """Direct LLM fallback when Crew fails."""
     from backend.app.services.llm_factory import invoke_hybrid_llm, extract_json_from_text
     from backend.app.routers.repo_judge import JUDGE_JSON_SCHEMA
     from langchain_core.messages import SystemMessage, HumanMessage
     import json
+
+    from backend.app.routers.repo_judge import SCORING_RUBRIC
 
     system_prompt = (
         "You are a hackathon judge. Static analysis + code sample provided.\n"
@@ -139,11 +280,16 @@ def analyze_repo_llm_only(
         "\"run_commands\" (list of strings), and \"notes\" (string)\n"
         "- \"files\" inside top_issues must be a list of OBJECTS with \"path\" and \"lines\" keys, "
         "never plain strings\n\n"
+        "Use the scoring rubric below to differentiate simple tutorial projects from full-stack or innovative solutions. "
+        "Do not give every repo the same mid-range score.\n\n"
+        f"{SCORING_RUBRIC}\n\n"
         f"EXACT JSON SCHEMA TO FOLLOW:\n{JUDGE_JSON_SCHEMA}"
     )
     user_prompt = (
         f"Repo: {github_url}\nStudent: {student_name}\n"
-        f"STATIC:\n{json.dumps(static_summary)[:6000]}\n\nCODE:\n{code_dump[:30000]}"
+        f"REPO METADATA:\n{_truncate_text(repo_summary, 900)}\n\n"
+        f"STATIC:\n{_truncate_text(json.dumps(static_summary), 3000)}\n\n"
+        f"CODE:\n{_truncate_text(code_dump, 12000)}"
     )
     try:
         response = invoke_hybrid_llm(
@@ -160,7 +306,10 @@ def analyze_repo_llm_only(
     except Exception as e:
         logger.error("LLM fallback failed: %s", e)
 
-    return _error_result(github_url, student_name, "Analysis incomplete")
+    result = _error_result(github_url, student_name, "Analysis incomplete")
+    if repo_info:
+        return _adjust_simple_project_scores(result, repo_info)
+    return result
 
 
 def _error_result(github_url, student_name, detail):

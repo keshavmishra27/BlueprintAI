@@ -6,6 +6,7 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from backend.app.routers.repo_judge import JudgeResult, SecurityWarning
+from backend.app.services.github_judge_service import _adjust_simple_project_scores
 
 
 def test_security_warning_mapping():
@@ -50,8 +51,30 @@ def test_full_result_validation():
         "mentor_notes": "Good job.",
     }
     validated = JudgeResult(**mock_result)
-    assert validated.total_score == 70
+    assert validated.total_score == 70.5
     assert len(validated.security_warnings) == 2
+
+
+def test_simple_project_score_caps():
+    result = {
+        "repo_url": "https://github.com/test/simple",
+        "scores": {
+            "functionality": {"score": 7, "reasons": ["Core feature works"]},
+            "code_quality": {"score": 5, "reasons": ["Acceptable style"]},
+            "documentation": {"score": 6, "reasons": ["Basic README"]},
+            "architecture": {"score": 7, "reasons": ["Single-purpose script"]},
+            "testing_ci": {"score": 5, "reasons": ["No tests present"]},
+            "innovation_ux": {"score": 8, "reasons": ["Simple model classifier"]},
+        },
+        "total_score": 52,
+        "mentor_notes": "Initial assessment.",
+    }
+    adjusted = _adjust_simple_project_scores(result, {"likely_tutorial": True})
+    assert adjusted["scores"]["architecture"]["score"] == 3.0
+    assert adjusted["scores"]["testing_ci"]["score"] == 1.0
+    assert adjusted["scores"]["innovation_ux"]["score"] == 2.0
+    assert adjusted["total_score"] <= 45
+    assert "small tutorial/miniproject" in adjusted["mentor_notes"].lower()
 
 
 def test_sparse_result_validation():

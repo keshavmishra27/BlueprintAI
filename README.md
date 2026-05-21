@@ -151,7 +151,10 @@ Create a `.env` file in the project root:
 OLLAMA_MODEL=qwen2.5:3b
 OLLAMA_BASE_URL=http://localhost:11434
 OPENROUTER_API_KEY=your_key_here
-OPENROUTER_MODEL=google/gemini-2.0-flash-001
+OPENROUTER_MODEL=gpt-4o-mini
+OPENROUTER_FALLBACK_MODEL=gpt-4o-mini
+OPENROUTER_CREW_MODEL=gpt-4o-mini
+OPENROUTER_FALLBACK_MAX_TOKENS=466
 GOOGLE_API_KEY=optional_gemini_key
 API_KEY=dev-local-key-change-me
 API_URL=http://localhost:8000

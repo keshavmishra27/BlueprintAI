@@ -17,18 +17,31 @@ def _crew_result_text(result) -> str:
     return str(result)
 
 
-def run_crew(agents: list, tasks: list, inputs: dict | None = None) -> str:
+def run_crew(agents: list, tasks: list, inputs: dict | None = None, max_retries: int = 2) -> str:
     llm = get_hybrid_crew_llm()
     for agent in agents:
         agent.llm = llm
-    crew = Crew(
-        agents=agents,
-        tasks=tasks,
-        process=Process.sequential,
-        verbose=False,
-    )
-    result = crew.kickoff(inputs=inputs or {})
-    return _crew_result_text(result)
+
+    last_result = ""
+    for attempt in range(1, max_retries + 1):
+        try:
+            crew = Crew(
+                agents=agents,
+                tasks=tasks,
+                process=Process.sequential,
+                verbose=False,
+            )
+            result = crew.kickoff(inputs=inputs or {})
+            text = _crew_result_text(result)
+            if text and text.strip():
+                return text
+            logger.warning("Crew attempt %d/%d returned empty output, retrying...", attempt, max_retries)
+            last_result = text
+        except Exception as e:
+            logger.warning("Crew attempt %d/%d failed: %s", attempt, max_retries, e)
+            if attempt == max_retries:
+                raise
+    return last_result
 
 
 def parse_json_output(raw: str) -> dict:

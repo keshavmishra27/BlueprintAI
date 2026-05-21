@@ -5,10 +5,16 @@ from crewai import Agent, Task
 
 from backend.app.services.crews.base import parse_json_output, run_crew
 from backend.app.services.llm_factory import extract_json_from_text, invoke_hybrid_llm
-from backend.app.routers.repo_judge import JUDGE_JSON_SCHEMA
+from backend.app.routers.repo_judge import JUDGE_JSON_SCHEMA, SCORING_RUBRIC
 from langchain_core.messages import SystemMessage, HumanMessage
 
 logger = logging.getLogger(__name__)
+
+
+def _truncate_text(text: str, max_chars: int) -> str:
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars] + "\n\n[...truncated due prompt size limit...]\n"
 
 
 def run_repo_judge_crew(
@@ -16,8 +22,9 @@ def run_repo_judge_crew(
     student_name: str,
     code_dump: str,
     static_summary: dict,
+    repo_summary: str = "",
 ) -> dict:
-    static_text = json.dumps(static_summary, indent=2)[:8000]
+    static_text = _truncate_text(json.dumps(static_summary, indent=2), 5000)
 
     code_analyst = Agent(
         role="Code Quality Analyst",
@@ -41,8 +48,9 @@ def run_repo_judge_crew(
     t1 = Task(
         description=(
             f"Repository: {github_url}\nStudent: {student_name}\n"
+            f"REPO METADATA:\n{repo_summary}\n\n"
             f"STATIC ANALYSIS (ruff/bandit):\n{static_text}\n\n"
-            f"CODE SAMPLE:\n{code_dump[:25000]}\n\n"
+            f"CODE SAMPLE:\n{_truncate_text(code_dump, 12000)}\n\n"
             "Analyze code quality, architecture, documentation, coding style. "
             "Return bullet findings with file paths."
         ),
@@ -60,6 +68,7 @@ def run_repo_judge_crew(
     )
     t3 = Task(
         description=(
+            f"REPO METADATA:\n{repo_summary}\n\n"
             "Merge prior analyses into ONE JSON object. "
             "Return ONLY valid JSON — no markdown, no explanation, no extra text.\n\n"
             "CRITICAL TYPE RULES (violating these causes a system crash):\n"
@@ -72,6 +81,9 @@ def run_repo_judge_crew(
             "\"run_commands\" (list of strings), and \"notes\" (string)\n"
             "- \"files\" inside top_issues must be a list of OBJECTS with \"path\" and \"lines\" keys, "
             "never plain strings\n\n"
+            "Use the scoring rubric below to differentiate simple tutorial projects from full-stack or innovative solutions. "
+            "Do not give every repo the same mid-range score.\n\n"
+            f"{SCORING_RUBRIC}\n\n"
             f'Set repo_url to "{github_url}".\n\n'
             f"EXACT JSON SCHEMA TO FOLLOW:\n{JUDGE_JSON_SCHEMA}"
         ),
@@ -91,10 +103,16 @@ def run_repo_judge_crew(
     except Exception as e:
         logger.warning("Repo crew failed: %s", e)
 
-    return _fallback_repo(github_url, student_name, code_dump, static_summary)
+    return _fallback_repo(github_url, student_name, code_dump, static_summary, repo_summary)
 
 
-def _fallback_repo(github_url, student_name, code_dump, static_summary) -> dict:
+def _fallback_repo(github_url, student_name, code_dump, static_summary, repo_summary: str = "") -> dict:
     from backend.app.services.github_judge_service import analyze_repo_llm_only
 
-    return analyze_repo_llm_only(github_url, student_name, code_dump, static_summary)
+    return analyze_repo_llm_only(
+        github_url,
+        student_name,
+        code_dump,
+        static_summary,
+        repo_summary=repo_summary,
+    )
