@@ -37,9 +37,10 @@ def run_project_suggest_crew(theme: str) -> dict:
         description=(
             f"Theme: {theme}\n"
             "Return JSON hackathon_projects: 5 items with title, description, tech_stack, why_it_wins. "
+            "Also include recommended_hackathons: 2-3 real-world upcoming/recurring hackathons (e.g. MLH, company specific) related to these themes. "
             "Combine with resume_projects into one JSON object."
         ),
-        expected_output="JSON with resume_projects and hackathon_projects",
+        expected_output="JSON with resume_projects, hackathon_projects, and recommended_hackathons",
         agent=hackathon_agent,
         context=[t1],
     )

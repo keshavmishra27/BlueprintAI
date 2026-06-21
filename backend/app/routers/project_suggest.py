@@ -15,10 +15,31 @@ class ProjectItem(BaseModel):
     tech_stack: List[str] = []
     why_great_for_resume: str = ""
     why_it_wins: str = ""
+from pydantic import BaseModel, model_validator
+
+class HackathonRecommendation(BaseModel):
+    name: str = "Unknown Hackathon"
+    description: str = ""
+    date: str = ""
+    registration_link: str = ""
+
+    @model_validator(mode='before')
+    @classmethod
+    def coerce_fields(cls, data):
+        if isinstance(data, str):
+            return {"name": data}
+        if isinstance(data, dict):
+            if 'link' in data and not data.get('registration_link'):
+                data['registration_link'] = data['link']
+            if 'theme' in data and not data.get('description'):
+                data['description'] = data['theme']
+        return data
+
 class SuggestResult(BaseModel):
     themes: List[str]
     resume_projects: List[ProjectItem] = []
     hackathon_projects: List[ProjectItem] = []
+    recommended_hackathons: List[HackathonRecommendation] = []
 @router.get("/health", summary="Project Suggest health check")
 def health():
     return {"status": "ok", "route": "/project-suggest"}
@@ -81,6 +102,14 @@ A) JSON schema (required keys)
       "time_and_scope":{"team_size":int,"hackathon_hours":int}
     }, ...
   ],
+  "recommended_hackathons":[
+    {
+      "name": "Hackathon Name",
+      "description": "Brief description of the hackathon related to these themes",
+      "date": "Month YYYY or Recurring",
+      "registration_link": "https://example.com/register"
+    }
+  ],
   "novelty_constraints":"For every idea, the agent MUST explicitly name at least one existing project/product and then state 2–3 concrete ways the proposed idea is different and why it matters.",
   "ethical_and_privacy_notes":"If the idea uses personal data/biometric/financial data, include a short privacy mitigation strategy and consent checklist.",
   "evaluation_rubric":{
@@ -120,15 +149,29 @@ def suggest_projects(request: Request, req: SuggestRequest):
             status_code=500,
             detail=f"Suggestion failed: {e}",
         )
-    # Normalise into ProjectItem-compatible dicts
+    def normalize_project(p: dict) -> dict:
+        norm = {}
+        for k in ProjectItem.model_fields:
+            val = p.get(k)
+            if k == "tech_stack":
+                if isinstance(val, str):
+                    norm[k] = [x.strip() for x in val.split(",") if x.strip()]
+                elif isinstance(val, list):
+                    norm[k] = val
+                else:
+                    norm[k] = []
+            else:
+                norm[k] = str(val) if val is not None else ""
+        return norm
+
     resume = []
     for p in data.get("resume_projects", []):
         if isinstance(p, dict):
-            resume.append(ProjectItem(**{k: p.get(k, "") for k in ProjectItem.model_fields}).dict())
+            resume.append(ProjectItem(**normalize_project(p)).dict())
     hackathon = []
     for p in data.get("hackathon_projects", []):
         if isinstance(p, dict):
-            hackathon.append(ProjectItem(**{k: p.get(k, "") for k in ProjectItem.model_fields}).dict())
+            hackathon.append(ProjectItem(**normalize_project(p)).dict())
     # Return as dict for robustness.
     # Frontend expects 'theme' (singular) often, so we provide both for safety.
     return {
@@ -136,4 +179,5 @@ def suggest_projects(request: Request, req: SuggestRequest):
         "theme": theme_str,
         "resume_projects": resume,
         "hackathon_projects": hackathon,
+        "recommended_hackathons": data.get("recommended_hackathons", [])
     }

@@ -1,29 +1,14 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
-let isInitialized = false;
-
 export function initBackgroundAnimation() {
-    if (isInitialized) return;
-    isInitialized = true;
-
-    // Create the background container
-    const bgDiv = document.createElement('div');
-    bgDiv.id = 'background-animation';
-    Object.assign(bgDiv.style, {
-        position: 'fixed',
-        top: '0', left: '0', width: '100vw', height: '100vh',
-        zIndex: '-2', // Behind the CSS mesh grid which should be -1
-        pointerEvents: 'none', // Don't block clicks
-        opacity: '0.8' // Slightly transparent so it blends well
-    });
-    document.body.appendChild(bgDiv);
-
     // CONFIG
     const COUNT = 20000;
     const SPEED_MULT = 1;
+    const AUTO_SPIN = true;
 
     // SETUP
     const scene = new THREE.Scene();
@@ -31,17 +16,30 @@ export function initBackgroundAnimation() {
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
     camera.position.set(0, 0, 100);
     
-    // Set alpha to true to allow transparent background
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0x000000, 0); // Transparent clear color
-    bgDiv.appendChild(renderer.domElement);
+    renderer.setClearColor(0x000000, 1);
+    
+    // Style the canvas to sit in the background
+    renderer.domElement.style.position = 'fixed';
+    renderer.domElement.style.top = '0';
+    renderer.domElement.style.left = '0';
+    renderer.domElement.style.zIndex = '-5';
+    renderer.domElement.style.pointerEvents = 'none'; // So it doesn't block UI interactions
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.autoRotate = AUTO_SPIN;
+    controls.autoRotateSpeed = 2.0;
 
     // POST PROCESSING
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
     const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-    bloomPass.strength = 1.8; bloomPass.radius = 0.4; bloomPass.threshold = 0;
+    bloomPass.strength = 1.8; 
+    bloomPass.radius = 0.4; 
+    bloomPass.threshold = 0;
     composer.addPass(bloomPass);
 
     // SWARM OBJECTS
@@ -66,10 +64,11 @@ export function initBackgroundAnimation() {
     }
 
     // CONTROL STUBS
-    const PARAMS: Record<string, number> = {"gravity":4,"swirl":3.5,"disk":80,"warp":2,"jets":1.5};
+    const PARAMS: Record<string, number> = {"speed":0.85,"intensity":0.45,"depth":95,"focus":0.9,"spread":34};
     const addControl = (id: string, _label: string, _min: number, _max: number, val: number) => {
         return PARAMS[id] !== undefined ? PARAMS[id] : val;
     };
+    const setInfo = (title?: string, desc?: string) => {};
 
     // ANIMATION LOOP
     const clock = new THREE.Clock();
@@ -83,80 +82,58 @@ export function initBackgroundAnimation() {
             (material as any).uniforms.uTime.value = time;
         }
 
+        controls.update();
+
         // SWARM LOGIC
-        const count = COUNT;
+        const count = COUNT; // Alias for user code compatibility
         for(let i=0; i<COUNT; i++) {
-             const gravity = addControl("gravity", "Gravity Strength", 0.1, 10.0, 4.0);
-             const swirl = addControl("swirl", "Frame Dragging", 0.0, 8.0, 3.5);
-             const disk = addControl("disk", "Accretion Disk Radius", 20.0, 200.0, 80.0);
-             const warp = addControl("warp", "Space Warp", 0.0, 5.0, 2.0);
-             const jets = addControl("jets", "Relativistic Jets", 0.0, 5.0, 1.5);
+             // USER CODE INJECTION START
+             const speed = addControl("speed", "Flow Speed", 0.05, 3.0, 0.85);
+             const intensity = addControl("intensity", "Intensity", 0.0, 1.0, 0.45);
+             const depth = addControl("depth", "Depth", 20, 180, 95);
+             const focus = addControl("focus", "Focus Core", 0.1, 2.0, 0.9);
+             const spread = addControl("spread", "Energy Spread", 5, 80, 34);
              
-             const fi = i / count;
-             const golden = 2.399963229728653;
-             const spiral = fi * 300.0;
+             const n = count > 1 ? i / (count - 1) : 0;
+             const g = i * 2.399963229728653;
+             const t = time * speed;
              
-             const baseAngle = i * golden;
-             const timeWarp = time * (0.15 + gravity * 0.05);
+             const band = n * 18.0;
+             const pulse = 0.5 + 0.5 * Math.sin(t * 1.35 - n * 12.0);
+             const breath = 0.86 + 0.14 * Math.sin(t * 0.72);
              
-             const radialNoise = Math.sin(i * 0.013 + time * 0.7) * 8.0;
-             const radius = disk + spiral * 0.18 + radialNoise;
+             const lane = Math.sin(g * 0.618 + t * 0.32);
+             const twist = g + t * (0.22 + intensity * 0.55) + Math.sin(band + t) * 0.35;
              
-             const collapse = 1.0 / (1.0 + fi * gravity * 0.7);
+             const core = Math.pow(Math.abs(lane), focus);
+             const r = (spread * (0.2 + core * 1.35)) * breath;
              
-             const angle = baseAngle + timeWarp + (1.0 / (radius * 0.03 + 0.2)) * swirl;
+             const waveA = Math.sin(band * 1.7 - t * 2.2);
+             const waveB = Math.cos(band * 0.9 + t * 1.4);
              
-             let x = Math.cos(angle) * radius * collapse;
-             let z = Math.sin(angle) * radius * collapse;
-             
-             const diskWave = Math.sin(radius * 0.08 - time * 2.0) * 3.0;
-             let y = diskWave * Math.exp(-radius * 0.008);
-             
-             const singularityDist = Math.sqrt(x * x + y * y + z * z) + 0.0001;
-             
-             const lens = warp / (singularityDist * 0.08 + 1.0);
-             
-             x *= 1.0 + lens;
-             z *= 1.0 + lens;
-             
-             const pull = gravity / (singularityDist * 0.15 + 1.0);
-             
-             x -= x * pull * 0.015;
-             y -= y * pull * 0.015;
-             z -= z * pull * 0.015;
-             
-             const jetMask = Math.abs(Math.sin(fi * 90.0 + time * 0.5));
-             const jetStrength = jets * Math.pow(jetMask, 18.0);
-             
-             y += (fi - 0.5) * 900.0 * jetStrength;
-             
-             const photonRing = Math.exp(-Math.abs(singularityDist - 18.0) * 0.08);
-             
-             x += Math.cos(angle * 4.0 + time * 3.0) * photonRing * 6.0;
-             z += Math.sin(angle * 4.0 + time * 3.0) * photonRing * 6.0;
+             const x = Math.cos(twist) * r + waveA * intensity * 9.0;
+             const y = Math.sin(twist) * r * 0.42 + waveB * intensity * 7.0;
+             const z = (n - 0.5) * depth + Math.sin(t * 1.1 + n * 24.0) * intensity * 18.0;
              
              target.set(x, y, z);
              
-             const hueShift = 0.58 + 0.25 * Math.sin(radius * 0.01 - time * 0.2);
-             const saturation = 0.8 - collapse * 0.3;
-             const brightness =
-                 0.15 +
-                 photonRing * 0.9 +
-                 jetStrength * 0.8 +
-                 Math.exp(-singularityDist * 0.01) * 0.5;
+             const heat = 0.56 + pulse * 0.08 + intensity * 0.03;
+             const sat = 0.58 + intensity * 0.32;
+             const light = 0.18 + pulse * 0.25 + core * 0.12;
              
-             color.setHSL(
-                 hueShift,
-                 saturation,
-                 Math.min(1.0, brightness)
-             );
+             color.setHSL(heat, sat, light);
+             
+             if (i === 0) {
+               setInfo("VEXIS Flow State Energy", "Controlled particle momentum: calm intensity, directional focus, and cinematic mental energy before execution.");
+             }
+             // USER CODE INJECTION END
 
              // LERP & UPDATE
              positions[i].lerp(target, 0.1);
              dummy.position.copy(positions[i]);
              dummy.updateMatrix();
              instancedMesh.setMatrixAt(i, dummy.matrix);
-             instancedMesh.setColorAt(i, color); 
+             instancedMesh.setColorAt(i, color); // Fix: Use 'color' which user modifies
         }
         instancedMesh.instanceMatrix.needsUpdate = true;
         if(instancedMesh.instanceColor) instancedMesh.instanceColor.needsUpdate = true;

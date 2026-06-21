@@ -44,34 +44,43 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "gpt-4o-mini")
 OPENROUTER_FALLBACK_MODEL = os.getenv("OPENROUTER_FALLBACK_MODEL", "gpt-4o-mini")
 OPENROUTER_CREW_MODEL = os.getenv("OPENROUTER_CREW_MODEL", OPENROUTER_FALLBACK_MODEL)
-OPENROUTER_FALLBACK_MAX_TOKENS = int(os.getenv("OPENROUTER_FALLBACK_MAX_TOKENS", "466"))
-OPENROUTER_CREW_MAX_TOKENS = int(os.getenv("OPENROUTER_CREW_MAX_TOKENS", "4096"))
+OPENROUTER_FALLBACK_MAX_TOKENS = int(os.getenv("OPENROUTER_FALLBACK_MAX_TOKENS", "4096"))
+OPENROUTER_CREW_MAX_TOKENS = int(os.getenv("OPENROUTER_CREW_MAX_TOKENS", "8192"))
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "1500"))
+LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "4096"))
 LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "60"))
 logger.info("LLM Factory initialized (OpenRouter=%s, max_tokens=%s, crew_max_tokens=%s)", "yes" if OPENROUTER_API_KEY else "no", LLM_MAX_TOKENS, OPENROUTER_CREW_MAX_TOKENS)
 def extract_json_from_text(text: str) -> dict:
     if not text:
         return {}
+    
+    # helper to clean trailing commas
+    def clean_json_str(s: str) -> str:
+        s = re.sub(r',\s*\}', '}', s)
+        s = re.sub(r',\s*\]', ']', s)
+        return s
+
     json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
     if json_match:
         try:
-            return json.loads(json_match.group(1))
+            return json.loads(clean_json_str(json_match.group(1)))
         except json.JSONDecodeError:
             pass
+            
     start = text.find("{")
     if start != -1:
         end = text.rfind("}")
         if end != -1 and end > start:
             json_str = text[start:end+1]
+            json_str_clean = clean_json_str(json_str)
             try:
-                return json.loads(json_str)
+                return json.loads(json_str_clean)
             except json.JSONDecodeError:
-                open_braces = json_str.count("{")
-                close_braces = json_str.count("}")
+                open_braces = json_str_clean.count("{")
+                close_braces = json_str_clean.count("}")
                 if open_braces > close_braces:
-                    fixed_json = json_str + ("}" * (open_braces - close_braces))
+                    fixed_json = json_str_clean + ("}" * (open_braces - close_braces))
                     try:
                         return json.loads(fixed_json)
                     except:
@@ -79,7 +88,7 @@ def extract_json_from_text(text: str) -> dict:
                 try:
                     for suffix in ["}", "]}", "}}", "}]}", "}]}}"]:
                          try:
-                             return json.loads(json_str + suffix)
+                             return json.loads(json_str_clean + suffix)
                          except:
                              continue
                 except:

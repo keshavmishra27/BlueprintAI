@@ -55,7 +55,15 @@ JUDGE_JSON_SCHEMA = """\
     {"name": "test_login", "description": "Test user login flow", "file": "tests/test_auth.py"}
   ],
   "mentor_notes": "Overall feedback paragraph as a single string.",
-  "coding_style_summary": "Paragraph about naming, modularity, consistency."
+  "coding_style_summary": "Paragraph about naming, modularity, consistency.",
+  "hackathon_recommendations": [
+    {
+      "name": "Hackathon Name",
+      "description": "Brief description of the hackathon",
+      "date": "Month YYYY or Recurring",
+      "registration_link": "https://example.com/register"
+    }
+  ]
 }"""
 
 SCORING_RUBRIC = """\
@@ -198,9 +206,22 @@ class Reproducibility(BaseModel):
             return {"notes": data, "can_run": False}
         return data
 class RecommendedTest(BaseModel):
+    name: Optional[str] = "Recommended Test"
+    description: Optional[str] = "No description provided."
+    file: Optional[str] = ""
+    @model_validator(mode='before')
+    @classmethod
+    def coerce_string(cls, data):
+        if isinstance(data, str):
+            return {"name": "Recommended Test", "description": data, "file": data}
+        return data
+
+class HackathonRecommendation(BaseModel):
     name: str
-    description: str
-    file: str
+    description: Optional[str] = ""
+    date: Optional[str] = ""
+    registration_link: Optional[str] = ""
+
 class JudgeResult(BaseModel):
     repo_url: str
     accessibility: str = "public"
@@ -215,6 +236,7 @@ class JudgeResult(BaseModel):
     recommended_tests: List[RecommendedTest] = []
     mentor_notes: str = "Analysis completed."
     student_name: Optional[str] = None
+    hackathon_recommendations: List[HackathonRecommendation] = []
     @model_validator(mode='before')
     @classmethod
     def coerce_fields(cls, data):
@@ -339,7 +361,8 @@ def analyze_repo(
             ],
             "reproducibility": {"can_run": False},
             "mentor_notes": f"Error processing AI results: {e}",
-            "student_name": req.student_name
+            "student_name": req.student_name,
+            "hackathon_recommendations": []
         }
     except Exception as e:
         logger.exception("Unexpected error finalizing result")

@@ -108,7 +108,7 @@ function attachFormListeners(render: () => void) {
       try {
         const res = await apiPost('/project-suggest/suggest', {
           themes: state.selectedDomains
-        }, 180000);
+        }, 300000);
 
         setState({
           loading: false,
@@ -183,6 +183,23 @@ function getResultsHTML() {
             </div>
           </div>
           ${hackathonProjects.map((p: any, i: number) => renderCard(p, '#00ffcc', 'Why It Wins', p.why_it_wins, i)).join('')}
+        </div>
+      ` : ''}
+
+      ${r.recommended_hackathons && r.recommended_hackathons.length > 0 ? `
+        <div class="glass-card" style="margin-bottom: 40px; border-left: 4px solid #f59e0b;">
+          <h3 style="margin-bottom: 16px; color: #f59e0b;">🏆 Recommended Hackathons</h3>
+          <p style="color: var(--text-muted); margin-bottom: 16px;">Based on your selected themes, you could submit these projects to these upcoming hackathons:</p>
+          <div style="display: grid; gap: 16px;">
+            ${r.recommended_hackathons.map((h: any) => `
+              <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 8px;">
+                <h4 style="color: var(--text-main); font-size: 1.1rem; margin-bottom: 4px;">${h.name}</h4>
+                <div style="font-size: 0.85rem; color: #00ffcc; margin-bottom: 8px; font-weight: 700;">📅 Date: ${h.date}</div>
+                <p style="font-size: 0.95rem; margin-bottom: 12px;">${h.description}</p>
+                <a href="${h.registration_link}" target="_blank" class="btn-outline" style="display: inline-block; text-decoration: none; font-size: 0.85rem;">Register Here &rarr;</a>
+              </div>
+            `).join('')}
+          </div>
         </div>
       ` : ''}
 

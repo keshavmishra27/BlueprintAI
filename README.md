@@ -13,9 +13,9 @@ Groupify is a platform which lets you analyze your coding style along with telli
 | **Repo Judge** | GitHub zip ingest, ruff/bandit static checks, CrewAI code/security/mentor agents |
 | **Project Suggestion** | CrewAI resume + hackathon mentors with web search for competitor context |
 | **Coder comparison** | CrewAI MCQ author + reviewer; percentile vs real scored sessions in the same domain |
-| **🔄 GitHub Webhook Automation** | Register repos for zero-touch CrewAI code review on every `git push` |
-| **⚡ Async Background Tasks** | CrewAI crews run in background threads; UI polls `/tasks/{id}` for results |
-| **🕛 Nightly Skill-Gap Curator** | APScheduler cron job runs CrewAI analyst + coach agents to identify gaps & recommend projects |
+| **GitHub Webhook Automation** | Register repos for zero touch CrewAI code review on every `git push` |
+| **Async Background Tasks** | CrewAI crews run in background threads; UI polls `/tasks/{id}` for results |
+| **Nightly Skill-Gap Curator** | APScheduler cron job runs CrewAI analyst + coach agents to identify gaps & recommend projects |
 ```mermaid
 graph TD
     classDef frontend fill:#1e1b4b,stroke:#0ea5e9,stroke-width:4px,color:#fff,rx:15,ry:15;
@@ -24,7 +24,7 @@ graph TD
     classDef db fill:#1e1b4b,stroke:#10b981,stroke-width:4px,color:#fff,rx:15,ry:15;
     classDef cloud fill:#1e1b4b,stroke:#f59e0b,stroke-width:4px,color:#fff,rx:15,ry:15;
     subgraph UserZone [" User Interface"]
-        UI[" <b>Reactive Frontend</b><br/>(Solara / Python)"]:::frontend
+        UI[" <b>Reactive Frontend</b><br/>(Vite/TS & Solara)"]:::frontend
     end
     subgraph ServiceZone [" Backend Logic"]
         API["<b>FastAPI Layer</b><br/>(Endpoints)"]:::backend
@@ -79,7 +79,7 @@ sequenceDiagram
     F->>+D: Update Session (Score & Status)
     D-->>-F: Confirmed
     F-->>-S: Final Score + Comparison Data
-    S-->>-U: 🎉 Show Detailed Scorecard & Percentile
+    S-->>-U: Show Detailed Scorecard & Percentile
 ```
 ##  Project Structure
 ```
@@ -109,6 +109,14 @@ group_maker/
 ├── alembic/                    # DB migrations
 ├── tests/                      # pytest suite
 ├── .github/workflows/ci.yml
+├── frontend/                   # Modern Vite/TS Frontend
+│   ├── index.html
+│   ├── package.json
+│   ├── src/
+│   │   ├── main.ts
+│   │   ├── style.css
+│   │   ├── pages/              # Frontend pages (Home, Repo Judge, etc.)
+│   │   └── api.ts              # Backend API client
 ├── solara_app/
 │   ├── app.py                     
 │   ├── assets/
@@ -129,8 +137,8 @@ group_maker/
 |---|---|
 | **Backend** | FastAPI, SQLAlchemy, Pydantic |
 | **Database** | PostgreSQL (Supabase)  auto fallback to SQLite |
-| **Frontend** | Solara (Python native reactive UI) |
-| **AI / LLM** | **Hybrid Model Factory** (Gemini 2.0 Flash via OpenRouter  Ollama Local) |
+| **Frontend** | Vite/TypeScript (Modern Web UI) & Solara (Python UI) |
+| **AI / LLM** | **Hybrid Model Factory** (Gemini 2.0 Flash via OpenRouter  Ollama Local) with Robust JSON fallback parser |
 | **Agents** | CrewAI (multi-agent crews per feature), LangChain LLM fallback |
 | **Security** | Optional `API_KEY`, slowapi rate limits, tightened CORS |
 | **CI** | GitHub Actions + pytest |
@@ -154,7 +162,9 @@ OPENROUTER_API_KEY=your_key_here
 OPENROUTER_MODEL=gpt-4o-mini
 OPENROUTER_FALLBACK_MODEL=gpt-4o-mini
 OPENROUTER_CREW_MODEL=gpt-4o-mini
-OPENROUTER_FALLBACK_MAX_TOKENS=466
+LLM_MAX_TOKENS=4096
+OPENROUTER_FALLBACK_MAX_TOKENS=4096
+OPENROUTER_CREW_MAX_TOKENS=8192
 GOOGLE_API_KEY=optional_gemini_key
 API_KEY=dev-local-key-change-me
 API_URL=http://localhost:8000
@@ -174,11 +184,19 @@ uvicorn backend.app.main:app --reload --port 8000
 ```
 - API: `http://localhost:8000`
 - Docs: `http://localhost:8000/docs`
-### 5. Start the frontend
+### 5. Start the Frontend (Vite)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+- UI: `http://localhost:5173`
+
+### 6. Start the Solara UI (Legacy/Alternative)
 ```bash
 solara run solara_app/app.py
 ```
-- UI: `http://localhost:8765`
+- Solara UI: `http://localhost:8765`
 ---
 ##  API Endpoints
 ### Worldwide Comparison
@@ -201,28 +219,28 @@ solara run solara_app/app.py
 | `GET` | `/project-suggest/health` | Project suggestion health check |
 | `POST` | `/idea-validator/check` | Check idea similarity vs current market |
 | `POST` | `/idea-validator/refine` | CrewAI refinement & novelty scoring (market research, not legal advice) |
-### 🔄 GitHub Webhooks (Option A)
+### GitHub Webhooks (Option A)
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/webhooks/register` | Register a repo for automatic CrewAI analysis on push |
 | `GET` | `/webhooks/repos` | List all registered webhook repos |
 | `POST` | `/webhooks/github` | Receive GitHub push events (called by GitHub, not users) |
-### ⚡ Background Tasks (Option B)
+### Background Tasks (Option B)
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/tasks/{task_id}` | Poll status of a background CrewAI task |
 | `GET` | `/tasks` | List recent background tasks |
-### 🕛 Automation & Scheduler (Option C)
+### Automation & Scheduler (Option C)
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/automation/scheduler` | Check scheduler status and next run times |
-| `POST` | `/automation/scheduler/run-now` | Manually trigger skill-gap analysis |
-| `GET` | `/automation/skill-gap-reports` | List recent skill-gap reports |
-| `GET` | `/automation/skill-gap-reports/{id}` | Get full skill-gap report JSON |
+| `POST` | `/automation/scheduler/run-now` | Manually trigger skill gap analysis |
+| `GET` | `/automation/skill-gap-reports` | List recent skill gap reports |
+| `GET` | `/automation/skill-gap-reports/{id}` | Get full skill gap report JSON |
 ##  Database Models
 | Model | Description |
 |---|---|
 | **`AssessmentSession`** | Student name, domains tested, chat transcript, scores, status |
 | **`BackgroundTask`** | Async task tracker: id, type, status, payload, result, error |
-| **`WebhookRepo`** | Registered repos for auto-analysis: URL, student, secret, last SHA |
-| **`SkillGapReport`** | Nightly curator output: per-student gaps + project recommendations |
+| **`WebhookRepo`** | Registered repos for auto analysis: URL, student, secret, last SHA |
+| **`SkillGapReport`** | Nightly curator output: per student gaps + project recommendations |

@@ -11,9 +11,9 @@ export function getHeaders(): Record<string, string> {
   return headers;
 }
 
-export async function apiGet(path: string, timeout = 30000): Promise<any> {
+export async function apiGet(path: string, timeout = 900000): Promise<any> {
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
+  const id = setTimeout(() => controller.abort(new Error(`Request timed out after ${timeout/1000} seconds. The AI might be taking longer than expected.`)), timeout);
   try {
     const response = await fetch(`${API_URL}${path}`, {
       method: 'GET',
@@ -31,9 +31,9 @@ export async function apiGet(path: string, timeout = 30000): Promise<any> {
   }
 }
 
-export async function apiPost(path: string, data: any, timeout = 120000): Promise<any> {
+export async function apiPost(path: string, data: any, timeout = 900000): Promise<any> {
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
+  const id = setTimeout(() => controller.abort(new Error(`Request timed out after ${timeout/1000} seconds. The AI might be taking longer than expected.`)), timeout);
   try {
     const response = await fetch(`${API_URL}${path}`, {
       method: 'POST',

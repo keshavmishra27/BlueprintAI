@@ -1,15 +1,16 @@
 import './style.css';
+import { initBackgroundAnimation } from './backgroundAnimation';
 import { Router } from './router';
 import { renderHome } from './pages/home';
 import { renderAssessment } from './pages/assessment';
 import { renderRepoJudge } from './pages/repo_judge';
 import { renderProjectSuggest } from './pages/project_suggest';
 import { renderIdeaRefiner } from './pages/idea_refiner';
-import { initBackgroundAnimation } from './backgroundAnimation';
-
-initBackgroundAnimation();
 
 const appDiv = document.getElementById('app')!;
+
+// Initialize the 3D background
+initBackgroundAnimation();
 
 appDiv.innerHTML = `
   <header class="app-bar">

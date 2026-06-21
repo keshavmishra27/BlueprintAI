@@ -152,7 +152,7 @@ def run_idea_refine_crew(idea: str, check_result: dict) -> dict:
     )
     task = Task(
         description=(
-            f"Idea:\n{idea}\n\nPrior research:\n{json.dumps(check_result, indent=2)[:12000]}\n\n"
+            f"Idea:\n{idea}\n\nPrior research:\n{json.dumps(check_result, indent=2)[:3000]}\n\n"
             "Return ONLY valid JSON — no markdown, no explanation, no extra text.\n\n"
             "CRITICAL TYPE RULES (violating these causes a system crash):\n"
             "- \"loopholes\" MUST be a LIST of OBJECTS. Each object MUST have:\n"
