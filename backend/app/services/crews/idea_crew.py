@@ -1,15 +1,10 @@
 import json
 import logging
-
 from crewai import Agent, Task
-
 from backend.app.services.crews.base import parse_json_output, run_crew
 from backend.app.services.crews.tools import web_search_tool
 from backend.app.services.search_service import search_for_idea
-
 logger = logging.getLogger(__name__)
-
-
 IDEA_CHECK_SCHEMA = """\
 {
   "similar_projects": [
@@ -28,7 +23,6 @@ IDEA_CHECK_SCHEMA = """\
   "search_queries_and_sources_used": ["query 1", "query 2"],
   "notes_and_limitations": "Paragraph about limitations of this research."
 }"""
-
 IDEA_REFINE_SCHEMA = """\
 {
   "uniqueness": {
@@ -73,8 +67,6 @@ IDEA_REFINE_SCHEMA = """\
   },
   "notes_and_limitations": "Paragraph about limitations."
 }"""
-
-
 def run_idea_check_crew(idea: str, search_context: str, sources: list) -> dict:
     researcher = Agent(
         role="Market & Prior-Art Researcher",
@@ -89,7 +81,6 @@ def run_idea_check_crew(idea: str, search_context: str, sources: list) -> dict:
         backstory="Product strategist focused on differentiation.",
         allow_delegation=False,
     )
-
     t1 = Task(
         description=(
             f"User idea:\n{idea}\n\n"
@@ -117,7 +108,6 @@ def run_idea_check_crew(idea: str, search_context: str, sources: list) -> dict:
         agent=analyst,
         context=[t1],
     )
-
     try:
         raw = run_crew([researcher, analyst], [t1, t2])
         data = parse_json_output(raw)
@@ -135,14 +125,11 @@ def run_idea_check_crew(idea: str, search_context: str, sources: list) -> dict:
             "search_sources": sources,
             "notes_and_limitations": f"Crew analysis failed: {e}",
         }
-
     return {
         "similar_projects": [],
         "search_sources": sources,
         "notes_and_limitations": "Crew returned empty output.",
     }
-
-
 def run_idea_refine_crew(idea: str, check_result: dict) -> dict:
     refiner = Agent(
         role="Innovation Refinement Coach",
@@ -185,7 +172,5 @@ def run_idea_refine_crew(idea: str, check_result: dict) -> dict:
         "loopholes": [],
         "refined_concept": {"final_direction": "Please retry."},
     }
-
-
 def gather_idea_search(idea: str) -> tuple[list, str]:
     return search_for_idea(idea)

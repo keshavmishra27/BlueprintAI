@@ -1,20 +1,14 @@
 import json
 import logging
-
 from crewai import Agent, Task
-
 from backend.app.services.crews.base import parse_json_list_output, run_crew
 from backend.app.services.llm_factory import invoke_hybrid_llm, extract_json_from_text
 from langchain_core.messages import SystemMessage, HumanMessage
-
 logger = logging.getLogger(__name__)
-
 MCQ_SPEC = (
     "Generate exactly 15 MCQs: 5 easy, 5 medium, 5 hard. "
     "Each has question, options (A-D), correct_answer (A|B|C|D), difficulty."
 )
-
-
 def run_mcq_crew(domain: str) -> list[dict]:
     writer = Agent(
         role="Technical MCQ Author",
@@ -53,10 +47,7 @@ def run_mcq_crew(domain: str) -> list[dict]:
             return _normalize_questions(questions)
     except Exception as e:
         logger.warning("MCQ crew failed, using LLM fallback: %s", e)
-
     return _fallback_mcq(domain)
-
-
 def _normalize_questions(questions: list) -> list[dict]:
     out = []
     for q in questions[:15]:
@@ -68,9 +59,6 @@ def _normalize_questions(questions: list) -> list[dict]:
             q["options"] = ["A) —", "B) —", "C) —", "D) —"]
         out.append(q)
     return out if out else []
-
-
 def _fallback_mcq(domain: str) -> list[dict]:
     from backend.app.services.mcq_service import generate_mcq_legacy
-
     return generate_mcq_legacy(domain)

@@ -1,16 +1,10 @@
 import json
-
 from backend.app.services.crews.project_crew import run_project_suggest_crew
-
-
 def suggest_projects(theme: str) -> dict:
     return run_project_suggest_crew(theme)
-
-
 def suggest_projects_legacy(theme: str) -> dict:
     from backend.app.services.llm_factory import invoke_hybrid_llm
     from langchain_core.messages import SystemMessage, HumanMessage
-
     system_prompt = "Return JSON with resume_projects and hackathon_projects (5 each), and recommended_hackathons (2-3 items)."
     user_prompt = f"Theme: {theme}. Generate portfolio and hackathon project ideas."
     response = invoke_hybrid_llm(

@@ -138,7 +138,7 @@ group_maker/
 | **Backend** | FastAPI, SQLAlchemy, Pydantic |
 | **Database** | PostgreSQL (Supabase)  auto fallback to SQLite |
 | **Frontend** | Vite/TypeScript (Modern Web UI) & Solara (Python UI) |
-| **AI / LLM** | **Hybrid Model Factory** (Gemini 2.0 Flash via OpenRouter  Ollama Local) with Robust JSON fallback parser |
+| **AI / LLM** | **Hybrid Model Factory** (Gemini 2.0 Flash via Groq  Ollama Local) with Robust JSON fallback parser |
 | **Agents** | CrewAI (multi-agent crews per feature), LangChain LLM fallback |
 | **Security** | Optional `API_KEY`, slowapi rate limits, tightened CORS |
 | **CI** | GitHub Actions + pytest |
@@ -158,13 +158,13 @@ Create a `.env` file in the project root:
 ```env
 OLLAMA_MODEL=qwen2.5:3b
 OLLAMA_BASE_URL=http://localhost:11434
-OPENROUTER_API_KEY=your_key_here
-OPENROUTER_MODEL=gpt-4o-mini
-OPENROUTER_FALLBACK_MODEL=gpt-4o-mini
-OPENROUTER_CREW_MODEL=gpt-4o-mini
+GROQ_API_KEY=your_key_here
+GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_FALLBACK_MODEL=llama-3.3-70b-versatile
+GROQ_CREW_MODEL=llama-3.3-70b-versatile
 LLM_MAX_TOKENS=4096
-OPENROUTER_FALLBACK_MAX_TOKENS=4096
-OPENROUTER_CREW_MAX_TOKENS=8192
+GROQ_FALLBACK_MAX_TOKENS=4096
+GROQ_CREW_MAX_TOKENS=8192
 GOOGLE_API_KEY=optional_gemini_key
 API_KEY=dev-local-key-change-me
 API_URL=http://localhost:8000

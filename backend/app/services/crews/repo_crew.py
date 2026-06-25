@@ -1,22 +1,15 @@
 import json
 import logging
-
 from crewai import Agent, Task
-
 from backend.app.services.crews.base import parse_json_output, run_crew
 from backend.app.services.llm_factory import extract_json_from_text, invoke_hybrid_llm
 from backend.app.routers.repo_judge import JUDGE_JSON_SCHEMA, SCORING_RUBRIC
 from langchain_core.messages import SystemMessage, HumanMessage
-
 logger = logging.getLogger(__name__)
-
-
 def _truncate_text(text: str, max_chars: int) -> str:
     if len(text) <= max_chars:
         return text
     return text[:max_chars] + "\n\n[...truncated due prompt size limit...]\n"
-
-
 def run_repo_judge_crew(
     github_url: str,
     student_name: str,
@@ -25,7 +18,6 @@ def run_repo_judge_crew(
     repo_summary: str = "",
 ) -> dict:
     static_text = _truncate_text(json.dumps(static_summary, indent=2), 5000)
-
     code_analyst = Agent(
         role="Code Quality Analyst",
         goal="Evaluate structure, patterns, and coding style from static context",
@@ -44,7 +36,6 @@ def run_repo_judge_crew(
         backstory="International hackathon judge with constructive tone.",
         allow_delegation=False,
     )
-
     t1 = Task(
         description=(
             f"Repository: {github_url}\nStudent: {student_name}\n"
@@ -92,7 +83,6 @@ def run_repo_judge_crew(
         agent=mentor,
         context=[t1, t2],
     )
-
     try:
         raw = run_crew([code_analyst, security_agent, mentor], [t1, t2, t3])
         result = parse_json_output(raw)
@@ -103,13 +93,9 @@ def run_repo_judge_crew(
             return result
     except Exception as e:
         logger.warning("Repo crew failed: %s", e)
-
     return _fallback_repo(github_url, student_name, code_dump, static_summary, repo_summary)
-
-
 def _fallback_repo(github_url, student_name, code_dump, static_summary, repo_summary: str = "") -> dict:
     from backend.app.services.github_judge_service import analyze_repo_llm_only
-
     return analyze_repo_llm_only(
         github_url,
         student_name,

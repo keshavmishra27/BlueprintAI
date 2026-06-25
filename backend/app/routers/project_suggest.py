@@ -5,7 +5,6 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from backend.app.middleware.rate_limit import limiter
 from ..services.llm_factory import check_llm_availability
-
 router = APIRouter(prefix="/project-suggest", tags=["Project Suggest"])
 class SuggestRequest(BaseModel):
     themes: List[str]
@@ -16,13 +15,11 @@ class ProjectItem(BaseModel):
     why_great_for_resume: str = ""
     why_it_wins: str = ""
 from pydantic import BaseModel, model_validator
-
 class HackathonRecommendation(BaseModel):
     name: str = "Unknown Hackathon"
     description: str = ""
     date: str = ""
     registration_link: str = ""
-
     @model_validator(mode='before')
     @classmethod
     def coerce_fields(cls, data):
@@ -34,7 +31,6 @@ class HackathonRecommendation(BaseModel):
             if 'theme' in data and not data.get('description'):
                 data['description'] = data['theme']
         return data
-
 class SuggestResult(BaseModel):
     themes: List[str]
     resume_projects: List[ProjectItem] = []
@@ -163,7 +159,6 @@ def suggest_projects(request: Request, req: SuggestRequest):
             else:
                 norm[k] = str(val) if val is not None else ""
         return norm
-
     resume = []
     for p in data.get("resume_projects", []):
         if isinstance(p, dict):
@@ -172,8 +167,6 @@ def suggest_projects(request: Request, req: SuggestRequest):
     for p in data.get("hackathon_projects", []):
         if isinstance(p, dict):
             hackathon.append(ProjectItem(**normalize_project(p)).dict())
-    # Return as dict for robustness.
-    # Frontend expects 'theme' (singular) often, so we provide both for safety.
     return {
         "themes": req.themes,
         "theme": theme_str,

@@ -1,51 +1,35 @@
 :root {
-  /* Colors - Binance Design */
   --primary: #fcd535;
   --primary-active: #f0b90b;
   --primary-disabled: #3a3a1f;
-  
   --ink: #181a20;
   --body: #eaecef;
   --body-on-light: #181a20;
-  
   --muted: #707a8a;
   --muted-strong: #929aa5;
-  
   --hairline-on-light: #eaecef;
   --hairline-on-dark: #2b3139;
   --border-strong: #cdd1d6;
-  
   --canvas-light: #ffffff;
   --canvas-dark: #0b0e11;
-  
   --surface-card-dark: #1e2329;
   --surface-elevated-dark: #2b3139;
   --surface-soft-light: #fafafa;
   --surface-strong-light: #f5f5f5;
-  
   --on-primary: #181a20;
   --on-dark: #ffffff;
-  
   --trading-up: #0ecb81;
   --trading-down: #f6465d;
   --accent-turquoise: #2dbdb6;
   --info: #3b82f6;
   --info-ring: #3b82f6;
-
-  /* Aliases for existing components */
   --canvas: var(--canvas-dark);
   --hairline: var(--hairline-on-dark);
-  
-  /* Semantic */
   --semantic-success: var(--trading-up);
   --semantic-warning: var(--primary);
   --semantic-error: var(--trading-down);
-
-  /* Typography */
   --font-family: 'BinanceNova', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', helvetica, arial, sans-serif;
   --font-mono: 'BinancePlex', 'JetBrains Mono', 'IBM Plex Sans', monospace;
-
-  /* Border Radius */
   --rounded-xs: 2px;
   --rounded-sm: 4px;
   --rounded-md: 6px;
@@ -53,8 +37,6 @@
   --rounded-xl: 12px;
   --rounded-pill: 9999px;
   --rounded-full: 9999px;
-  
-  /* Spacing */
   --spacing-xxs: 4px;
   --spacing-xs: 8px;
   --spacing-sm: 12px;
@@ -64,13 +46,11 @@
   --spacing-xxl: 48px;
   --spacing-section: 80px;
 }
-
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
-
 body {
   font-family: var(--font-family);
   background-color: var(--canvas);
@@ -80,8 +60,6 @@ body {
   position: relative;
   -webkit-font-smoothing: antialiased;
 }
-
-/* Background mesh/grid effect (Adapted for dark ground) */
 body::before {
   content: '';
   position: fixed;
@@ -92,14 +70,11 @@ body::before {
   background-size: 32px 32px;
   z-index: -1;
 }
-
 #app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
-
-/* Top Navigation (top-nav-dark) */
 header.app-bar {
   background: rgba(11, 14, 17, 0.75);
   backdrop-filter: blur(12px);
@@ -114,7 +89,6 @@ header.app-bar {
   top: 0;
   z-index: 100;
 }
-
 .app-title {
   font-size: 20px;
   font-weight: 700;
@@ -122,14 +96,12 @@ header.app-bar {
   letter-spacing: -0.3px;
   text-decoration: none;
 }
-
 nav.nav-links {
   display: flex;
   gap: var(--spacing-md);
   height: 100%;
   align-items: center;
 }
-
 nav.nav-links a {
   text-decoration: none;
   color: var(--muted);
@@ -143,18 +115,14 @@ nav.nav-links a {
   font-size: 14px;
   border-radius: var(--rounded-md);
 }
-
 nav.nav-links a:hover {
   color: var(--on-dark);
   background: var(--surface-elevated-dark);
 }
-
 nav.nav-links a.active {
   color: var(--on-dark);
   font-weight: 600;
 }
-
-/* Main Content Area */
 main.container {
   flex: 1;
   padding: var(--spacing-section) var(--spacing-lg);
@@ -167,8 +135,6 @@ main.container {
   flex-direction: column;
   gap: var(--spacing-xl);
 }
-
-/* Cards (Restored glassmorphism for Binance dark theme) */
 .glass-card {
   background: rgba(30, 35, 41, 0.75);
   backdrop-filter: blur(12px);
@@ -178,8 +144,6 @@ main.container {
   padding: var(--spacing-lg);
   transition: transform 0.2s ease;
 }
-
-/* Buttons */
 .btn-primary {
   background: var(--primary);
   color: var(--on-primary);
@@ -199,18 +163,15 @@ main.container {
   gap: 8px;
   text-decoration: none;
 }
-
 .btn-primary:hover:not(:disabled) {
   background: var(--primary-active);
 }
-
 .btn-primary:disabled {
   background: var(--primary-disabled);
   color: var(--muted);
   cursor: not-allowed;
   transform: none;
 }
-
 .btn-outline {
   background: var(--surface-card-dark);
   border: none;
@@ -229,17 +190,13 @@ main.container {
   align-items: center;
   justify-content: center;
 }
-
 .btn-outline:hover:not(:disabled) {
   background: var(--surface-elevated-dark);
 }
-
 .btn-outline.selected {
   background: var(--primary);
   color: var(--on-primary);
 }
-
-/* Inputs (search-input-on-dark) */
 .input-field {
   width: 100%;
   padding: 10px 16px;
@@ -252,16 +209,13 @@ main.container {
   color: var(--on-dark);
   transition: all 0.2s ease;
 }
-
 .input-field:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); /* info-ring */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); 
 }
-
 .input-field::placeholder {
   color: var(--muted);
 }
-
 .input-label {
   display: block;
   font-weight: 500;
@@ -269,23 +223,17 @@ main.container {
   color: var(--muted-strong);
   margin-bottom: var(--spacing-xs);
 }
-
-/* Animations */
 .fade-in {
   animation: fadeIn 0.4s ease forwards;
   opacity: 0;
 }
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
-/* Typography Utilities */
 .text-gradient {
   color: var(--primary);
 }
-
 .text-title { 
   font-size: 64px; 
   font-weight: 700; 
@@ -294,15 +242,12 @@ main.container {
   margin-bottom: var(--spacing-lg);
   color: var(--on-dark);
 }
-
 .text-subtitle { 
   font-size: 24px; 
   font-weight: 600;
   color: var(--body); 
   line-height: 1.3; 
 }
-
-/* Status banners */
 .alert-error {
   background: transparent;
   color: var(--semantic-error);
@@ -312,7 +257,6 @@ main.container {
   font-size: 14px;
   line-height: 1.5;
 }
-
 .alert-info {
   background: transparent;
   color: var(--primary);

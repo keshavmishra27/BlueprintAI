@@ -1,8 +1,5 @@
 from sqlalchemy.orm import Session
-
 from backend.app.models import AssessmentSession
-
-
 def compute_real_percentile(
     db: Session,
     domains: list[str],
@@ -21,7 +18,6 @@ def compute_real_percentile(
             "percentile_source": "insufficient_data",
             "message": "Not enough scored sessions yet — showing neutral baseline.",
         }
-
     ratio = weighted_score / max_weighted
     sessions = (
         db.query(AssessmentSession)
@@ -29,7 +25,6 @@ def compute_real_percentile(
         .filter(AssessmentSession.scores.isnot(None))
         .all()
     )
-
     domain_set = set(domains or [])
     cohort_ratios: list[float] = []
     for s in sessions:
@@ -43,7 +38,6 @@ def compute_real_percentile(
         ws = sc.get("weighted_score") or 0
         if mw > 0:
             cohort_ratios.append(ws / mw)
-
     cohort_size = len(cohort_ratios)
     if cohort_size < 3:
         return {
@@ -55,7 +49,6 @@ def compute_real_percentile(
                 "percentile will improve as more developers take the quiz."
             ),
         }
-
     below = sum(1 for r in cohort_ratios if r < ratio)
     percentile = int((below / cohort_size) * 100)
     percentile = max(1, min(99, percentile))
