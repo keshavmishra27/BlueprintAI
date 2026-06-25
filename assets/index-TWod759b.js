@@ -4244,53 +4244,45 @@ void main() {
       <p class="text-subtitle" style="margin-bottom: 40px; max-width: 600px; margin-inline: auto; text-shadow: 0 2px 10px rgba(0,0,0,0.8);">
         Your ultimate AI architecture and learning platform. Assess developer skills, discover project ideas, refine concepts, and judge repositories.
       </p>
-      
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; max-width: 900px; margin: 0 auto;">
-        
         <a href="#/assessment" style="text-decoration: none; color: inherit;">
           <div class="glass-card" style="padding: 24px; text-align: left; height: 100%; display: flex; flex-direction: column;">
             <h3 style="font-size: 1.25rem; font-weight: 800; color: #0891b2; margin-bottom: 8px;"> Assessment</h3>
             <p style="color: var(--text-muted); font-size: 0.9rem; flex: 1;">Take an AI-generated multiple choice quiz on your preferred domains.</p>
           </div>
         </a>
-
         <a href="#/repo-judge" style="text-decoration: none; color: inherit;">
           <div class="glass-card" style="padding: 24px; text-align: left; height: 100%; display: flex; flex-direction: column;">
             <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--accent); margin-bottom: 8px;"> Repo Judge</h3>
             <p style="color: var(--text-muted); font-size: 0.9rem; flex: 1;">Analyze GitHub repositories and rate their quality and maintainability.</p>
           </div>
         </a>
-
         <a href="#/project-suggest" style="text-decoration: none; color: inherit;">
           <div class="glass-card" style="padding: 24px; text-align: left; height: 100%; display: flex; flex-direction: column;">
             <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--accent2); margin-bottom: 8px;"> Project Ideas</h3>
             <p style="color: var(--text-muted); font-size: 0.9rem; flex: 1;">Get tailored project suggestions based on your tech stack.</p>
           </div>
         </a>
-
         <a href="#/idea-refiner" style="text-decoration: none; color: inherit;">
           <div class="glass-card" style="padding: 24px; text-align: left; height: 100%; display: flex; flex-direction: column;">
             <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary); margin-bottom: 8px;"> Idea Refiner</h3>
             <p style="color: var(--text-muted); font-size: 0.9rem; flex: 1;">Validate and flesh out your raw product ideas with AI feedback.</p>
           </div>
         </a>
-
       </div>
     </div>
-  `}var lf=e=>new Promise(t=>setTimeout(t,e));async function uf(e,t=9e5){if(await lf(800),e===`/assess/domains`)return[`Web Development`,`Machine Learning`,`Cybersecurity`,`Cloud Computing`,`App Development`,`Agentic AI`];throw Error(`Mock GET for ${e} not implemented`)}async function df(e,t,n=9e5){if(await lf(1200),e===`/repo-judge/analyze`)return{score:85,feedback:[{category:`Code Quality`,score:9,max_score:10,comments:`Excellent code structure and naming conventions.`},{category:`Architecture`,score:8,max_score:10,comments:`Good separation of concerns, could improve modularity.`},{category:`Documentation`,score:8,max_score:10,comments:`README is thorough, but inline comments are sparse.`}],hackathons:[{name:`Global Hackathon 2026`,date:`July 2026`,description:`A great fit for your tech stack.`,link:`#`},{name:`AI Innovators Challenge`,date:`August 2026`,description:`Perfect for AI-focused projects.`,link:`#`}]};if(e===`/project-suggest/suggest`)return{suggestions:[{title:`Automated Code Review Assistant`,overview:`An AI tool that reviews pull requests automatically.`,features:[`Linting integration`,`Security vulnerability scanning`,`Style enforcement`],difficulty:`Intermediate`,market_need:`High`},{title:`Decentralized Identity Provider`,overview:`A blockchain-based SSO solution for web3 apps.`,features:[`Zero-knowledge proofs`,`Wallet integration`,`Revocable access`],difficulty:`Advanced`,market_need:`Medium`},{title:`Developer Portfolio Generator`,overview:`Instantly generates a stunning portfolio from a GitHub profile.`,features:[`Theme selection`,`Automatic repo fetching`,`SEO optimization`],difficulty:`Beginner`,market_need:`High`}]};if(e===`/idea-validator/check`)return{gaps_and_loopholes:`The current market lacks tools that integrate seamlessly with legacy enterprise systems.`,search_sources:[`GitHub Repositories`,`Product Hunt`,`Hacker News Discussions`],similar_projects:[{name:`LegacyBridge`,type:`Enterprise Tool`,overview:`Connects old mainframes to modern APIs.`,relevance_score:85,comparison:`They focus on specific IBM systems, while your idea is more generic.`},{name:`ApiWrap`,type:`Open Source Library`,overview:`Generates REST APIs from SQL databases.`,relevance_score:60,comparison:`Only handles databases, not arbitrary legacy protocols.`}]};if(e===`/idea-validator/refine`)return{uniqueness:{verdict:`MODERATELY_UNIQUE`,score:75,rationale:`While similar tools exist, your specific approach to arbitrary protocol parsing is novel.`},refined_concept:{final_direction:`Focus on a visual protocol builder that lets enterprises map their legacy systems without writing code.`,quick_win_variant:{description:`Build a command-line tool first to prove the parsing engine works.`}}};if(e===`/assess/generate-mcq`)return{session_id:123,questions:[{index:0,question:`Which protocol is primarily used for secure web browsing?`,options:[`HTTPS`,`FTP`,`SMTP`,`Telnet`],difficulty:`easy`},{index:1,question:`In React, what hook is used to manage side effects?`,options:[`useEffect`,`useState`,`useContext`,`useReducer`],difficulty:`medium`}]};if(e===`/assess/submit-mcq`)return{session_id:123,student_name:`Demo User`,scores:{total:2,correct:2,wrong:0,percentile:95,percentile_message:`You performed better than 95% of candidates.`}};throw Error(`Mock POST for ${e} not implemented`)}var $={studentName:``,selectedDomains:[],allDomains:[],setupError:``,sessionId:null,questions:[],userAnswers:{},loading:!1,loadingStep:``,scores:null,screen:`setup`};function ff(e,t){$={...$,...e},t()}function pf(e){let t=()=>{$.screen===`setup`?(e.innerHTML=mf(),hf(t)):$.screen===`quiz`?(e.innerHTML=gf(),_f(t)):$.screen===`submitting`?e.innerHTML=`<div class="fade-in" style="text-align: center; margin-top: 100px;"><h2>Grading your quiz...</h2></div>`:(e.innerHTML=vf(),yf(t))};$.allDomains.length===0&&!$.setupError&&uf(`/assess/domains`).then(e=>{ff({allDomains:e},t)}).catch(e=>{ff({setupError:e.message||`Failed to load domains`},t)}),t()}function mf(){let e=$.allDomains.map(e=>{let t=$.selectedDomains.includes(e);return`<button class="domain-btn ${t?`btn-outline selected`:`btn-outline`}" data-domain="${e}">${t?`✓ `:``}${e}</button>`}).join(` `);return`
+  `}var lf=e=>new Promise(t=>setTimeout(t,e));async function uf(e,t=9e5){if(await lf(800),e===`/assess/domains`)return[`Web Development`,`Machine Learning`,`Cybersecurity`,`Cloud Computing`,`App Development`,`Agentic AI`,`Healthcare IT`];throw Error(`Mock GET for ${e} not implemented`)}async function df(e,t,n=9e5){if(await lf(1200),e===`/repo-judge/analyze`)return{student_name:t?.student_name||`Student`,repo_url:t?.github_url||`https://github.com/demo/repo`,total_score:85,overall_score:85,scores:{functionality:{score:9,reasons:[`Core features work flawlessly.`]},code_quality:{score:9,reasons:[`Excellent code structure and naming conventions.`]},documentation:{score:8,reasons:[`README is thorough, but inline comments are sparse.`]},architecture:{score:8,reasons:[`Good separation of concerns, could improve modularity.`]},testing_ci:{score:7,reasons:[`Has unit tests but missing CI/CD pipeline.`]},innovation_ux:{score:10,reasons:[`Incredibly unique approach to the problem.`]}},mentor_notes:`This is a fantastic repository. The code is clean and the problem you solved is highly relevant to today's market. With a few tweaks to your automated testing, this is a top-tier project.`,strengths:[`Strong use of modern frameworks`,`Clean folder structure`,`Excellent use of async/await`],top_issues:[{title:`Missing CI/CD`,description:`Consider adding GitHub actions to automatically run tests.`},{title:`Sparse Inline Comments`,description:`Add JSDoc or docstrings to your main utility functions.`}],hackathon_recommendations:[{name:`Global Hackathon 2026`,date:`July 2026`,description:`A great fit for your tech stack.`,registration_link:`#`},{name:`AI Innovators Challenge`,date:`August 2026`,description:`Perfect for AI-focused projects.`,registration_link:`#`}]};if(e===`/project-suggest/suggest`){let e=(t?.themes?.join(` `)||``).toLowerCase(),n=t?.themes?.[0]||`Custom Themes`;return e.includes(`health`)||e.includes(`med`)?{theme:n,resume_projects:[{title:`Smart ICU Monitoring Agent`,description:`An AI agent that monitors patient vitals and alerts staff to anomalies before they become critical.`,tech_stack:[`Python`,`TensorFlow`,`React`,`WebSockets`],why_great_for_resume:`Shows ability to handle real-time streaming data and critical systems.`},{title:`AI Medical Record Summarizer`,description:`Automatically extracts key insights and action items from lengthy patient history documents.`,tech_stack:[`OpenAI API`,`LangChain`,`Next.js`,`PostgreSQL`],why_great_for_resume:`Demonstrates NLP skills and working with unstructured enterprise data.`}],hackathon_projects:[{title:`Hospital Resource Prediction System`,description:`Uses ML to forecast bed availability and staff requirements based on local health trends.`,tech_stack:[`Python`,`Pandas`,`Scikit-Learn`,`FastAPI`],why_it_wins:`Solves a real-world supply chain problem with clear ROI.`}],recommended_hackathons:[{name:`HealthTech Innovators 2026`,date:`October 2026`,description:`Build the future of healthcare.`,registration_link:`#`}]}:e.includes(`cyber`)||e.includes(`security`)?{theme:n,resume_projects:[{title:`Zero-Trust Network Analyzer`,description:`Monitors network traffic for unauthorized lateral movement in real-time.`,tech_stack:[`Go`,`eBPF`,`React`,`ClickHouse`],why_great_for_resume:`Deep systems programming and high-performance network analysis.`}],hackathon_projects:[{title:`Automated Penetration Testing Agent`,description:`An AI that autonomously probes web apps for common vulnerabilities (OWASP top 10).`,tech_stack:[`Python`,`Playwright`,`LLMs`],why_it_wins:`High wow factor when the AI hacks a test site live on stage.`}],recommended_hackathons:[{name:`CyberSec Hackathon`,date:`November 2026`,description:`Protect the web.`,registration_link:`#`}]}:{theme:n,resume_projects:[{title:`Automated Code Review Assistant`,description:`An AI tool that reviews pull requests automatically.`,tech_stack:[`TypeScript`,`GitHub Actions`,`OpenAI`],why_great_for_resume:`Shows deep understanding of CI/CD and developer workflows.`},{title:`Decentralized Identity Provider`,description:`A blockchain-based SSO solution for web3 apps.`,tech_stack:[`Solidity`,`Next.js`,`Ethers.js`],why_great_for_resume:`Proves you understand modern auth and web3 architectures.`}],hackathon_projects:[{title:`Developer Portfolio Generator`,description:`Instantly generates a stunning portfolio from a GitHub profile.`,tech_stack:[`React`,`Tailwind`,`Vite`,`GitHub API`],why_it_wins:`Everyone loves tools that save them time, incredibly relatable for judges.`}],recommended_hackathons:[{name:`Global Hackathon 2026`,date:`July 2026`,description:`A great fit for your tech stack.`,registration_link:`#`}]}}if(e===`/idea-validator/check`){let e=(t?.idea||``).toLowerCase();return e.includes(`ambulance`)||e.includes(`health`)?{gaps_and_loopholes:`Small city emergency coordination is a major gap. Current tools lack real-time hospital bed availability integration.`,search_sources:[`Medical Journals`,`Product Hunt`,`Government Health Tech RFPs`],similar_projects:[{name:`Google Maps Emergency Routing`,type:`Navigation SaaS`,overview:`Provides fast routes for emergency vehicles.`,relevance_score:85,comparison:`They focus strictly on traffic routing, ignoring hospital capacity and bed availability.`},{name:`Waze Emergency Services`,type:`Navigation Tool`,overview:`Crowdsourced traffic data for first responders.`,relevance_score:72,comparison:`Lacks deep integration with hospital ER admitting systems.`}]}:e.includes(`notes`)||e.includes(`summary`)?{gaps_and_loopholes:`The general AI note-taking market is heavily saturated. You must find a specific niche to succeed.`,search_sources:[`Product Hunt`,`Reddit r/productivity`,`G2 Crowd`],similar_projects:[{name:`Otter.ai`,type:`Transcription SaaS`,overview:`General purpose meeting notes.`,relevance_score:95,comparison:`Massive market leader, very hard to compete on general features.`},{name:`Fireflies.ai`,type:`Meeting Assistant`,overview:`AI assistant for zoom calls.`,relevance_score:90,comparison:`They dominate corporate meetings, but ignore niche physical workflows.`}]}:{gaps_and_loopholes:`The current market lacks tools that integrate seamlessly with legacy enterprise systems.`,search_sources:[`GitHub Repositories`,`Product Hunt`,`Hacker News Discussions`],similar_projects:[{name:`LegacyBridge`,type:`Enterprise Tool`,overview:`Connects old mainframes to modern APIs.`,relevance_score:85,comparison:`They focus on specific IBM systems, while your idea is more generic.`},{name:`ApiWrap`,type:`Open Source Library`,overview:`Generates REST APIs from SQL databases.`,relevance_score:60,comparison:`Only handles databases, not arbitrary legacy protocols.`}]}}if(e===`/idea-validator/refine`){let e=(t?.idea||``).toLowerCase();return e.includes(`ambulance`)||e.includes(`health`)?{uniqueness:{verdict:`HIGHLY_UNIQUE`,score:88,rationale:`Combining navigation with real-time ER bed capacity is a highly novel approach that solves a real bottleneck.`},refined_concept:{final_direction:`An ambulance routing system that dynamically redirects drivers to hospitals with confirmed open beds, rather than just the closest geographic hospital.`,quick_win_variant:{description:`Build a prototype for a single city's dispatch center using simulated traffic and hospital capacity data.`}}}:e.includes(`notes`)||e.includes(`summary`)?{uniqueness:{verdict:`LOW_UNIQUENESS`,score:35,rationale:`General AI note taking is a solved problem with massive incumbents.`},refined_concept:{final_direction:`Pivot to a hyper-specific vertical: 'AI Notes for Veterinarians' that automatically understands animal breeds, standard dosages, and formats into veterinary compliance standards.`,quick_win_variant:{description:`Build a mobile voice-memo app that outputs perfectly formatted SOAP notes for a single local vet clinic.`}}}:{uniqueness:{verdict:`MODERATELY_UNIQUE`,score:75,rationale:`While similar tools exist, your specific approach to arbitrary protocol parsing is novel.`},refined_concept:{final_direction:`Focus on a visual protocol builder that lets enterprises map their legacy systems without writing code.`,quick_win_variant:{description:`Build a command-line tool first to prove the parsing engine works.`}}}}if(e===`/assess/generate-mcq`){let e=(t?.domains?.join(` `)||``).toLowerCase();return e.includes(`agentic`)?{session_id:201,questions:[{index:0,question:`Which pattern allows an LLM to decide when and how to execute external functions?`,options:[`Tool Calling / Function Calling`,`Zero-Shot Prompting`,`Retrieval Augmented Generation`,`Fine-Tuning`],difficulty:`medium`},{index:1,question:`What is a common architectural pattern used to prevent Agent loops from running infinitely?`,options:[`Max Iterations Guardrail`,`Temperature Scaling`,`Cosine Similarity`,`Gradient Clipping`],difficulty:`easy`},{index:2,question:`Which memory type allows an agent to recall events from previous, distinct sessions?`,options:[`Long-Term Memory (Vector DB)`,`Short-Term Memory (Context Window)`,`Working Memory`,`Sensory Memory`],difficulty:`medium`}]}:e.includes(`web`)?{session_id:202,questions:[{index:0,question:`In React, what hook is used to manage side effects?`,options:[`useEffect`,`useState`,`useContext`,`useReducer`],difficulty:`medium`},{index:1,question:`Which CSS property is used to change the background color?`,options:[`background-color`,`color`,`bgcolor`,`fill`],difficulty:`easy`}]}:{session_id:123,questions:[{index:0,question:`What does API stand for?`,options:[`Application Programming Interface`,`Advanced Protocol Integration`,`Automated Process Interchange`,`Application Process Interface`],difficulty:`easy`},{index:1,question:`Which data structure uses LIFO (Last In First Out)?`,options:[`Stack`,`Queue`,`Array`,`Tree`],difficulty:`easy`}]}}if(e===`/assess/submit-mcq`){let e=t?.session_id;return e===201?{session_id:201,student_name:`Demo User`,scores:{total:3,correct:2,wrong:1,percentile:88,percentile_message:`You performed better than 88% of candidates.`},level:`Advanced`,strengths:[`Tool Calling`,`Memory Management`],weaknesses:[`Evaluation Frameworks`,`Infinite Loop Guardrails`]}:e===202?{session_id:202,student_name:`Demo User`,scores:{total:2,correct:2,wrong:0,percentile:95,percentile_message:`You performed better than 95% of candidates.`},level:`Expert`,strengths:[`React Hooks`,`CSS Fundamentals`],weaknesses:[`Advanced State Management`]}:{session_id:123,student_name:`Demo User`,scores:{total:2,correct:1,wrong:1,percentile:50,percentile_message:`You performed exactly average.`},level:`Intermediate`,strengths:[`Basic terminology`],weaknesses:[`Data structures`]}}throw Error(`Mock POST for ${e} not implemented`)}var $={studentName:``,selectedDomains:[],allDomains:[],setupError:``,sessionId:null,questions:[],userAnswers:{},loading:!1,loadingStep:``,scores:null,screen:`setup`};function ff(e,t){$={...$,...e},t()}function pf(e){let t=()=>{$.screen===`setup`?(e.innerHTML=mf(),hf(t)):$.screen===`quiz`?(e.innerHTML=gf(),_f(t)):$.screen===`submitting`?e.innerHTML=`<div class="fade-in" style="text-align: center; margin-top: 100px;"><h2>Grading your quiz...</h2></div>`:(e.innerHTML=vf(),yf(t))};$.allDomains.length===0&&!$.setupError&&uf(`/assess/domains`).then(e=>{ff({allDomains:e},t)}).catch(e=>{ff({setupError:e.message||`Failed to load domains`},t)}),t()}function mf(){let e=$.allDomains.map(e=>{let t=$.selectedDomains.includes(e);return`<button class="domain-btn ${t?`btn-outline selected`:`btn-outline`}" data-domain="${e}">${t?`✓ `:``}${e}</button>`}).join(` `);return`
     <div class="fade-in" style="max-width: 680px; margin: 40px auto;">
       <h1 class="text-title"> AI Developer Assessment</h1>
       <p class="text-subtitle" style="margin-bottom: 32px;">
         Select a domain to generate an adaptive, 15-question technical exam.
       </p>
-
       <div class="glass-card">
         <h3 style="color: #0891b2; margin-bottom: 16px;">Your Details</h3>
         <div style="margin-bottom: 16px;">
           <label class="input-label">Full Name</label>
           <input type="text" id="as-name" class="input-field" value="${$.studentName}">
         </div>
-
         <div style="margin-bottom: 16px;">
           <label class="input-label">Select Domains</label>
           ${$.allDomains.length===0&&!$.setupError?`<p>Loading domains...</p>`:``}
@@ -4298,9 +4290,7 @@ void main() {
             ${e}
           </div>
         </div>
-
         ${$.setupError?`<div class="alert-error" style="margin-bottom: 16px;">${$.setupError}</div>`:``}
-
         <button id="as-start" class="btn-primary" style="width: 100%; margin-top: 16px;" ${$.loading?`disabled`:``}>
           ${$.loading?`Generating questions...`:`Start Quiz`}
         </button>
@@ -4319,9 +4309,7 @@ void main() {
         <div style="background: rgba(0,0,0,0.05); padding: 4px 12px; border-radius: 12px; font-weight: 700;">${t}/${n} answered</div>
       </div>
       ${e}
-      
       ${$.setupError?`<div class="alert-error" style="margin-bottom: 16px;">${$.setupError}</div>`:``}
-
       <button id="as-submit" class="btn-primary" style="width: 100%;" ${r?``:`disabled`}>
         Submit Quiz
       </button>
@@ -4329,19 +4317,16 @@ void main() {
   `}function _f(e){document.querySelectorAll(`.opt-btn`).forEach(t=>{t.addEventListener(`click`,t=>{let n=t.currentTarget,r=n.getAttribute(`data-qi`),i=n.getAttribute(`data-val`);r&&i&&($.userAnswers[r]=i,e())})});let t=document.getElementById(`as-submit`);t&&t.addEventListener(`click`,async()=>{ff({screen:`submitting`},e);try{ff({scores:(await df(`/assess/submit-mcq`,{session_id:$.sessionId,answers:$.userAnswers})).scores,screen:`results`},e)}catch(t){ff({setupError:t.message,screen:`quiz`},e)}})}function vf(){let e=$.scores;if(!e)return``;let t=e.correct||0,n=e.total||1,r=Math.round(t/n*100),i=r>=80?`#34d399`:r>=50?`#f59e0b`:`#ef4444`;return`
     <div class="fade-in" style="max-width: 760px; margin: 40px auto; text-align: center;">
       <h1 class="text-title"> Results for ${$.studentName}</h1>
-      
       <div class="glass-card" style="border-top: 4px solid ${i}; margin-bottom: 24px;">
         <div style="font-size: 0.875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Your Score</div>
         <div style="font-size: 4rem; font-weight: 900; color: ${i};">${t}/${n}</div>
         <div style="font-weight: 700; color: ${i};">${r}% correct</div>
       </div>
-
       <div class="glass-card" style="margin-bottom: 24px;">
         <div style="font-size: 0.875rem; color: var(--text-muted); text-transform: uppercase;">Domain Percentile</div>
         <div style="font-size: 3.5rem; font-weight: 900; color: #0891b2;">${e.percentile||50}%</div>
         <p>${e.percentile_message||`Estimated percentile`}</p>
       </div>
-
       <button id="as-reset" class="btn-primary" style="width: 100%;">Take Another Quiz</button>
     </div>
   `}function yf(e){let t=document.getElementById(`as-reset`);t&&t.addEventListener(`click`,()=>{ff({sessionId:null,questions:[],userAnswers:{},scores:null,screen:`setup`},e)})}var bf={githubUrl:``,studentName:``,errorMsg:``,loading:!1,loadingStep:``,result:null,screen:`form`};function xf(e,t){bf={...bf,...e},t()}function Sf(e){let t=()=>{bf.screen===`form`?(e.innerHTML=Cf(),wf(t)):(e.innerHTML=Tf(),Ef(t))};t()}function Cf(){return`
@@ -4350,26 +4335,20 @@ void main() {
       <p class="text-subtitle" style="margin-bottom: 32px;">
         Paste your student's public GitHub repository URL. The AI will read the entire codebase and return a hackathon judge verdict — scores, strengths, and concrete improvements.
       </p>
-      
       <div class="glass-card">
         <h2 style="font-size: 1.25rem; font-weight: 700; color: #0891b2; margin-bottom: 24px;">Judge a Repository</h2>
-        
         <div style="margin-bottom: 16px;">
           <label class="input-label">Student Name</label>
           <input type="text" id="rj-name" class="input-field" value="${bf.studentName}">
         </div>
-        
         <div style="margin-bottom: 24px;">
           <label class="input-label">GitHub Repository URL</label>
           <input type="url" id="rj-url" class="input-field" value="${bf.githubUrl}" placeholder="https://github.com/owner/repo">
         </div>
-        
         ${bf.errorMsg?`<div class="alert-error" style="margin-bottom: 16px;">Error: ${bf.errorMsg}</div>`:``}
-        
         <button id="rj-submit" class="btn-primary" style="width: 100%;" ${bf.loading?`disabled`:``}>
           ${bf.loading?`Analyzing... (may take 5-15 min)`:`Analyze Repository`}
         </button>
-        
         ${bf.loading?`
           <div class="alert-info" style="margin-top: 24px;">
             <strong>${bf.loadingStep||`Working...`}</strong><br>
@@ -4403,7 +4382,6 @@ void main() {
           <div style="font-size: 3rem; font-weight: 900; color: ${n}; line-height: 1;">${Math.round(t)}/100</div>
         </div>
       </div>
-
       <div class="glass-card" style="margin-bottom: 32px;">
         <h3 style="margin-bottom: 16px; color: #4f46e5;">Scores</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
@@ -4415,14 +4393,12 @@ void main() {
           ${r(`Innovation & UX`,e.scores?.innovation_ux,`#a855f7`)}
         </div>
       </div>
-
       ${e.mentor_notes?`
         <div class="glass-card" style="margin-bottom: 32px; border-left: 4px solid #4f46e5;">
           <h3 style="margin-bottom: 12px; color: #4f46e5;">🎙️ Mentor Verdict</h3>
           <p style="font-style: italic; line-height: 1.6;">${e.mentor_notes}</p>
         </div>
       `:``}
-
       ${e.strengths&&e.strengths.length>0?`
         <div class="glass-card" style="margin-bottom: 32px; border-left: 4px solid #00ff66;">
           <h3 style="margin-bottom: 12px; color: #00ff66;">👍 Strengths</h3>
@@ -4431,7 +4407,6 @@ void main() {
           </ul>
         </div>
       `:``}
-
       ${e.top_issues&&e.top_issues.length>0?`
         <div class="glass-card" style="margin-bottom: 32px; border-left: 4px solid #ef4444;">
           <h3 style="margin-bottom: 12px; color: #ef4444;">👎 Areas for Improvement</h3>
@@ -4444,8 +4419,6 @@ void main() {
           </ul>
         </div>
       `:``}
-
-
       ${e.hackathon_recommendations&&e.hackathon_recommendations.length>0?`
         <div class="glass-card" style="margin-bottom: 32px; border-left: 4px solid #f59e0b;">
           <h3 style="margin-bottom: 16px; color: #f59e0b;">🏆 Recommended Hackathons</h3>
@@ -4462,7 +4435,6 @@ void main() {
           </div>
         </div>
       `:``}
-
       <button id="rj-reset" class="btn-primary" style="width: 100%;">Judge Another Project</button>
     </div>
   `}function Ef(e){let t=document.getElementById(`rj-reset`);t&&t.addEventListener(`click`,()=>{xf({githubUrl:``,studentName:``,errorMsg:``,result:null,screen:`form`},e)})}var Df=[`Artificial Intelligence`,`FinTech`,`Healthcare`,`Web3 / Blockchain`,`EdTech`,`Sustainability`,`Cybersecurity`,`IoT`,`DSA`,`ambulance`,`hospital`],Of={selectedDomains:[],errorMsg:``,loading:!1,loadingStep:``,result:null,screen:`form`};function kf(e,t){Of={...Of,...e},t()}function Af(e){let t=()=>{Of.screen===`form`?(e.innerHTML=jf(),Mf(t)):(e.innerHTML=Nf(),Pf(t))};t()}function jf(){let e=Df.map(e=>`<button class="ps-theme-btn ${Of.selectedDomains.includes(e)?`btn-outline selected`:`btn-outline`}" data-theme="${e}">${e}</button>`).join(` `),t=Of.selectedDomains.map(e=>`<span style="background: rgba(0, 255, 204, 0.1); color: #0891b2; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-right: 6px; display: inline-block; margin-bottom: 4px; border: 1px solid rgba(0, 255, 204, 0.2);">${e}</span>`).join(``);return`
@@ -4471,28 +4443,22 @@ void main() {
       <p class="text-subtitle" style="margin-bottom: 32px;">
         Enter a theme or domain — the AI agent will suggest the best industry-grade projects for your resume and innovative ideas that win hackathons.
       </p>
-
       <div class="glass-card">
         <h3 style="color: #0891b2; margin-bottom: 20px;">Choose Your Theme</h3>
-        
         <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 8px;">Select one or more themes:</p>
         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
           ${e}
         </div>
-
         ${Of.selectedDomains.length>0?`
           <div style="margin-bottom: 20px; padding: 10px; background: rgba(0, 136, 255, 0.05); border-radius: 8px; border: 1px solid rgba(0, 136, 255, 0.2);">
             <strong style="color: #0369a1; font-size: 0.875rem; margin-right: 8px;">Selected:</strong>
             ${t}
           </div>
         `:``}
-
         ${Of.errorMsg?`<div class="alert-error" style="margin-bottom: 16px;">${Of.errorMsg}</div>`:``}
-
         <button id="ps-submit" class="btn-primary" style="width: 100%;" ${Of.loading?`disabled`:``}>
           ${Of.loading?` Thinking... (may take 1-2 min)`:` Generate Project Ideas`}
         </button>
-
         ${Of.loading?`
           <div class="alert-info" style="margin-top: 24px;">
             <strong>${Of.loadingStep||`Working...`}</strong><br>
@@ -4508,13 +4474,11 @@ void main() {
         <h3 style="font-size: 1.125rem; font-weight: 700; color: var(--text-main); margin: 0;">${e.title}</h3>
       </div>
       <p style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px;">${e.description}</p>
-      
       ${(e.tech_stack||[]).length>0?`
         <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
           ${e.tech_stack.map(e=>`<span style="background: rgba(0, 136, 255, 0.1); border: 1px solid rgba(0, 136, 255, 0.2); border-radius: 20px; padding: 4px 12px; font-size: 0.75rem; color: #0369a1; font-weight: 600;">${e}</span>`).join(``)}
         </div>
       `:``}
-
       ${r?`
         <div style="padding: 10px 14px; border-radius: 10px; background: rgba(0, 255, 204, 0.06); border-left: 3px solid ${t};">
           <div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: ${t}; font-weight: 700; margin-bottom: 4px;">${n}</div>
@@ -4528,7 +4492,6 @@ void main() {
       <p style="color: #0891b2; font-size: 0.875rem; margin-bottom: 32px;">
         ${n.length} resume projects • ${r.length} hackathon ideas
       </p>
-
       ${n.length>0?`
         <div style="margin-bottom: 40px;">
           <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(0,136,255,0.1); padding-bottom: 12px;">
@@ -4541,7 +4504,6 @@ void main() {
           ${n.map((e,t)=>i(e,`#0088ff`,`Why Great for Resume`,e.why_great_for_resume,t)).join(``)}
         </div>
       `:``}
-
       ${r.length>0?`
         <div style="margin-bottom: 40px;">
           <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(0,255,204,0.1); padding-bottom: 12px;">
@@ -4554,7 +4516,6 @@ void main() {
           ${r.map((e,t)=>i(e,`#00ffcc`,`Why It Wins`,e.why_it_wins,t)).join(``)}
         </div>
       `:``}
-
       ${e.recommended_hackathons&&e.recommended_hackathons.length>0?`
         <div class="glass-card" style="margin-bottom: 40px; border-left: 4px solid #f59e0b;">
           <h3 style="margin-bottom: 16px; color: #f59e0b;">🏆 Recommended Hackathons</h3>
@@ -4571,7 +4532,6 @@ void main() {
           </div>
         </div>
       `:``}
-
       <button id="ps-reset" class="btn-primary" style="width: 100%;">Try Another Theme</button>
     </div>
   `}function Pf(e){let t=document.getElementById(`ps-reset`);t&&t.addEventListener(`click`,()=>{kf({selectedDomains:[],errorMsg:``,result:null,screen:`form`},e)})}var Ff={userIdea:``,loading:!1,errorMsg:``,similarProjects:[],checkResult:null,refinement:null,screen:`input`};function If(e,t){Ff={...Ff,...e},t()}function Lf(e){let t=()=>{Ff.screen===`input`?(e.innerHTML=Rf(),zf(t)):(e.innerHTML=Bf(),Wf(t))};t()}function Rf(){return`
@@ -4580,13 +4540,10 @@ void main() {
       <p class="text-subtitle" style="margin-bottom: 40px;">
         Enter your project idea. We'll check if it already exists and help you find a unique angle with market loophole analysis.
       </p>
-
       <div style="margin-bottom: 24px;">
         <textarea id="ir-idea" class="input-field" rows="5" placeholder="Describe your project idea in detail...">${Ff.userIdea}</textarea>
       </div>
-
       ${Ff.errorMsg?`<div class="alert-error" style="margin-bottom: 16px;">${Ff.errorMsg}</div>`:``}
-
       <button id="ir-check" class="btn-primary" style="width: 100%; padding: 20px; font-size: 1.125rem;" ${Ff.loading?`disabled`:``}>
         ${Ff.loading?`Searching...`:` Check Similarities`}
       </button>
@@ -4597,26 +4554,20 @@ void main() {
         <h1 class="text-title" style="margin-bottom: 0;">Analysis Results</h1>
         <button id="ir-back" class="btn-outline">← Start Over</button>
       </div>
-
       <div style="margin-bottom: 40px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 32px;">
         <div style="font-size: 0.75rem; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px;">YOUR IDEA:</div>
         <div style="font-size: 1rem; color: var(--text-main); font-style: italic; line-height: 1.6;">${Ff.userIdea}</div>
       </div>
-
       ${Ff.refinement?Hf(Ff.refinement):``}
       ${Ff.checkResult?Vf(Ff.checkResult):``}
-      
       ${Ff.similarProjects.length>0?`
         <h2 style="font-size: 1.25rem; font-weight: 800; color: #0ea5e9; margin: 40px 0 20px;">Similar Existing Projects</h2>
         ${Ff.similarProjects.map(Uf).join(``)}
       `:``}
-
       ${!Ff.checkResult&&Ff.similarProjects.length===0?`
         <p style="color: #10b981; font-style: italic;">No similar projects found! Your idea might be very unique.</p>
       `:``}
-
       ${Ff.errorMsg?`<div class="alert-error" style="margin-bottom: 16px;">${Ff.errorMsg}</div>`:``}
-
       ${Ff.refinement?``:`
         <button id="ir-refine" class="btn-primary" style="width: 100%; margin-top: 40px; padding: 20px; font-size: 1.125rem;" ${Ff.loading?`disabled`:``}>
           ${Ff.loading?`Analyzing...`:` Refine & Find Gaps`}
@@ -4643,7 +4594,6 @@ void main() {
         <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">${t.score||`?`}% Novelty Score</div>
         <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.6;">${t.rationale||``}</p>
       </div>
-
       <div class="glass-card" style="border-left: 4px solid #0891b2; margin-bottom: 32px;">
         <h3 style="color: #0891b2; margin-bottom: 12px;"> Recommended Direction</h3>
         <p style="font-size: 1rem; line-height: 1.7; font-weight: 700; margin-bottom: 16px;">${n.final_direction||``}</p>
