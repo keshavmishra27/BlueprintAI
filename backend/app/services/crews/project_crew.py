@@ -1,13 +1,8 @@
 import logging
-
 from crewai import Agent, Task
-
 from backend.app.services.crews.base import parse_json_output, run_crew
 from backend.app.services.crews.tools import web_search_tool
-
 logger = logging.getLogger(__name__)
-
-
 def run_project_suggest_crew(theme: str) -> dict:
     resume_agent = Agent(
         role="Resume Project Mentor",
@@ -22,7 +17,6 @@ def run_project_suggest_crew(theme: str) -> dict:
         backstory="Judge who rewards novelty and clear demos.",
         allow_delegation=False,
     )
-
     t1 = Task(
         description=(
             f"Theme: {theme}\n"
@@ -44,7 +38,6 @@ def run_project_suggest_crew(theme: str) -> dict:
         agent=hackathon_agent,
         context=[t1],
     )
-
     try:
         raw = run_crew([resume_agent, hackathon_agent], [t1, t2])
         data = parse_json_output(raw)
@@ -52,7 +45,5 @@ def run_project_suggest_crew(theme: str) -> dict:
             return data
     except Exception as e:
         logger.warning("Project crew failed: %s", e)
-
     from backend.app.services.project_suggest_service import suggest_projects_legacy
-
     return suggest_projects_legacy(theme)

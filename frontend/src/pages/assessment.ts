@@ -1,5 +1,4 @@
 import { apiGet, apiPost } from '../api';
-
 let state = {
   studentName: '',
   selectedDomains: [] as string[],
@@ -13,12 +12,10 @@ let state = {
   scores: null as any,
   screen: 'setup' as 'setup' | 'quiz' | 'submitting' | 'results'
 };
-
 function setState(newState: Partial<typeof state>, render: () => void) {
   state = { ...state, ...newState };
   render();
 }
-
 export function renderAssessment(container: HTMLElement) {
   const render = () => {
     if (state.screen === 'setup') {
@@ -34,8 +31,6 @@ export function renderAssessment(container: HTMLElement) {
       attachResultsListeners(render);
     }
   };
-
-  // Initial load domains
   if (state.allDomains.length === 0 && !state.setupError) {
     apiGet('/assess/domains').then(domains => {
       setState({ allDomains: domains }, render);
@@ -43,30 +38,25 @@ export function renderAssessment(container: HTMLElement) {
       setState({ setupError: err.message || 'Failed to load domains' }, render);
     });
   }
-
   render();
 }
-
 function getSetupHTML() {
   const domainsHTML = state.allDomains.map(d => {
     const isSel = state.selectedDomains.includes(d);
     return `<button class="domain-btn ${isSel ? 'btn-outline selected' : 'btn-outline'}" data-domain="${d}">${isSel ? '✓ ' : ''}${d}</button>`;
   }).join(' ');
-
   return `
     <div class="fade-in" style="max-width: 680px; margin: 40px auto;">
       <h1 class="text-title"> AI Developer Assessment</h1>
       <p class="text-subtitle" style="margin-bottom: 32px;">
         Select a domain to generate an adaptive, 15-question technical exam.
       </p>
-
       <div class="glass-card">
         <h3 style="color: #0891b2; margin-bottom: 16px;">Your Details</h3>
         <div style="margin-bottom: 16px;">
           <label class="input-label">Full Name</label>
           <input type="text" id="as-name" class="input-field" value="${state.studentName}">
         </div>
-
         <div style="margin-bottom: 16px;">
           <label class="input-label">Select Domains</label>
           ${state.allDomains.length === 0 && !state.setupError ? '<p>Loading domains...</p>' : ''}
@@ -74,9 +64,7 @@ function getSetupHTML() {
             ${domainsHTML}
           </div>
         </div>
-
         ${state.setupError ? `<div class="alert-error" style="margin-bottom: 16px;">${state.setupError}</div>` : ''}
-
         <button id="as-start" class="btn-primary" style="width: 100%; margin-top: 16px;" ${state.loading ? 'disabled' : ''}>
           ${state.loading ? 'Generating questions...' : 'Start Quiz'}
         </button>
@@ -84,7 +72,6 @@ function getSetupHTML() {
     </div>
   `;
 }
-
 function attachSetupListeners(render: () => void) {
   const nameInput = document.getElementById('as-name') as HTMLInputElement;
   if (nameInput) {
@@ -92,7 +79,6 @@ function attachSetupListeners(render: () => void) {
       state.studentName = (e.target as HTMLInputElement).value;
     });
   }
-
   document.querySelectorAll('.domain-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const d = (e.target as HTMLElement).getAttribute('data-domain');
@@ -106,7 +92,6 @@ function attachSetupListeners(render: () => void) {
       }
     });
   });
-
   const startBtn = document.getElementById('as-start');
   if (startBtn) {
     startBtn.addEventListener('click', async () => {
@@ -115,13 +100,11 @@ function attachSetupListeners(render: () => void) {
         return;
       }
       setState({ loading: true, setupError: '' }, render);
-
       try {
         const res = await apiPost('/assess/generate-mcq', {
           student_name: state.studentName,
           domains: state.selectedDomains
         }, 180000);
-
         setState({
           loading: false,
           sessionId: res.session_id,
@@ -135,7 +118,6 @@ function attachSetupListeners(render: () => void) {
     });
   }
 }
-
 function getQuizHTML() {
   const qHtml = state.questions.map((q, i) => {
     const chosen = state.userAnswers[i] || '';
@@ -143,7 +125,6 @@ function getQuizHTML() {
       const isSel = chosen === opt[0];
       return `<button class="opt-btn btn-outline ${isSel ? 'selected' : ''}" data-qi="${i}" data-val="${opt[0]}" style="display: block; width: 100%; text-align: left; margin-bottom: 8px; border-radius: 8px;">${opt}</button>`;
     }).join('');
-
     return `
       <div class="glass-card" style="margin-bottom: 24px; padding: 24px;">
         <div style="font-weight: 700; color: #64748b; margin-bottom: 8px; text-transform: uppercase;">Question ${i + 1} <span style="float: right; font-size: 0.75rem; background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 12px;">${q.difficulty}</span></div>
@@ -152,11 +133,9 @@ function getQuizHTML() {
       </div>
     `;
   }).join('');
-
   const answered = Object.keys(state.userAnswers).length;
   const total = state.questions.length;
   const canSubmit = answered === total;
-
   return `
     <div class="fade-in" style="max-width: 760px; margin: 40px auto;">
       <div style="display: flex; justify-content: space-between; margin-bottom: 24px;">
@@ -164,16 +143,13 @@ function getQuizHTML() {
         <div style="background: rgba(0,0,0,0.05); padding: 4px 12px; border-radius: 12px; font-weight: 700;">${answered}/${total} answered</div>
       </div>
       ${qHtml}
-      
       ${state.setupError ? `<div class="alert-error" style="margin-bottom: 16px;">${state.setupError}</div>` : ''}
-
       <button id="as-submit" class="btn-primary" style="width: 100%;" ${!canSubmit ? 'disabled' : ''}>
         Submit Quiz
       </button>
     </div>
   `;
 }
-
 function attachQuizListeners(render: () => void) {
   document.querySelectorAll('.opt-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -186,7 +162,6 @@ function attachQuizListeners(render: () => void) {
       }
     });
   });
-
   const subBtn = document.getElementById('as-submit');
   if (subBtn) {
     subBtn.addEventListener('click', async () => {
@@ -203,7 +178,6 @@ function attachQuizListeners(render: () => void) {
     });
   }
 }
-
 function getResultsHTML() {
   const s = state.scores;
   if (!s) return '';
@@ -211,28 +185,23 @@ function getResultsHTML() {
   const total = s.total || 1;
   const pct = Math.round((correct / total) * 100);
   const color = pct >= 80 ? '#34d399' : pct >= 50 ? '#f59e0b' : '#ef4444';
-
   return `
     <div class="fade-in" style="max-width: 760px; margin: 40px auto; text-align: center;">
       <h1 class="text-title"> Results for ${state.studentName}</h1>
-      
       <div class="glass-card" style="border-top: 4px solid ${color}; margin-bottom: 24px;">
         <div style="font-size: 0.875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Your Score</div>
         <div style="font-size: 4rem; font-weight: 900; color: ${color};">${correct}/${total}</div>
         <div style="font-weight: 700; color: ${color};">${pct}% correct</div>
       </div>
-
       <div class="glass-card" style="margin-bottom: 24px;">
         <div style="font-size: 0.875rem; color: var(--text-muted); text-transform: uppercase;">Domain Percentile</div>
         <div style="font-size: 3.5rem; font-weight: 900; color: #0891b2;">${s.percentile || 50}%</div>
         <p>${s.percentile_message || 'Estimated percentile'}</p>
       </div>
-
       <button id="as-reset" class="btn-primary" style="width: 100%;">Take Another Quiz</button>
     </div>
   `;
 }
-
 function attachResultsListeners(render: () => void) {
   const resetBtn = document.getElementById('as-reset');
   if (resetBtn) {

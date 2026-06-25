@@ -1,47 +1,35 @@
 import yaml
-
-#loading the themes from yaml file
 def load_theme():
     with open("backend\\app\\config\\themes.yaml", "r") as f:
         data = yaml.safe_load(f)
     return data
-
-#getting available themes
 def get_themes():
     data = load_theme()
     for theme in range(0, len(data['themes'])):
         print(f"{theme+1}. {data['themes'][theme]}")
     return data['themes']
-
-#validating the themes  
 def validate_theme(user_themes:str):
     data = load_theme()
     test_themes = user_themes.split(",")
     valid_themes=[]
     invalid_themes=[]
-    
     for test_theme in test_themes:
         if test_theme in data['themes']:
             valid_themes.append(test_theme)
         else:
             invalid_themes.append(test_theme)
     """
-        
     if count == 0:
         return {"status":True, "valid_themes":valid_themes,"message":"All themes are valid."}
     else:
         return {"status":False, "valid_themes":valid_themes, "invalid_themes":invalid_themes,
                 "message":f"check the theme section for all themes"}
     """
-
     if invalid_themes==[]:
         return {"status":True, "valid_themes":valid_themes,"message":"All themes are valid."}
     else:
         return {"status":False, "valid_themes":valid_themes, "invalid_themes":invalid_themes,
                 "message":f"check the theme section for all themes"}
-    
-
-#adding a new theme
 def add_theme(new_theme:str):
     data=load_theme()
     if new_theme not in data['themes']:

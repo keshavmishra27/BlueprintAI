@@ -1,5 +1,4 @@
 import { apiPost } from '../api';
-
 let state = {
   userIdea: '',
   loading: false,
@@ -9,12 +8,10 @@ let state = {
   refinement: null as any,
   screen: 'input' as 'input' | 'results'
 };
-
 function setState(newState: Partial<typeof state>, render: () => void) {
   state = { ...state, ...newState };
   render();
 }
-
 export function renderIdeaRefiner(container: HTMLElement) {
   const render = () => {
     if (state.screen === 'input') {
@@ -27,7 +24,6 @@ export function renderIdeaRefiner(container: HTMLElement) {
   };
   render();
 }
-
 function getInputHTML() {
   return `
     <div class="fade-in" style="max-width: 860px; margin: 40px auto;">
@@ -35,20 +31,16 @@ function getInputHTML() {
       <p class="text-subtitle" style="margin-bottom: 40px;">
         Enter your project idea. We'll check if it already exists and help you find a unique angle with market loophole analysis.
       </p>
-
       <div style="margin-bottom: 24px;">
         <textarea id="ir-idea" class="input-field" rows="5" placeholder="Describe your project idea in detail...">${state.userIdea}</textarea>
       </div>
-
       ${state.errorMsg ? `<div class="alert-error" style="margin-bottom: 16px;">${state.errorMsg}</div>` : ''}
-
       <button id="ir-check" class="btn-primary" style="width: 100%; padding: 20px; font-size: 1.125rem;" ${state.loading ? 'disabled' : ''}>
         ${state.loading ? 'Searching...' : ' Check Similarities'}
       </button>
     </div>
   `;
 }
-
 function attachInputListeners(render: () => void) {
   const ideaInput = document.getElementById('ir-idea') as HTMLTextAreaElement;
   if (ideaInput) {
@@ -56,7 +48,6 @@ function attachInputListeners(render: () => void) {
       state.userIdea = (e.target as HTMLTextAreaElement).value;
     });
   }
-
   const checkBtn = document.getElementById('ir-check');
   if (checkBtn) {
     checkBtn.addEventListener('click', async () => {
@@ -65,7 +56,6 @@ function attachInputListeners(render: () => void) {
         return;
       }
       setState({ loading: true, errorMsg: '' }, render);
-
       try {
         const res = await apiPost('/idea-validator/check', { idea: state.userIdea }, 120000);
         setState({
@@ -80,7 +70,6 @@ function attachInputListeners(render: () => void) {
     });
   }
 }
-
 function getResultsHTML() {
   return `
     <div class="fade-in" style="max-width: 860px; margin: 40px auto; padding-bottom: 60px;">
@@ -88,26 +77,20 @@ function getResultsHTML() {
         <h1 class="text-title" style="margin-bottom: 0;">Analysis Results</h1>
         <button id="ir-back" class="btn-outline">← Start Over</button>
       </div>
-
       <div style="margin-bottom: 40px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 32px;">
         <div style="font-size: 0.75rem; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px;">YOUR IDEA:</div>
         <div style="font-size: 1rem; color: var(--text-main); font-style: italic; line-height: 1.6;">${state.userIdea}</div>
       </div>
-
       ${state.refinement ? renderRefinement(state.refinement) : ''}
       ${!state.refinement && state.checkResult ? renderCheckResult(state.checkResult) : ''}
-      
       ${(!state.refinement && state.similarProjects.length > 0) ? `
         <h2 style="font-size: 1.25rem; font-weight: 800; color: #0ea5e9; margin: 40px 0 20px;">Similar Existing Projects</h2>
         ${state.similarProjects.map(renderProjectCard).join('')}
       ` : ''}
-
       ${(!state.refinement && !state.checkResult && state.similarProjects.length === 0) ? `
         <p style="color: #10b981; font-style: italic;">No similar projects found! Your idea might be very unique.</p>
       ` : ''}
-
       ${state.errorMsg ? `<div class="alert-error" style="margin-bottom: 16px;">${state.errorMsg}</div>` : ''}
-
       ${!state.refinement ? `
         <button id="ir-refine" class="btn-primary" style="width: 100%; margin-top: 40px; padding: 20px; font-size: 1.125rem;" ${state.loading ? 'disabled' : ''}>
           ${state.loading ? 'Analyzing...' : ' Refine & Find Gaps'}
@@ -116,7 +99,6 @@ function getResultsHTML() {
     </div>
   `;
 }
-
 function renderCheckResult(res: any) {
   const gap = res.gap_and_loopholes || res.gaps_and_loopholes;
   const sources = res.search_queries_and_sources_used || res.search_sources;
@@ -134,7 +116,6 @@ function renderCheckResult(res: any) {
     </div>
   `;
 }
-
 function renderRefinement(ref: any) {
   const uniq = ref.uniqueness || {};
   const concept = ref.refined_concept || {};
@@ -145,7 +126,6 @@ function renderRefinement(ref: any) {
         <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">${uniq.score || '?'}% Novelty Score</div>
         <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.6;">${uniq.rationale || ''}</p>
       </div>
-
       <div class="glass-card" style="border-left: 4px solid #0891b2; margin-bottom: 32px;">
         <h3 style="color: #0891b2; margin-bottom: 12px;"> Recommended Direction</h3>
         <p style="font-size: 1rem; line-height: 1.7; font-weight: 700; margin-bottom: 16px;">${concept.final_direction || ''}</p>
@@ -159,7 +139,6 @@ function renderRefinement(ref: any) {
     </div>
   `;
 }
-
 function renderProjectCard(proj: any) {
   return `
     <div class="glass-card" style="margin-bottom: 20px; padding: 20px;">
@@ -180,7 +159,6 @@ function renderProjectCard(proj: any) {
     </div>
   `;
 }
-
 function attachResultsListeners(render: () => void) {
   const backBtn = document.getElementById('ir-back');
   if (backBtn) {
@@ -188,7 +166,6 @@ function attachResultsListeners(render: () => void) {
       setState({ screen: 'input', checkResult: null, refinement: null, similarProjects: [] }, render);
     });
   }
-
   const refineBtn = document.getElementById('ir-refine');
   if (refineBtn) {
     refineBtn.addEventListener('click', async () => {

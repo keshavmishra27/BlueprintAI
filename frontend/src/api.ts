@@ -1,6 +1,5 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 export const API_KEY = import.meta.env.VITE_API_KEY || '';
-
 export function getHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -10,7 +9,6 @@ export function getHeaders(): Record<string, string> {
   }
   return headers;
 }
-
 export async function apiGet(path: string, timeout = 900000): Promise<any> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(new Error(`Request timed out after ${timeout/1000} seconds. The AI might be taking longer than expected.`)), timeout);
@@ -30,7 +28,6 @@ export async function apiGet(path: string, timeout = 900000): Promise<any> {
     clearTimeout(id);
   }
 }
-
 export async function apiPost(path: string, data: any, timeout = 900000): Promise<any> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(new Error(`Request timed out after ${timeout/1000} seconds. The AI might be taking longer than expected.`)), timeout);
@@ -51,7 +48,6 @@ export async function apiPost(path: string, data: any, timeout = 900000): Promis
     clearTimeout(id);
   }
 }
-
 async function parseError(response: Response): Promise<Error> {
   try {
     const data = await response.json();

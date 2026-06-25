@@ -9,7 +9,6 @@ from backend.app.database import get_db
 from backend.app.middleware.rate_limit import limiter
 from backend.app.models import AssessmentSession
 from ..services.llm_factory import check_llm_availability
-
 router = APIRouter(prefix="/assess", tags=["Assessment"])
 AVAILABLE_DOMAINS = [
     "Web Development",

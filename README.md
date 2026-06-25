@@ -1,11 +1,18 @@
-#  Groupify
-Groupify is a platform which lets you analyze your coding style along with telling you how much ahead you are as compared to other developers.
+#  BlueprintAI
+BlueprintAI is a platform which lets you analyse your projects by suggesting hackathon level analysis of your project,suggesting ideas for hackthons, and patent ideas check.
+
+
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi&logoColor=white)
 ![Solara](https://img.shields.io/badge/Solara-Reactive_UI-6366f1)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791?logo=postgresql&logoColor=white)
 ![AI](https://img.shields.io/badge/AI-Ollama_%7C_CrewAI-ff6b6b)
 ---
+
+##  Live Demo
+Experience the interactive frontend with dynamic mock data, 3D animations, and a polished SaaS feel here:  
+**[BlueprintAI Live Demo](https://keshavmishra27.github.io/BlueprintAI/)**
+
 ##  Features
 | Feature | Description |
 |---|---|
@@ -158,18 +165,15 @@ Create a `.env` file in the project root:
 ```env
 OLLAMA_MODEL=qwen2.5:3b
 OLLAMA_BASE_URL=http://localhost:11434
-OPENROUTER_API_KEY=your_key_here
-OPENROUTER_MODEL=gpt-4o-mini
-OPENROUTER_FALLBACK_MODEL=gpt-4o-mini
-OPENROUTER_CREW_MODEL=gpt-4o-mini
-LLM_MAX_TOKENS=4096
-OPENROUTER_FALLBACK_MAX_TOKENS=4096
-OPENROUTER_CREW_MAX_TOKENS=8192
-GOOGLE_API_KEY=optional_gemini_key
-API_KEY=dev-local-key-change-me
 API_URL=http://localhost:8000
-GITHUB_TOKEN=optional_for_higher_rate_limits
-SEARCH_ENABLED=true
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+GROQ_API_KEY=your_api_key
+
+# Free models (auto-routed, no credits needed)
+GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_FALLBACK_MODEL=llama-3.3-70b-versatile
+GROQ_CREW_MODEL=llama-3.3-70b-versatile
+LLM_MAX_TOKENS=1500
 ```
 
 Copy `.env.example` for the full list. Set the same `API_KEY` in the Solara UI process so requests include `X-API-Key`.

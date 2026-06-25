@@ -1,22 +1,15 @@
 """
 Option B – Task status polling endpoint.
-
 GET /tasks/{task_id}  →  current status + result when done.
 GET /tasks             →  recent tasks (newest first).
 """
-
 from typing import List
-
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-
 from backend.app.database import SessionLocal
 from backend.app.models import BackgroundTask
 from backend.app.services.task_queue import get_task
-
 router = APIRouter(prefix="/tasks", tags=["Background Tasks"])
-
-
 class TaskStatus(BaseModel):
     id: str
     task_type: str
@@ -26,13 +19,9 @@ class TaskStatus(BaseModel):
     error: str | None = None
     created_at: str | None = None
     updated_at: str | None = None
-
-
 @router.get("/health")
 def health():
     return {"status": "ok", "route": "/tasks"}
-
-
 @router.get("/{task_id}", response_model=TaskStatus)
 def poll_task(task_id: str):
     """Poll the current status of a background task."""
@@ -40,8 +29,6 @@ def poll_task(task_id: str):
     if not info:
         raise HTTPException(status_code=404, detail="Task not found.")
     return info
-
-
 @router.get("", response_model=List[TaskStatus])
 def list_recent_tasks(limit: int = Query(20, ge=1, le=100)):
     """List the most recent background tasks (newest first)."""

@@ -54,20 +54,16 @@ logger.info("LLM Factory initialized (OpenRouter=%s, max_tokens=%s, crew_max_tok
 def extract_json_from_text(text: str) -> dict:
     if not text:
         return {}
-    
-    # helper to clean trailing commas
     def clean_json_str(s: str) -> str:
         s = re.sub(r',\s*\}', '}', s)
         s = re.sub(r',\s*\]', ']', s)
         return s
-
     json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
     if json_match:
         try:
             return json.loads(clean_json_str(json_match.group(1)))
         except json.JSONDecodeError:
             pass
-            
     start = text.find("{")
     if start != -1:
         end = text.rfind("}")
@@ -94,7 +90,6 @@ def extract_json_from_text(text: str) -> dict:
                 except:
                     pass
     return {}
-
 def _parse_openrouter_available_tokens(error: Exception) -> int | None:
     if not error:
         return None
@@ -106,7 +101,6 @@ def _parse_openrouter_available_tokens(error: Exception) -> int | None:
     if match:
         return int(match.group(1))
     return None
-
 def _google_llm(temperature=0.7):
     google_key = os.getenv("GOOGLE_API_KEY")
     if not google_key or google_key == "your_gemini_api_key_here":
@@ -118,8 +112,6 @@ def _google_llm(temperature=0.7):
     except Exception as e:
         logger.warning("Google Gemini init failed: %s", e)
         return None
-
-
 def get_hybrid_llm(temperature=0.7):
     llms = []
     gemini = _google_llm(temperature)
@@ -206,14 +198,11 @@ def invoke_hybrid_llm(messages, temperature=0.7, max_retries=3):
                 continue
     raise last_exception or Exception("All LLMs failed to respond after multiple retries")
 def get_hybrid_crew_llm():
-    # 1. Try Google Gemini first
     google_key = os.getenv("GOOGLE_API_KEY")
     if google_key and google_key != "your_gemini_api_key_here":
         model = os.getenv("GOOGLE_MODEL", "gemini-2.0-flash")
         logger.info("Configuring CrewAI for Google Gemini (%s)", model)
         return LLM(model=f"gemini/{model}", api_key=google_key)
-
-    # 2. Try OpenRouter
     has_key = bool(OPENROUTER_API_KEY) and OPENROUTER_API_KEY != "your_openrouter_api_key_here"
     if has_key:
         crew_model = OPENROUTER_CREW_MODEL
@@ -232,8 +221,6 @@ def get_hybrid_crew_llm():
             return llm
         except Exception as e:
             logger.warning(f"OpenRouter crew LLM init failed: {e}. Falling back to Ollama.")
-
-    # 3. Fallback to Ollama (always available as last resort)
     logger.info(f"Configuring CrewAI for Ollama ({OLLAMA_MODEL})")
     return LLM(
         model=f"ollama/{OLLAMA_MODEL}",

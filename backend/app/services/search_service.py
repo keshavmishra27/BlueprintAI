@@ -3,17 +3,11 @@ import logging
 import time
 import re
 from datetime import datetime, timezone
-
 import requests
-
 from backend.app.config import get_settings
-
 logger = logging.getLogger(__name__)
-
-_DDG_BACKOFF_SECONDS = 2.0  # Initial backoff for DDG rate limits
+_DDG_BACKOFF_SECONDS = 2.0  
 _DDG_MAX_RETRIES = 3
-
-
 def _search_duckduckgo(query: str, max_results: int = 5) -> list[dict]:
     """Search DuckDuckGo with retry/backoff for rate limits."""
     try:
@@ -21,10 +15,8 @@ def _search_duckduckgo(query: str, max_results: int = 5) -> list[dict]:
     except ImportError:
         logger.warning("duckduckgo_search not installed")
         return []
-
     results: list[dict] = []
     backoff = _DDG_BACKOFF_SECONDS
-
     for attempt in range(1, _DDG_MAX_RETRIES + 1):
         try:
             with DDGS() as ddgs:
@@ -52,10 +44,7 @@ def _search_duckduckgo(query: str, max_results: int = 5) -> list[dict]:
                     continue
             logger.warning("DuckDuckGo search failed (attempt %d): %s", attempt, e)
             break
-
     return results
-
-
 def _search_github(query: str, max_results: int = 3) -> list[dict]:
     """Search GitHub repositories."""
     settings = get_settings()
@@ -87,8 +76,6 @@ def _search_github(query: str, max_results: int = 3) -> list[dict]:
     except Exception as e:
         logger.warning("GitHub search failed: %s", e)
     return results
-
-
 def _search_google_scrape(query: str, max_results: int = 5) -> list[dict]:
     """Lightweight fallback: scrape Google search results page."""
     results: list[dict] = []
@@ -106,10 +93,7 @@ def _search_google_scrape(query: str, max_results: int = 5) -> list[dict]:
             timeout=10,
         )
         if r.status_code == 200:
-            # Extract basic results from HTML
-            # Look for result blocks with URLs and snippets
             text = r.text
-            # Find all result links (simplified parsing)
             url_pattern = re.compile(
                 r'<a href="/url\?q=(https?://[^&"]+)[^"]*"[^>]*>(.*?)</a>',
                 re.DOTALL,
@@ -120,7 +104,6 @@ def _search_google_scrape(query: str, max_results: int = 5) -> list[dict]:
             )
             matches = url_pattern.findall(text)
             for url, title_html in matches[:max_results]:
-                # Skip Google's own URLs
                 if "google.com" in url or "youtube.com" in url:
                     continue
                 clean_title = re.sub(r"<[^>]+>", "", title_html).strip()
@@ -139,29 +122,19 @@ def _search_google_scrape(query: str, max_results: int = 5) -> list[dict]:
     except Exception as e:
         logger.warning("Google scrape failed: %s", e)
     return results
-
-
 def search_web(query: str, max_results: int = 5) -> list[dict]:
     """Search the web using DuckDuckGo (primary) and Google (fallback)."""
     settings = get_settings()
     if not settings.search_enabled:
         return []
-
     results: list[dict] = []
-
-    # 1. Try DuckDuckGo first
     ddg_results = _search_duckduckgo(query, max_results=max_results)
     results.extend(ddg_results)
-
-    # 2. If DDG failed, fall back to Google scrape
     if not ddg_results:
         logger.info("DDG returned no results, trying Google scrape fallback...")
         google_results = _search_google_scrape(query, max_results=max_results)
         results.extend(google_results)
-
     return results
-
-
 def format_search_context(results: list[dict]) -> str:
     if not results:
         return "No live search results available. State this in notes_and_limitations."
@@ -175,29 +148,21 @@ def format_search_context(results: list[dict]) -> str:
             f"Retrieved: {r.get('date')}"
         )
     return "\n\n".join(lines)
-
-
 def search_for_idea(idea: str) -> tuple[list[dict], str]:
     seen_urls: set[str] = set()
     merged: list[dict] = []
-
-    # 1. GitHub search first — use the raw idea (no suffixes)
-    #    to find directly relevant repos and projects
     gh_results = _search_github(idea[:80], max_results=5)
     for row in gh_results:
         url = row.get("url", "")
         if url and url not in seen_urls:
             seen_urls.add(url)
             merged.append(row)
-
-    # 2. Web search with varied suffixes for broader market context
     web_queries = [
         f"{idea[:80]} startup product",
         f"{idea[:80]} open source alternative",
         f"{idea[:80]} existing solutions",
     ]
     for i, q in enumerate(web_queries):
-        # Stagger queries to avoid rate limits
         if i > 0:
             time.sleep(1.5)
         for row in search_web(q, max_results=4):
@@ -205,7 +170,5 @@ def search_for_idea(idea: str) -> tuple[list[dict], str]:
             if url and url not in seen_urls:
                 seen_urls.add(url)
                 merged.append(row)
-
     logger.info("Idea search returned %d total results", len(merged))
     return merged, format_search_context(merged)
-

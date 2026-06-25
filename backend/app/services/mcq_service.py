@@ -1,20 +1,14 @@
 import json
 import math
-
 from backend.app.services.crews.mcq_crew import run_mcq_crew
-
-
 def generate_mcq(domain: str) -> list[dict]:
     questions = run_mcq_crew(domain)
     if questions:
         return questions
     return generate_mcq_legacy(domain)
-
-
 def generate_mcq_legacy(domain: str) -> list[dict]:
     from backend.app.services.llm_factory import invoke_hybrid_llm
     from langchain_core.messages import SystemMessage, HumanMessage
-
     system_prompt = """You are an expert technical interviewer.
 Generate exactly 15 MCQs: 5 easy, 5 medium, 5 hard.
 Each question: question, options (A-D), correct_answer (A|B|C|D), difficulty.
@@ -48,8 +42,6 @@ Return ONLY a valid JSON array."""
             "difficulty": "easy",
         }
     ]
-
-
 def grade_answers(questions: list[dict], answers: dict[str, str], db=None, domains=None, session_id=None) -> dict:
     easy_c = easy_t = med_c = med_t = hard_c = hard_t = 0
     details = []
@@ -83,14 +75,12 @@ def grade_answers(questions: list[dict], answers: dict[str, str], db=None, domai
     correct = easy_c + med_c + hard_c
     weighted = easy_c * 1 + med_c * 2 + hard_c * 3
     max_weighted = easy_t * 1 + med_t * 2 + hard_t * 3
-
     percentile_info = {"percentile": 50, "percentile_source": "default", "cohort_size": 0, "message": ""}
     if db is not None:
         from backend.app.services.percentile_service import compute_real_percentile
         percentile_info = compute_real_percentile(
             db, domains or [], weighted, max_weighted, exclude_session_id=session_id
         )
-
     return {
         "total": total,
         "correct": correct,

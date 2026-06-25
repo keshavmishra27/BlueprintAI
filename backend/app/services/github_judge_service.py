@@ -3,13 +3,10 @@ import logging
 import os
 import zipfile
 from urllib.parse import urlparse
-
 import requests as http_requests
 from dotenv import load_dotenv
-
 logger = logging.getLogger(__name__)
 load_dotenv()
-
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 CODE_EXTENSIONS = {
     ".py", ".js", ".ts", ".jsx", ".tsx",
@@ -23,14 +20,10 @@ PRIORITY_FILENAMES = {
 }
 MAX_FILE_SIZE_BYTES = 100_000
 MAX_TOTAL_CHARS = 18_000
-
-
 def _truncate_text(text: str, max_chars: int) -> str:
     if len(text) <= max_chars:
         return text
     return text[:max_chars] + "\n\n[...truncated due prompt size limit...]\n"
-
-
 def _parse_github_url(url: str) -> tuple[str, str]:
     url = url.strip().rstrip("/")
     parsed = urlparse(url)
@@ -40,23 +33,17 @@ def _parse_github_url(url: str) -> tuple[str, str]:
     if len(parts) < 2:
         raise ValueError("Could not find owner/repo in the URL.")
     return parts[0], parts[1]
-
-
 def _get_api_headers() -> dict:
     headers = {"Accept": "application/vnd.github.v3+json"}
     if GITHUB_TOKEN:
         headers["Authorization"] = f"token {GITHUB_TOKEN}"
     return headers
-
-
 def download_repo_zip(owner: str, repo: str) -> bytes:
     api_url = f"https://api.github.com/repos/{owner}/{repo}/zipball/HEAD"
     resp = http_requests.get(api_url, headers=_get_api_headers(), timeout=30, stream=True)
     if resp.status_code != 200:
         raise ValueError(f"Failed to download repository archive: {resp.status_code}")
     return resp.content
-
-
 def _should_read(path: str, size: int) -> bool:
     parts = path.split("/", 1)
     if len(parts) < 2:
@@ -65,22 +52,18 @@ def _should_read(path: str, size: int) -> bool:
     ext = os.path.splitext(clean_path)[1].lower()
     filename = os.path.basename(clean_path).lower()
     return (ext in CODE_EXTENSIONS or filename in PRIORITY_FILENAMES) and size <= MAX_FILE_SIZE_BYTES
-
-
 def _gather_code_from_zip(zip_bytes: bytes) -> str:
     zip_io = io.BytesIO(zip_bytes)
     aggregated = []
     total_chars = 0
     with zipfile.ZipFile(zip_io) as z:
         file_infos = [info for info in z.infolist() if not info.is_dir()]
-
         def sort_key(info):
             path = info.filename
             parts = path.split("/", 1)
             filename = os.path.basename(parts[1] if len(parts) > 1 else path).lower()
             priority = 0 if filename in PRIORITY_FILENAMES else 1
             return (priority, info.file_size)
-
         file_infos.sort(key=sort_key)
         for info in file_infos:
             if total_chars >= MAX_TOTAL_CHARS:
@@ -99,8 +82,6 @@ def _gather_code_from_zip(zip_bytes: bytes) -> str:
             except Exception:
                 continue
     return "".join(aggregated)
-
-
 def _summarize_repo_structure(zip_bytes: bytes) -> dict:
     summary = {
         "total_files": 0,
@@ -139,7 +120,6 @@ def _summarize_repo_structure(zip_bytes: bytes) -> dict:
                 summary["has_notebooks"] = True
             if "/" not in clean_path and filename.endswith(".py"):
                 summary["top_level_scripts"] += 1
-
     likely_tutorial = (
         summary["source_files"] <= 6
         and not summary["has_tests"]
@@ -148,8 +128,6 @@ def _summarize_repo_structure(zip_bytes: bytes) -> dict:
     )
     summary["likely_tutorial"] = likely_tutorial
     return summary
-
-
 def _format_repo_summary(info: dict) -> str:
     lines = [
         f"Total files: {info.get('total_files', 0)}",
@@ -165,16 +143,12 @@ def _format_repo_summary(info: dict) -> str:
     if info.get("likely_tutorial"):
         lines.append("Judgment: likely a small tutorial/miniproject.")
     return "\n".join(lines)
-
-
 def _score_value(score_data):
     if isinstance(score_data, dict):
         return float(score_data.get("score", 0))
     if isinstance(score_data, (int, float)):
         return float(score_data)
     return 0.0
-
-
 def _recalculate_total_score(scores: dict) -> float:
     weights = {
         'functionality': 0.25, 'code_quality': 0.20,
@@ -192,8 +166,6 @@ def _recalculate_total_score(scores: dict) -> float:
         ws_sum += score * weight
         w_sum += weight
     return round((ws_sum / w_sum) * 10, 1) if w_sum > 0 else 0.0
-
-
 def _adjust_simple_project_scores(result: dict, repo_info: dict) -> dict:
     if not repo_info.get("likely_tutorial"):
         return result
@@ -226,18 +198,14 @@ def _adjust_simple_project_scores(result: dict, repo_info: dict) -> dict:
         )
         result["mentor_notes"] = (mentor_notes + "\n\n" + note).strip() if mentor_notes else note
     return result
-
-
 def analyze_repo(github_url: str, student_name: str) -> dict:
     owner, repo = _parse_github_url(github_url)
     zip_bytes = download_repo_zip(owner, repo)
     code_dump = _gather_code_from_zip(zip_bytes)
     if not code_dump.strip():
         raise ValueError("No readable code files found in this repository or access limit reached.")
-
     from backend.app.services.static_analysis_service import run_static_analysis
     from backend.app.services.crews.repo_crew import run_repo_judge_crew
-
     static_summary = run_static_analysis(zip_bytes)
     repo_info = _summarize_repo_structure(zip_bytes)
     repo_summary = _format_repo_summary(repo_info)
@@ -249,8 +217,6 @@ def analyze_repo(github_url: str, student_name: str) -> dict:
         repo_summary=repo_summary,
     )
     return _adjust_simple_project_scores(result, repo_info)
-
-
 def analyze_repo_llm_only(
     github_url: str,
     student_name: str,
@@ -264,9 +230,7 @@ def analyze_repo_llm_only(
     from backend.app.routers.repo_judge import JUDGE_JSON_SCHEMA
     from langchain_core.messages import SystemMessage, HumanMessage
     import json
-
     from backend.app.routers.repo_judge import SCORING_RUBRIC
-
     system_prompt = (
         "You are a hackathon judge. Static analysis + code sample provided.\n"
         "Return ONLY valid JSON — no markdown fences, no explanation, no extra text.\n\n"
@@ -306,13 +270,10 @@ def analyze_repo_llm_only(
             return result
     except Exception as e:
         logger.error("LLM fallback failed: %s", e)
-
     result = _error_result(github_url, student_name, "Analysis incomplete")
     if repo_info:
         return _adjust_simple_project_scores(result, repo_info)
     return result
-
-
 def _error_result(github_url, student_name, detail):
     return {
         "repo_url": github_url,

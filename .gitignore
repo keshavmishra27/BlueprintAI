@@ -31,3 +31,12 @@ htmlcov/
 
 scratch/
 tmp/
+
+# Node/Frontend
+node_modules/
+dist/
+npm-debug.log*
+
+# Untracked/Unnecessary Projects
+demo/
+next-app/

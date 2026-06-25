@@ -1,34 +1,22 @@
 """
 Option B – In-process async task queue backed by threads + DB.
-
 Usage:
     task_id = enqueue("repo_judge", {"github_url": "...", "student_name": "..."})
     # ... later ...
     status = get_task(task_id)   # {"id": ..., "status": "done", "result_json": {...}}
 """
-
 import logging
 import threading
 import uuid
 from datetime import datetime, timezone
-
 from backend.app.database import SessionLocal
 from backend.app.models import BackgroundTask
-
 logger = logging.getLogger(__name__)
-
-# ── registry of callable handlers keyed by task_type ─────────────────────────
 _HANDLERS: dict[str, callable] = {}
-
-
 def register_handler(task_type: str, fn: callable):
     """Register a function to be called for a given task_type."""
     _HANDLERS[task_type] = fn
     logger.info("Registered async handler for task_type=%s", task_type)
-
-
-# ── public API ───────────────────────────────────────────────────────────────
-
 def enqueue(task_type: str, payload: dict) -> str:
     """Create a BackgroundTask row and spawn a daemon thread to execute it."""
     task_id = uuid.uuid4().hex
@@ -44,15 +32,12 @@ def enqueue(task_type: str, payload: dict) -> str:
         db.commit()
     finally:
         db.close()
-
     thread = threading.Thread(
         target=_run_task, args=(task_id, task_type, payload), daemon=True
     )
     thread.start()
     logger.info("Enqueued task %s (type=%s)", task_id, task_type)
     return task_id
-
-
 def get_task(task_id: str) -> dict | None:
     """Return the current state of a background task."""
     db = SessionLocal()
@@ -72,10 +57,6 @@ def get_task(task_id: str) -> dict | None:
         }
     finally:
         db.close()
-
-
-# ── internal runner ──────────────────────────────────────────────────────────
-
 def _run_task(task_id: str, task_type: str, payload: dict):
     """Execute the registered handler and persist the result."""
     db = SessionLocal()
@@ -86,7 +67,6 @@ def _run_task(task_id: str, task_type: str, payload: dict):
         row.status = "running"
         row.updated_at = datetime.now(timezone.utc)
         db.commit()
-
         handler = _HANDLERS.get(task_type)
         if not handler:
             row.status = "failed"
@@ -94,7 +74,6 @@ def _run_task(task_id: str, task_type: str, payload: dict):
             row.updated_at = datetime.now(timezone.utc)
             db.commit()
             return
-
         try:
             result = handler(payload)
             row.status = "done"
@@ -103,7 +82,6 @@ def _run_task(task_id: str, task_type: str, payload: dict):
             logger.exception("Task %s failed", task_id)
             row.status = "failed"
             row.error = str(exc)
-
         row.updated_at = datetime.now(timezone.utc)
         db.commit()
     except Exception:

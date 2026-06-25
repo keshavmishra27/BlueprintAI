@@ -1,15 +1,10 @@
 import os
 from functools import lru_cache
 from dotenv import load_dotenv
-
 load_dotenv(override=True)
-
-
 @lru_cache
 def get_settings():
     return Settings()
-
-
 class Settings:
     def __init__(self):
         self.api_key: str | None = os.getenv("API_KEY") or None
