@@ -1,0 +1,92 @@
+{
+  "project_state": {
+    "user_idea": {
+      "what": "Predict patient waiting times and identify overcrowding.",
+      "why": "Hospitals need earlier intervention without expensive infrastructure.",
+      "how_raw": "AI-based prediction using historical queue, appointment, staffing and arrival data.",
+      "how_structured": {
+        "inputs": [],
+        "processing": [],
+        "decision": [],
+        "output": [],
+        "capabilities": [],
+        "data_required": [],
+        "resources_required": [],
+        "constraints": []
+      }
+    },
+    "current_constraints": [
+      "budget <= $500/month",
+      "no cloud infrastructure",
+      "existing hospital computers only",
+      "unreliable internet",
+      "30-day prototype",
+      "patient data must remain local"
+    ],
+    "current_requirements": [
+      {
+        "name": "predict waiting time",
+        "required": true
+      },
+      {
+        "name": "identify overcrowding risk",
+        "required": true
+      },
+      {
+        "name": "useful accuracy",
+        "required": true
+      },
+      {
+        "name": "low operating cost",
+        "required": true
+      }
+    ]
+  },
+  "architecture": {
+    "inputs": [
+      "Direct query to local hospital replica DB via ODBC"
+    ],
+    "processing": [
+      "Local Python script",
+      "XGBoost for prediction"
+    ],
+    "decision": [
+      "Threshold model for overcrowding alerts"
+    ],
+    "output": [
+      "Local web dashboard accessible on hospital intranet"
+    ],
+    "capabilities": [
+      "prediction",
+      "alerting",
+      "predict waiting time",
+      "identify overcrowding risk"
+    ],
+    "data_required": [
+      "historical queue",
+      "staffing",
+      "arrivals"
+    ],
+    "resources_required": [
+      "existing hospital computer"
+    ],
+    "constraints": [
+      "budget <= $500/month",
+      "no cloud infrastructure",
+      "existing hospital computers only",
+      "unreliable internet",
+      "30-day prototype",
+      "patient data must remain local"
+    ],
+    "evidence_provenance": [],
+    "historical_decisions": [],
+    "architectural_decisions": {
+      "compute_location": "local existing hospital computer",
+      "inference_strategy": "daily batch prediction",
+      "storage_location": "local file system",
+      "connectivity_strategy": "direct ODBC query",
+      "input_modality": "direct DB query",
+      "decision_mechanism": "XGBoost regression"
+    }
+  }
+}

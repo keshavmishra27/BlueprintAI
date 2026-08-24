@@ -1,0 +1,14 @@
+{
+  "pattern_id": "pattern_offline_accessibility_01",
+  "domain": "Agriculture & FinTech",
+  "pattern": "Solutions targeting rural populations succeed when they explicitly remove dependencies on high-speed internet or smartphones.",
+  "observed_in_projects": [
+    "sih_2023_fin_01",
+    "sih_2023_ag_01"
+  ],
+  "evidence": [
+    "sih_2023_fin_01: IVR-based voice UPI works on feature phones without data.",
+    "sih_2023_ag_01: CNN model runs entirely on-device (TFLite) without needing cloud inference."
+  ],
+  "confidence": "high"
+}

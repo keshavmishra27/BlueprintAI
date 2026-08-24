@@ -1,0 +1,12 @@
+{
+  "pattern_id": "pattern_decentralized_trust_01",
+  "domain": "Governance",
+  "pattern": "When the core problem is systemic fraud or forgery, blockchain and cryptographic hashing are standard winning approaches for verification.",
+  "observed_in_projects": [
+    "sih_2023_gov_01"
+  ],
+  "evidence": [
+    "sih_2023_gov_01: Solves certificate forgery entirely via decentralized hashing rather than centralized DBs."
+  ],
+  "confidence": "low"
+}

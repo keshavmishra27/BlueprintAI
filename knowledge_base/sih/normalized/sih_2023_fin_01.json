@@ -1,0 +1,67 @@
+{
+  "id": "sih_2023_fin_01",
+  "hackathon": "Smart India Hackathon",
+  "edition": "2023",
+  "problem_domain": [
+    "FinTech"
+  ],
+  "subdomains": [
+    "Financial Inclusion"
+  ],
+  "problem_statement": "Voice-assisted UPI payments for feature phones without internet.",
+  "what": "An IVR-based payment system allowing users to make UPI transfers using voice commands in regional languages.",
+  "why": "Millions of rural citizens lack smartphones and internet access, excluding them from the digital payments ecosystem.",
+  "how": "User dials a toll-free number. An NLP engine processes the spoken language (e.g., 'Pay 100 rupees to Ramesh'). It authenticates via a voice PIN and interfaces with the UPI123Pay protocol.",
+  "technical_approach": [
+    "Voice Recognition (ASR)",
+    "IVR integration",
+    "Telecom protocols"
+  ],
+  "technologies": [
+    "Python",
+    "Bhashini API",
+    "Asterisk (IVR)",
+    "UPI API"
+  ],
+  "key_components": [
+    "IVR Gateway",
+    "Speech-to-Text",
+    "Payment Gateway"
+  ],
+  "innovation_or_differentiation": null,
+  "measurable_or_claimed_impact": null,
+  "outcome": "winner",
+  "outcome_verified": true,
+  "decision_features": {
+    "problem_type": [
+      "accessibility",
+      "transaction"
+    ],
+    "solution_type": [
+      "voice_interface",
+      "telecom"
+    ],
+    "primary_value": [
+      "inclusion",
+      "convenience"
+    ],
+    "user_type": [
+      "rural_citizen"
+    ],
+    "workflow_intervention": true,
+    "requires_ml": true,
+    "requires_llm": false,
+    "prototype_complexity": "high",
+    "measurable_impact": true
+  },
+  "sources": [
+    {
+      "source_url": "https://www.sih.gov.in/sih2023_results",
+      "source_title": "SIH 2023 FinTech Winners",
+      "source_type": "official",
+      "retrieved_at": "2026-08-09T12:28:57.572638",
+      "extracted_text": "Winner: Offline voice-based UPI payment system.",
+      "notes": "Addresses the offline/rural constraint pattern."
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "id": "gap-8a4b-9c2d",
+  "decision_id": "1c854183-05a8-4e60-9903-8ed73ea8dad7",
+  "repository_fingerprint": "rf4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "expected_architecture": {
+    "components": [
+      {"name": "FastAPI", "type": "Backend Framework", "description": "High performance API layer"},
+      {"name": "PostgreSQL", "type": "Database", "description": "Relational data store"},
+      {"name": "Redis", "type": "Cache", "description": "In-memory caching"},
+      {"name": "XGBoost", "type": "ML Model", "description": "Hospital overcrowding predictor model"},
+      {"name": "Docker", "type": "Infrastructure", "description": "Containerization"}
+    ],
+    "decisions": [
+      {"component": "Database", "choice": "PostgreSQL", "rationale": "High data integrity required"}
+    ]
+  },
+  "actual_architecture": {
+    "components": ["FastAPI", "MongoDB"]
+  },
+  "findings": [
+    {
+      "category": "MISMATCH",
+      "expected": "PostgreSQL",
+      "observed": "MongoDB"
+    },
+    {
+      "category": "MISSING",
+      "expected": "Redis",
+      "observed": "insufficient evidence"
+    },
+    {
+      "category": "MATCH",
+      "expected": "FastAPI",
+      "observed": "FastAPI"
+    },
+    {
+      "category": "UNKNOWN",
+      "expected": "Monitoring",
+      "observed": "insufficient evidence"
+    }
+  ],
+  "evidence": [
+    {"file": "requirements.txt", "line": 7, "content": "pymongo==3.12.0"}
+  ],
+  "alignment_score": 0.72,
+  "created_at": "2026-08-23T10:05:00Z"
+}

@@ -1,0 +1,68 @@
+{
+  "id": "sih_2022_tr_01",
+  "hackathon": "Smart India Hackathon",
+  "edition": "2022",
+  "problem_domain": [
+    "Transportation"
+  ],
+  "subdomains": [
+    "Traffic Management"
+  ],
+  "problem_statement": "Intelligent traffic light control system based on real-time vehicle density.",
+  "what": "A computer vision system that analyzes CCTV feeds at intersections to adjust traffic light timings dynamically.",
+  "why": "Static traffic lights cause unnecessary wait times when one lane is empty and another is congested, increasing pollution and fuel waste.",
+  "how": "Processes live CCTV feeds using object detection to count vehicles. An algorithm calculates optimal green light duration for each lane and interfaces with the traffic light controller.",
+  "technical_approach": [
+    "Computer Vision",
+    "Real-time processing",
+    "Dynamic scheduling"
+  ],
+  "technologies": [
+    "Python",
+    "YOLOv5",
+    "OpenCV",
+    "C++ (Controller)"
+  ],
+  "key_components": [
+    "Vision Module",
+    "Scheduling Algorithm",
+    "Hardware Interface"
+  ],
+  "innovation_or_differentiation": null,
+  "measurable_or_claimed_impact": null,
+  "outcome": "winner",
+  "outcome_verified": true,
+  "decision_features": {
+    "problem_type": [
+      "optimization",
+      "automation"
+    ],
+    "solution_type": [
+      "software",
+      "hardware_integration"
+    ],
+    "primary_value": [
+      "time_reduction",
+      "efficiency"
+    ],
+    "user_type": [
+      "traffic_police",
+      "commuter"
+    ],
+    "workflow_intervention": true,
+    "requires_ml": true,
+    "requires_llm": false,
+    "prototype_complexity": "high",
+    "measurable_impact": true
+  },
+  "sources": [
+    {
+      "source_url": "https://github.com/example/sih2022-traffic",
+      "source_title": "SIH 2022 Winning Repo - Traffic Management",
+      "source_type": "repository",
+      "retrieved_at": "2026-08-09T12:28:57.572595",
+      "extracted_text": "We won SIH 2022 for our AI traffic management system.",
+      "notes": "Common smart city pattern."
+    }
+  ]
+}

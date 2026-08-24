@@ -5,19 +5,28 @@ def load_theme():
     return data
 def get_themes():
     data = load_theme()
+    print(len(data['themes']))
     for theme in range(0, len(data['themes'])):
         print(f"{theme+1}. {data['themes'][theme]}")
     return data['themes']
+
+get_themes()
+
 def validate_theme(user_themes:str):
     data = load_theme()
     test_themes = user_themes.split(",")
     valid_themes=[]
     invalid_themes=[]
+
+
+
+    """
     for test_theme in test_themes:
         if test_theme in data['themes']:
             valid_themes.append(test_theme)
         else:
             invalid_themes.append(test_theme)
+    """
     """
     if count == 0:
         return {"status":True, "valid_themes":valid_themes,"message":"All themes are valid."}

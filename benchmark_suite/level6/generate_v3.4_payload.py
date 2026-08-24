@@ -1,0 +1,175 @@
+import json
+import os
+
+def create_payload():
+    payload = {
+        "project_state": {
+            "user_idea": {
+                "title": "Hospital Overcrowding Predictor",
+                "what": "Predict patient waiting times and identify overcrowding early.",
+                "why": "To manage queue times effectively.",
+                "how_raw": "using existing hospital computers, historical queue, appointment, staffing and arrival data.",
+                "how_structured": {}
+            },
+            "current_constraints": [
+                "budget_less_than_500_per_month",
+                "no_cloud_infrastructure",
+                "use_existing_hospital_computers",
+                "unreliable_internet",
+                "patient_data_remains_local",
+                "30_day_prototype"
+            ],
+            "current_requirements": [
+                {
+                    "id": "req-1",
+                    "name": "Predict waiting time",
+                    "description": "predict_patient_waiting_times",
+                    "required": True
+                },
+                {
+                    "id": "req-2",
+                    "name": "Identify overcrowding risk",
+                    "description": "identify_overcrowding_early",
+                    "required": True
+                }
+            ]
+        },
+        "initial_architecture": {
+            "inputs": ["historical hospital operational data"],
+            "processing": ["local predictive model", "risk assessment rules"],
+            "decision": ["overcrowding risk assessment"],
+            "output": ["local hospital dashboard"],
+            "capabilities": ["predict_patient_waiting_times", "identify_overcrowding_early"],
+            "data_required": ["historical queue data", "appointment data", "staffing data", "arrival data"],
+            "resources_required": ["existing hospital computer"],
+            "constraints": [
+                "budget_less_than_500_per_month",
+                "no_cloud_infrastructure",
+                "use_existing_hospital_computers",
+                "unreliable_internet",
+                "patient_data_remains_local",
+                "30_day_prototype"
+            ],
+            "evidence_provenance": [],
+            "historical_decisions": [],
+            "semantic_dependencies": [
+                "requires_historical_data_access",
+                "requires_local_compute",
+                "requires_local_dashboard"
+            ],
+            "architectural_decisions": {}
+        },
+        "candidate_uncertainties": [
+            {
+                "id": "unc-001",
+                "question_text": "Is the historical data readily exported via CSV, or does it require direct database integration with the hospital's Electronic Medical Record (EMR) system?",
+                "question_target": "Data Extraction Method",
+                "unknown_fact": "Data Accessibility",
+                "importance": "CRITICAL",
+                "yes_mutation": {
+                    "add_constraints": ["structured_csv_exports_available"],
+                    "remove_constraints": []
+                },
+                "no_mutation": {
+                    "add_constraints": ["direct_emr_integration_required"],
+                    "remove_constraints": []
+                },
+                "yes_candidate_architecture": {
+                    "inputs": ["historical hospital operational data", "csv export files"],
+                    "processing": ["local predictive model"],
+                    "decision": ["overcrowding risk assessment"],
+                    "output": ["local hospital dashboard"],
+                    "capabilities": ["predict_patient_waiting_times", "identify_overcrowding_early"],
+                    "data_required": ["historical queue data"],
+                    "resources_required": ["existing hospital computer"],
+                    "constraints": [],
+                    "evidence_provenance": [],
+                    "historical_decisions": [],
+                    "semantic_dependencies": [
+                        "requires_historical_data_access",
+                        "requires_local_compute",
+                        "requires_csv_parsing"
+                    ],
+                    "architectural_decisions": {}
+                },
+                "no_candidate_architecture": {
+                    "inputs": ["historical hospital operational data", "EMR database connection"],
+                    "processing": ["local predictive model"],
+                    "decision": ["overcrowding risk assessment"],
+                    "output": ["local hospital dashboard"],
+                    "capabilities": ["predict_patient_waiting_times", "identify_overcrowding_early"],
+                    "data_required": ["historical queue data"],
+                    "resources_required": ["existing hospital computer"],
+                    "constraints": [],
+                    "evidence_provenance": [],
+                    "historical_decisions": [],
+                    "semantic_dependencies": [
+                        "requires_historical_data_access",
+                        "requires_local_compute",
+                        "requires_unknown_alien_tech"
+                    ],
+                    "architectural_decisions": {}
+                }
+            },
+            {
+                "id": "unc-002",
+                "question_text": "Are the existing hospital computers locked down preventing third-party software installation, requiring a portable application or manual data transfer from a secure machine?",
+                "question_target": "Deployment Environment Security",
+                "unknown_fact": "Software Installation Privileges",
+                "importance": "CRITICAL",
+                "yes_mutation": {
+                    "add_constraints": ["locked_down_environment"],
+                    "remove_constraints": []
+                },
+                "no_mutation": {
+                    "add_constraints": ["admin_access_available"],
+                    "remove_constraints": []
+                },
+                "yes_candidate_architecture": {
+                    "inputs": ["historical hospital operational data", "manual data transfer"],
+                    "processing": ["local predictive model (portable)"],
+                    "decision": ["overcrowding risk assessment"],
+                    "output": ["local hospital dashboard"],
+                    "capabilities": ["predict_patient_waiting_times", "identify_overcrowding_early"],
+                    "data_required": ["historical queue data"],
+                    "resources_required": ["existing hospital computer", "portable media"],
+                    "constraints": [],
+                    "evidence_provenance": [],
+                    "historical_decisions": [],
+                    "semantic_dependencies": [
+                        "requires_historical_data_access",
+                        "requires_local_compute",
+                        "requires_manual_usb_transfer"
+                    ],
+                    "architectural_decisions": {}
+                },
+                "no_candidate_architecture": {
+                    "inputs": ["historical hospital operational data"],
+                    "processing": ["local predictive model"],
+                    "decision": ["overcrowding risk assessment"],
+                    "output": ["local hospital dashboard"],
+                    "capabilities": ["predict_patient_waiting_times", "identify_overcrowding_early"],
+                    "data_required": ["historical queue data"],
+                    "resources_required": ["existing hospital computer"],
+                    "constraints": [],
+                    "evidence_provenance": [],
+                    "historical_decisions": [],
+                    "semantic_dependencies": [
+                        "requires_historical_data_access",
+                        "requires_local_compute",
+                        "requires_admin_software_installation"
+                    ],
+                    "architectural_decisions": {}
+                }
+            }
+        ]
+    }
+    
+    out_path = os.path.join(os.path.dirname(__file__), "results", "v3.4_hospital_case_02", "raw_refiner_output.json")
+    with open(out_path, "w") as f:
+        json.dump(payload, f, indent=2)
+        
+    print(f"Generated unprompted payload at {out_path}")
+
+if __name__ == "__main__":
+    create_payload()

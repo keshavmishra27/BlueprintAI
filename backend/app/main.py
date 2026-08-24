@@ -9,7 +9,7 @@ from backend.app.database import ensure_schema
 from backend.app.middleware.auth import APIKeyMiddleware
 from backend.app.middleware.rate_limit import limiter
 from backend.app.routers import assessment, repo_judge, project_suggest, idea_validator
-from backend.app.routers import tasks, webhooks, automation
+from backend.app.routers import tasks, webhooks, automation, journey
 logging.basicConfig(level=logging.INFO)
 try:
     ensure_schema()
@@ -47,3 +47,7 @@ app.include_router(idea_validator.router)
 app.include_router(tasks.router)        
 app.include_router(webhooks.router)     
 app.include_router(automation.router)   
+app.include_router(journey.router)
+
+from product.api.v1.routes import router as product_router
+app.include_router(product_router, prefix="/api/v1", tags=["Product"])

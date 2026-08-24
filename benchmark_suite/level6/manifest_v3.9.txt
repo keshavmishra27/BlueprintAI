@@ -1,0 +1,32 @@
+# BlueprintAI V3.9 Manifest: The Governed Ontology-Promotion Feedback Loop
+
+## Intent
+Freeze the core architectural components that successfully demonstrated the complete governed feedback loop: Epistemic Discovery $\rightarrow$ Audit $\rightarrow$ Curator Promotion $\rightarrow$ Identical-Input Replay $\rightarrow$ Altered Objective Optimization.
+
+## Architectural Hashes
+* `ontology.py`: 111b3172decc6afc
+* `benchmark_evaluator.py` (Evaluator Logic): 0795bfd296121239
+* `optimizer.py`: 81bb0eabff77b963
+* `epistemic_audit.py`: a40384c4eeabb621
+* `raw_refiner_output.json` (Frozen Idea payload): dd6eafc0b0f8bcc0
+
+## Experiment Matrix
+
+### The Promotion Event
+* **Ontology Gap:** `requires_advanced_patient_tracking`
+* **Promoted Version:** `v3.9`
+* **Governed Policy Consequence:** If `requires_advanced_patient_tracking`, environment must have `rfid_infrastructure_available`.
+
+### Identical-Input Replay Results
+| State               | V3.8 (Pre-Promotion)             | V3.9 (Post-Promotion)                    |
+| ------------------- | -------------------------------- | ---------------------------------------- |
+| Input Payload Hash  | IDENTICAL                        | IDENTICAL                                |
+| Node-B Status       | `TERMINAL`                       | `REJECTED`                               |
+| Rejection Reason    | N/A                              | `['rfid_infrastructure_missing']`        |
+| Optimizer Winner    | `Node-B-Risky`                   | `Node-A-Safe`                            |
+| Audit Result        | `Requires Review: True`          | `Requires Review: False`                 |
+
+## Epistemic Boundary Invariants
+1. **The LLM Proposes, the Ontology Governs:** The LLM cannot silently promote its own guesses into truth. All unknown dependencies sit on an epistemic boundary until curated by a human.
+2. **Causal Isolation:** The *only* intentional causal variable between the V3.8 and V3.9 evaluations is the ontology policy state. The optimization code, preferences, and input remain 100% frozen.
+3. **Audit Neutrality:** The Epistemic Audit is strictly observational. Bypassing the audit produces the exact same optimizer result as running it. The optimizer remains mathematically ignorant of epistemic debt.

@@ -6,6 +6,7 @@ app=typer.Typer()
 def show_themes():
     get_themes()
 @app.command()
+
 def valiate_theme(themes:str):
     result=validate_theme(themes)
     if result['status']==True:
@@ -14,6 +15,9 @@ def valiate_theme(themes:str):
         print(result['message'])
         print(f"Valid themes: {result['valid_themes']}")
         print(f"Invalid themes: {result['invalid_themes']}")
+
+
+
 @app.command()
 def new_theme(theme:str):
     result=add_theme(theme)

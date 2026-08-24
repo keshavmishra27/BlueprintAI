@@ -1,0 +1,36 @@
+=========================================================
+BlueprintAI - V3.1-LIVE-PILOT-02 Manifest
+=========================================================
+
+Generated at: 2026-08-19T06:53:24.487269
+
+## Three-Scenario Scope & Metric Profiles
+
+1. Hidden Assumption (test_hidden_assumption.json)
+   - information_acquisition: true
+   - hypothesis_exploration: false
+   - Intent: Can the agent acquire missing information?
+
+2. Unselected Winner (test_unselected_winner.json)
+   - information_acquisition: false
+   - hypothesis_exploration: true
+   - Intent: Can the agent explore alternatives that the conversation itself does not select?
+
+3. Optimal Baseline (test_optimal_baseline.json)
+   - information_acquisition: false
+   - hypothesis_exploration: false
+   - Intent: Can the protocol avoid degrading a solution that is already optimal?
+
+## Cryptographic Hashes (SHA-256)
+
+b74f3b04b5f4eefef8be09501a4210b8b49063fd6c87957d7f7f192c30db873e  backend/app/routers/journey.py
+0795bfd2961212397b63a3043384957c47199d08744e36eba567d56cd8bc1ef4  decision_engine/tree/benchmark_evaluator.py
+81bb0eabff77b963af93d5af1e354b67d66a6be505f6b5e4c251e5ee6da49de1  decision_engine/tree/optimizer.py
+575606bc3727cb938d3e512fdfec3145b1f3e170b616b4eee1accbbb8345e8ee  decision_engine/input_layer/evaluator.py
+d695c53aed8a2dcdffc6e1dd16405e39c52b16b30b8634cb1ed38d6d9dc02a68  benchmark_suite/schemas.py
+7bf4ca969c3c49c576af57bbb7f2a16506addfdf425def164ad984e6c38f5f60  benchmark_suite/scenarios/v3_core/test_hidden_assumption.json
+705bb12444251338424e9214fc544023c504a20493b887e7a7dafebf97899612  benchmark_suite/scenarios/v3_core/test_optimal_baseline.json
+81b6e0557d943ed03a3004c4f9244d3eb4865b8bf56e0268aa08318ae88d0808  benchmark_suite/scenarios/v3_core/test_unselected_winner.json
+671f09d5e621be90553ec54c779916abef6b8bd7cf4e4a1be96de6369902af6b  benchmark_suite/level6/agent_driver.py
+4b9f2fd3999af6673c4f7f4d3124fde2e7e3a4c3c9a285d4a77b6a701aa52ce6  benchmark_suite/level6/antigravity_protocol.md
+9b4c625f49d65d3be88ef7a36a749cd899b7d81270f776a8b98b958013eea448  tests/test_preflight_gates.py

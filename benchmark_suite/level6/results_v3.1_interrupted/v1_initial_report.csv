@@ -1,0 +1,8 @@
+Scenario,Baseline_Public_F,Baseline_Real_F,BP_F,Delta_F,UAR,Questions,Irr_Q,Terminals,Oracle_Hit,Unselected_Winner,CGFR,Final_Status
+test_false_confidence,True,True,False,0,0,1,1,2,False,False,0.0,BEST_ARCHITECTURE_FOUND
+test_feasible_tie,True,True,False,0,0,1,1,2,False,False,0.0,BEST_ARCHITECTURE_FOUND
+test_hidden_assumption,True,True,False,0,1,1,0,0,False,False,0.0,None
+test_impossible,False,False,False,0,0,1,1,0,False,False,0.0,NO_FEASIBLE_ARCHITECTURE_FOUND
+test_irrelevant_uncertainty,True,True,False,0,0,0,0,1,False,False,0.0,BEST_ARCHITECTURE_FOUND
+test_optimal_baseline,True,True,False,0,0,0,0,1,False,False,0.0,BEST_ARCHITECTURE_FOUND
+test_unselected_winner,True,True,False,0,0,1,1,2,False,False,0.0,BEST_ARCHITECTURE_FOUND

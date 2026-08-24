@@ -1,0 +1,66 @@
+{
+  "id": "sih_2024_env_01",
+  "hackathon": "Smart India Hackathon",
+  "edition": "2024",
+  "problem_domain": [
+    "Environment"
+  ],
+  "subdomains": [
+    "Waste Management"
+  ],
+  "problem_statement": "Gamified platform to encourage citizen participation in e-waste recycling.",
+  "what": "A mobile application where users can schedule e-waste pickups and earn reward points redeemable at partner stores.",
+  "why": "E-waste is often discarded in regular trash due to lack of accessible disposal channels and zero incentive for citizens.",
+  "how": "Users snap a photo of the e-waste. An AI estimates its point value. A logistics partner is notified for pickup. Once collected, blockchain records the transaction and points are credited.",
+  "technical_approach": [
+    "Gamification",
+    "Logistics routing",
+    "Image classification"
+  ],
+  "technologies": [
+    "React Native",
+    "Node.js",
+    "MongoDB",
+    "AWS"
+  ],
+  "key_components": [
+    "User App",
+    "Driver App",
+    "Reward Engine"
+  ],
+  "outcome": "winner",
+  "outcome_verified": true,
+  "decision_features": {
+    "problem_type": [
+      "incentivization",
+      "logistics"
+    ],
+    "solution_type": [
+      "mobile_app",
+      "platform"
+    ],
+    "primary_value": [
+      "behavior_change",
+      "sustainability"
+    ],
+    "user_type": [
+      "citizen",
+      "logistics_partner"
+    ],
+    "workflow_intervention": false,
+    "requires_ml": true,
+    "requires_llm": false,
+    "prototype_complexity": "medium",
+    "measurable_impact": false
+  },
+  "sources": [
+    {
+      "source_url": "https://institution.edu/sih-2024-win",
+      "source_title": "College Team wins SIH 2024 for E-Waste App",
+      "source_type": "institution",
+      "retrieved_at": "2026-08-09T12:28:57.572628",
+      "extracted_text": "Our team won first prize for their gamified e-waste collection app.",
+      "notes": "Classic marketplace/gamification pattern."
+    }
+  ]
+}

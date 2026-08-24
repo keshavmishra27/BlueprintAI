@@ -1,0 +1,213 @@
+:root {
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  
+  /* Light mode tokens (default) */
+  --bg-color: #ffffff;
+  --bg-secondary: #f4f4f5;
+  --bg-tertiary: #e4e4e7;
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --border-color: #e4e4e7;
+  
+  --score-positive: #10b981;
+  --score-neutral: #64748b;
+  --score-negative: #ef4444;
+  
+  --evidence-verified: #0284c7;
+  --evidence-verified-bg: #e0f2fe;
+  
+  --evidence-reasoned: #9333ea;
+  --evidence-reasoned-bg: #f3e8ff;
+  
+  --evidence-assumption: #ea580c;
+  --evidence-assumption-bg: #ffedd5;
+  
+  --refinement-bg: #fef08a;
+  --refinement-text: #854d0e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #18181b;
+    --bg-secondary: #27272a;
+    --bg-tertiary: #3f3f46;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --border-color: #3f3f46;
+    
+    --score-positive: #34d399;
+    --score-neutral: #94a3b8;
+    --score-negative: #f87171;
+    
+    --evidence-verified: #38bdf8;
+    --evidence-verified-bg: #0c4a6e;
+    
+    --evidence-reasoned: #c084fc;
+    --evidence-reasoned-bg: #4c1d95;
+    
+    --evidence-assumption: #fb923c;
+    --evidence-assumption-bg: #7c2d12;
+    
+    --refinement-bg: #854d0e;
+    --refinement-text: #fef08a;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--evidence-verified);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Utilities */
+.card {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card h2, .card h3 {
+  margin-top: 0;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-refinement {
+  background-color: var(--refinement-bg);
+  color: var(--refinement-text);
+  margin-left: 0.5rem;
+}
+
+.badge-verified {
+  background-color: var(--evidence-verified-bg);
+  color: var(--evidence-verified);
+}
+.badge-reasoned {
+  background-color: var(--evidence-reasoned-bg);
+  color: var(--evidence-reasoned);
+}
+.badge-assumption {
+  background-color: var(--evidence-assumption-bg);
+  color: var(--evidence-assumption);
+}
+
+/* Layouts */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+@media (min-width: 768px) {
+  .grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* States */
+.state-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  text-align: center;
+}
+
+/* Evidence details summary */
+details {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+  background-color: var(--bg-secondary);
+}
+summary {
+  cursor: pointer;
+  font-weight: 500;
+  list-style: none; /* Hide default arrow in some browsers */
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+.evidence-content {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.875rem;
+}
+
+/* Lists */
+.dashboard-list {
+  list-style: none;
+  padding: 0;
+}
+.dashboard-list li {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.dashboard-list li:last-child {
+  border-bottom: none;
+}
+
+/* Score Panel */
+.score-panel {
+  text-align: center;
+  padding: 2rem;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+.score-huge {
+  font-size: 4rem;
+  font-weight: bold;
+  line-height: 1;
+  color: var(--score-positive);
+}
+.score-delta {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}

@@ -1,0 +1,59 @@
+{
+  "project_state": {
+    "user_idea": {
+      "what": "High freq trading",
+      "why": "Profit",
+      "how_raw": "C++ or Python",
+      "how_structured": {
+        "inputs": [],
+        "processing": [],
+        "decision": [],
+        "output": [],
+        "capabilities": [],
+        "data_required": [],
+        "resources_required": [],
+        "constraints": []
+      }
+    },
+    "current_constraints": [
+      "budget <= $5000/month"
+    ],
+    "current_requirements": [
+      {
+        "name": "lowest possible latency",
+        "required": true
+      }
+    ]
+  },
+  "architecture": {
+    "inputs": [
+      "Fast API"
+    ],
+    "processing": [
+      "Python trading engine"
+    ],
+    "decision": [
+      "Rule-based execution logic"
+    ],
+    "output": [
+      "High Speed Dashboard"
+    ],
+    "capabilities": [
+      "Sub-millisecond processing"
+    ],
+    "data_required": [
+      "stream"
+    ],
+    "resources_required": [
+      "high end server"
+    ],
+    "constraints": [
+      "budget <= $5000/month"
+    ],
+    "evidence_provenance": [],
+    "historical_decisions": [],
+    "architectural_decisions": {
+      "engine": "python"
+    }
+  }
+}

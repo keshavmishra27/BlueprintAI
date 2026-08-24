@@ -1,0 +1,68 @@
+{
+  "id": "sih_2023_gov_01",
+  "hackathon": "Smart India Hackathon",
+  "edition": "2023",
+  "problem_domain": [
+    "Governance"
+  ],
+  "subdomains": [
+    "Document Verification"
+  ],
+  "problem_statement": "Blockchain-based system for issuing and verifying educational certificates to prevent forgery.",
+  "what": "A decentralized platform where universities issue digital certificates on a blockchain, and employers can instantly verify them.",
+  "why": "Fake degrees and certificates are a massive problem, and manual verification by universities takes weeks and costs money.",
+  "how": "Universities create a cryptographic hash of the student's certificate and store it on a public/consortium blockchain. Employers upload a PDF, the system hashes it, and checks the blockchain for a match.",
+  "technical_approach": [
+    "Blockchain",
+    "Cryptographic Hashing",
+    "Decentralized storage"
+  ],
+  "technologies": [
+    "Solidity",
+    "Ethereum/Polygon",
+    "React",
+    "Node.js"
+  ],
+  "key_components": [
+    "Smart Contracts",
+    "Issuer Portal",
+    "Verifier Portal"
+  ],
+  "innovation_or_differentiation": null,
+  "measurable_or_claimed_impact": null,
+  "outcome": "winner",
+  "outcome_verified": true,
+  "decision_features": {
+    "problem_type": [
+      "verification",
+      "security"
+    ],
+    "solution_type": [
+      "web_app",
+      "blockchain"
+    ],
+    "primary_value": [
+      "trust",
+      "time_reduction"
+    ],
+    "user_type": [
+      "university",
+      "employer"
+    ],
+    "workflow_intervention": true,
+    "requires_ml": false,
+    "requires_llm": false,
+    "prototype_complexity": "medium",
+    "measurable_impact": true
+  },
+  "sources": [
+    {
+      "source_url": "https://news.example.com/sih-2023-blockchain",
+      "source_title": "Students win SIH with Blockchain Degree Verification",
+      "source_type": "news",
+      "retrieved_at": "2026-08-09T12:28:57.572605",
+      "extracted_text": "The team won the governance category by creating a tamper-proof certificate system.",
+      "notes": "Standard blockchain use case in SIH."
+    }
+  ]
+}

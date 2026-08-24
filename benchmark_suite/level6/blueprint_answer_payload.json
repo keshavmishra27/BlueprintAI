@@ -1,0 +1,31 @@
+{
+    "session_id": "scenario-1-session",
+    "parent_node_id": "64041aa7-3b0b-47f9-bdae-2c3c026dccf1",
+    "answer": "NO",
+    "generated_architecture": {
+        "inputs": ["Manual CSV export via USB from administrator"],
+        "processing": ["Local Python script", "XGBoost"],
+        "decision": ["Threshold model"],
+        "output": ["Local web dashboard"],
+        "capabilities": ["prediction"],
+        "data_required": ["historical queue"],
+        "resources_required": ["existing hospital computer"],
+        "constraints": [
+            "budget <= $500/month",
+            "no cloud infrastructure",
+            "existing hospital computers only",
+            "unreliable internet",
+            "30-day prototype",
+            "patient data must remain local",
+            "no direct db connection"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "architectural_decisions": {
+            "compute_location": "local",
+            "db_access": "manual usb export"
+        }
+    },
+    "candidate_uncertainties": [],
+    "is_user_selected": true
+}

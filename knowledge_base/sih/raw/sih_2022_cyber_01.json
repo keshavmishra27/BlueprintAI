@@ -1,0 +1,63 @@
+{
+  "id": "sih_2022_cyber_01",
+  "hackathon": "Smart India Hackathon",
+  "edition": "2022",
+  "problem_domain": [
+    "Cybersecurity"
+  ],
+  "subdomains": [
+    "Phishing Detection"
+  ],
+  "problem_statement": "Automated detection of localized phishing campaigns via SMS (Smishing).",
+  "what": "An Android app that scans incoming SMS for malicious links and intent, alerting the user before they click.",
+  "why": "Financial fraud via SMS (e.g., fake electricity bill alerts) is rampant in India, and standard URL blacklists are too slow to catch them.",
+  "how": "Uses NLP to analyze the semantic intent of the SMS (urgency, financial threats) combined with URL heuristics (domain age, typosquatting) directly on the device.",
+  "technical_approach": [
+    "NLP intent classification",
+    "URL heuristics",
+    "On-device processing"
+  ],
+  "technologies": [
+    "Java/Kotlin",
+    "Python (Model Training)",
+    "TensorFlow Lite"
+  ],
+  "key_components": [
+    "SMS Listener Service",
+    "NLP Engine",
+    "Alert UI"
+  ],
+  "outcome": "runner_up",
+  "outcome_verified": true,
+  "decision_features": {
+    "problem_type": [
+      "detection",
+      "security"
+    ],
+    "solution_type": [
+      "mobile_app",
+      "background_service"
+    ],
+    "primary_value": [
+      "fraud_prevention"
+    ],
+    "user_type": [
+      "general_public"
+    ],
+    "workflow_intervention": true,
+    "requires_ml": true,
+    "requires_llm": false,
+    "prototype_complexity": "medium",
+    "measurable_impact": true
+  },
+  "sources": [
+    {
+      "source_url": "https://www.sih.gov.in/sih2022_results",
+      "source_title": "SIH 2022 Results",
+      "source_type": "official",
+      "retrieved_at": "2026-08-09T12:28:57.572613",
+      "extracted_text": "Runner up: SMS Phishing detection application.",
+      "notes": "Shows a runner-up entry."
+    }
+  ]
+}

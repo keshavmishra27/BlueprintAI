@@ -1,0 +1,7 @@
+{
+  "unc-002_NO": {
+    "requirement": "FAIL",
+    "b_feasible": true,
+    "node_status": "TERMINAL"
+  }
+}

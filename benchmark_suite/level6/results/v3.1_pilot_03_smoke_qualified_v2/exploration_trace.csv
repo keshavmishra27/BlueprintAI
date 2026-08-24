@@ -1,0 +1,2 @@
+RunID,RequestedSessionID,ActualSessionID,Scenario,QuestionID,QuestionText,ImpactScore,Selected,UserAnswer,BranchGenerated,BranchValid,BranchFeasible,BranchScore,EncodingNormalized
+v3.1_pilot_03_smoke_qualified_v2,v3.1_pilot_03_smoke_qualified_v2-test_hidden_assumption-session,v3.1_pilot_03_smoke_qualified_v2-test_hidden_assumption-session,test_hidden_assumption,unc-001,Do the existing hospital computers have permission to execute direct database queries?,10,True,NO,True,True,True,0.0,False

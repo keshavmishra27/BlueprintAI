@@ -1,0 +1,3 @@
+Run ID: v3.1_pilot_03_smoke_qualified
+Timestamp: 2026-08-19T19:28:35.596752
+Step Timeout (s): 300.0

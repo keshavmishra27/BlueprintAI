@@ -1,0 +1,67 @@
+{
+  "id": "sih_2023_trans_03",
+  "hackathon": "Smart India Hackathon",
+  "edition": "2023",
+  "problem_domain": [
+    "Transportation"
+  ],
+  "subdomains": [
+    "Hospital Resource Management"
+  ],
+  "problem_statement": "Crowdsourced public bus tracking",
+  "what": "App where passengers share GPS to predict bus arrivals without installing hardware on buses.",
+  "why": "During peak times (like COVID-19 or local disasters), hospitals suffer from unequal bed distribution, leading to patient turnarounds even when nearby facilities have capacity.",
+  "how": "Uses historical admission data and real-time census to forecast demand. It runs an optimization algorithm to suggest patient transfers to nearby network hospitals.",
+  "technical_approach": [
+    "Time-series forecasting",
+    "Resource optimization algorithm",
+    "Real-time dashboard"
+  ],
+  "technologies": [
+    "Python",
+    "TensorFlow",
+    "React",
+    "Node.js"
+  ],
+  "key_components": [
+    "Predictive Engine",
+    "Hospital Network API",
+    "Admin Dashboard"
+  ],
+  "innovation_or_differentiation": null,
+  "measurable_or_claimed_impact": null,
+  "outcome": "winner",
+  "outcome_verified": true,
+  "decision_features": {
+    "problem_type": [
+      "prediction",
+      "optimization"
+    ],
+    "solution_type": [
+      "software",
+      "dashboard"
+    ],
+    "primary_value": [
+      "resource_utilization",
+      "time_reduction"
+    ],
+    "user_type": [
+      "hospital_admin"
+    ],
+    "workflow_intervention": true,
+    "requires_ml": true,
+    "requires_llm": false,
+    "prototype_complexity": "high",
+    "measurable_impact": true
+  },
+  "sources": [
+    {
+      "source_url": "https://www.sih.gov.in/sih2022_results",
+      "source_title": "SIH 2022 Official Results - Ministry of Health",
+      "source_type": "official",
+      "retrieved_at": "2026-08-09T12:28:57.572107",
+      "extracted_text": "Ministry of Health and Family Welfare: Winning solution developed an AI predictive model for hospital bed occupancy.",
+      "notes": "Verified from official portal."
+    }
+  ]
+}

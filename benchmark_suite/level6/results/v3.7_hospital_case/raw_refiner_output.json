@@ -1,0 +1,349 @@
+{
+  "project_state": {
+    "user_idea": {
+      "title": "Hospital Overcrowding Predictor",
+      "what": "Predict patient waiting times and identify overcrowding early.",
+      "why": "To manage queue times effectively.",
+      "how_raw": "using existing hospital computers, historical queue, appointment, staffing and arrival data.",
+      "how_structured": {}
+    },
+    "current_constraints": [
+      "budget_less_than_500_per_month",
+      "no_cloud_infrastructure",
+      "use_existing_hospital_computers",
+      "unreliable_internet",
+      "patient_data_remains_local",
+      "30_day_prototype"
+    ],
+    "current_requirements": [
+      {
+        "id": "req-1",
+        "name": "Predict waiting time",
+        "description": "predict_patient_waiting_times",
+        "required": true
+      },
+      {
+        "id": "req-2",
+        "name": "Identify overcrowding risk",
+        "description": "identify_overcrowding_early",
+        "required": true
+      }
+    ]
+  },
+  "initial_architecture": {
+    "inputs": [
+      "historical hospital operational data"
+    ],
+    "processing": [
+      "local predictive model",
+      "risk assessment rules"
+    ],
+    "decision": [
+      "overcrowding risk assessment"
+    ],
+    "output": [
+      "local hospital dashboard"
+    ],
+    "capabilities": [
+      "predict_patient_waiting_times",
+      "identify_overcrowding_early"
+    ],
+    "data_required": [
+      "historical queue data",
+      "appointment data",
+      "staffing data",
+      "arrival data"
+    ],
+    "resources_required": [
+      "existing hospital computer"
+    ],
+    "constraints": [
+      "budget_less_than_500_per_month",
+      "no_cloud_infrastructure",
+      "use_existing_hospital_computers",
+      "unreliable_internet",
+      "patient_data_remains_local",
+      "30_day_prototype"
+    ],
+    "evidence_provenance": [],
+    "historical_decisions": [],
+    "semantic_dependencies": [
+      "requires_historical_data_access",
+      "requires_local_compute"
+    ],
+    "architectural_decisions": {}
+  },
+  "candidate_uncertainties": [
+    {
+      "id": "unc-A",
+      "question_text": "Case A: Fully authorized and available interface?",
+      "question_target": "Data",
+      "unknown_fact": "N/A",
+      "importance": "CRITICAL",
+      "yes_mutation": {
+        "add_constraints": [
+          "approved_hl7_interface_available",
+          "application_authorized",
+          "realtime_operational_feed_available"
+        ],
+        "remove_constraints": []
+      },
+      "no_mutation": {
+        "add_constraints": [],
+        "remove_constraints": []
+      },
+      "yes_candidate_architecture": {
+        "inputs": [
+          "real-time clinical data feed"
+        ],
+        "processing": [
+          "local predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "data_required": [
+          "live arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "approved_hl7_interface_available",
+          "application_authorized",
+          "realtime_operational_feed_available"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [
+          "requires_approved_emr_interface",
+          "requires_realtime_operational_data"
+        ],
+        "architectural_decisions": {}
+      },
+      "no_candidate_architecture": {
+        "inputs": [],
+        "processing": [],
+        "decision": [],
+        "output": [],
+        "capabilities": [],
+        "data_required": [],
+        "resources_required": [],
+        "constraints": [],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [],
+        "architectural_decisions": {}
+      }
+    },
+    {
+      "id": "unc-B",
+      "question_text": "Case B: Missing authorization?",
+      "question_target": "Data",
+      "unknown_fact": "N/A",
+      "importance": "CRITICAL",
+      "yes_mutation": {
+        "add_constraints": [
+          "approved_hl7_interface_available",
+          "realtime_operational_feed_available"
+        ],
+        "remove_constraints": []
+      },
+      "no_mutation": {
+        "add_constraints": [],
+        "remove_constraints": []
+      },
+      "yes_candidate_architecture": {
+        "inputs": [
+          "real-time clinical data feed"
+        ],
+        "processing": [
+          "local predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "data_required": [
+          "live arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "approved_hl7_interface_available",
+          "realtime_operational_feed_available"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [
+          "requires_approved_emr_interface",
+          "requires_realtime_operational_data"
+        ],
+        "architectural_decisions": {}
+      },
+      "no_candidate_architecture": {
+        "inputs": [],
+        "processing": [],
+        "decision": [],
+        "output": [],
+        "capabilities": [],
+        "data_required": [],
+        "resources_required": [],
+        "constraints": [],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [],
+        "architectural_decisions": {}
+      }
+    },
+    {
+      "id": "unc-C",
+      "question_text": "Case C: Missing realtime feed?",
+      "question_target": "Data",
+      "unknown_fact": "N/A",
+      "importance": "CRITICAL",
+      "yes_mutation": {
+        "add_constraints": [
+          "approved_hl7_interface_available",
+          "application_authorized"
+        ],
+        "remove_constraints": []
+      },
+      "no_mutation": {
+        "add_constraints": [],
+        "remove_constraints": []
+      },
+      "yes_candidate_architecture": {
+        "inputs": [
+          "real-time clinical data feed"
+        ],
+        "processing": [
+          "local predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "data_required": [
+          "live arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "approved_hl7_interface_available",
+          "application_authorized"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [
+          "requires_approved_emr_interface",
+          "requires_realtime_operational_data"
+        ],
+        "architectural_decisions": {}
+      },
+      "no_candidate_architecture": {
+        "inputs": [],
+        "processing": [],
+        "decision": [],
+        "output": [],
+        "capabilities": [],
+        "data_required": [],
+        "resources_required": [],
+        "constraints": [],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [],
+        "architectural_decisions": {}
+      }
+    },
+    {
+      "id": "unc-D",
+      "question_text": "Case D: Unknown dependency?",
+      "question_target": "Data",
+      "unknown_fact": "N/A",
+      "importance": "CRITICAL",
+      "yes_mutation": {
+        "add_constraints": [
+          "approved_hl7_interface_available",
+          "application_authorized",
+          "realtime_operational_feed_available"
+        ],
+        "remove_constraints": []
+      },
+      "no_mutation": {
+        "add_constraints": [],
+        "remove_constraints": []
+      },
+      "yes_candidate_architecture": {
+        "inputs": [
+          "real-time clinical data feed"
+        ],
+        "processing": [
+          "local predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "data_required": [
+          "live arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "approved_hl7_interface_available",
+          "application_authorized",
+          "realtime_operational_feed_available"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [
+          "requires_some_alien_magic"
+        ],
+        "architectural_decisions": {}
+      },
+      "no_candidate_architecture": {
+        "inputs": [],
+        "processing": [],
+        "decision": [],
+        "output": [],
+        "capabilities": [],
+        "data_required": [],
+        "resources_required": [],
+        "constraints": [],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [],
+        "architectural_decisions": {}
+      }
+    }
+  ]
+}

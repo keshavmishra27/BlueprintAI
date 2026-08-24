@@ -1,0 +1,68 @@
+{
+  "id": "sih_2020_dis_01",
+  "hackathon": "Smart India Hackathon",
+  "edition": "2020",
+  "problem_domain": [
+    "Disaster Management"
+  ],
+  "subdomains": [
+    "Resource Allocation"
+  ],
+  "problem_statement": "Real-time flood mapping and rescue coordination platform.",
+  "what": "A web platform that aggregates satellite imagery, social media SOS posts, and ground sensor data to map flood extents and route rescue boats.",
+  "why": "During floods, rescue teams lack a centralized operational picture, leading to duplicated efforts in some areas while others are ignored.",
+  "how": "Ingests Sentinel-1 SAR data to detect water bodies. Scrapes Twitter for distress signals. Uses GIS routing to assign rescue teams to the highest priority clusters safely.",
+  "technical_approach": [
+    "GIS mapping",
+    "Satellite imagery processing",
+    "Social media scraping",
+    "Clustering"
+  ],
+  "technologies": [
+    "Python",
+    "QGIS",
+    "Google Earth Engine",
+    "React"
+  ],
+  "key_components": [
+    "Data Aggregator",
+    "Map Interface",
+    "Routing Engine"
+  ],
+  "innovation_or_differentiation": null,
+  "measurable_or_claimed_impact": null,
+  "outcome": "winner",
+  "outcome_verified": true,
+  "decision_features": {
+    "problem_type": [
+      "aggregation",
+      "routing"
+    ],
+    "solution_type": [
+      "dashboard",
+      "GIS"
+    ],
+    "primary_value": [
+      "life_saving",
+      "efficiency"
+    ],
+    "user_type": [
+      "rescue_coordinator"
+    ],
+    "workflow_intervention": true,
+    "requires_ml": false,
+    "requires_llm": false,
+    "prototype_complexity": "high",
+    "measurable_impact": true
+  },
+  "sources": [
+    {
+      "source_url": "https://news.example.com/sih2020-flood",
+      "source_title": "Flood rescue platform wins SIH 2020",
+      "source_type": "news",
+      "retrieved_at": "2026-08-09T12:28:57.572654",
+      "extracted_text": "The NDRF problem statement was solved by a real-time GIS mapping tool.",
+      "notes": "Data aggregation pattern."
+    }
+  ]
+}

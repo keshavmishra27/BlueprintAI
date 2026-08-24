@@ -1,0 +1,33 @@
+{
+  "id": "2c854183-05a8-4e60-9903-8ed73ea8dad7",
+  "version": 1,
+  "architecture": {
+    "components": [
+      {"name": "FastAPI", "type": "Backend Framework", "description": "High performance API layer"},
+      {"name": "MongoDB", "type": "Database", "description": "NoSQL data store"},
+      {"name": "Redis", "type": "Cache", "description": "In-memory caching"},
+      {"name": "XGBoost", "type": "ML Model", "description": "Hospital overcrowding predictor model"},
+      {"name": "Docker", "type": "Infrastructure", "description": "Containerization"}
+    ],
+    "decisions": [
+      {"component": "Database", "choice": "MongoDB", "rationale": "Adapted to match repository state"}
+    ]
+  },
+  "governance": {
+    "action": "RECOMMEND",
+    "severity": "INFO",
+    "scores": {
+      "Performance": 95.0,
+      "Cost": 75.0,
+      "Robustness": 90.0,
+      "Complexity": 45.0,
+      "Epistemic Risk": 0.0
+    }
+  },
+  "alternatives": [],
+  "alignment": 0.81,
+  "decision_fingerprint": "df4new",
+  "graph_fingerprint": "gf4new",
+  "context_fingerprint": "cf4new",
+  "created_at": "2026-08-23T10:10:00Z"
+}

@@ -1,0 +1,66 @@
+{
+  "id": "sih_2022_def_01",
+  "hackathon": "Smart India Hackathon",
+  "edition": "2022",
+  "problem_domain": [
+    "Defence"
+  ],
+  "subdomains": [
+    "Logistics"
+  ],
+  "problem_statement": "Predictive maintenance system for military transport vehicles.",
+  "what": "An IoT and ML based dashboard that predicts component failures in military trucks before they happen.",
+  "why": "Vehicle breakdowns during critical missions or in remote border areas cause severe logistical delays and risks.",
+  "how": "Reads CAN bus data (engine temp, RPM, vibrations) via OBD2 sensors. An ML model detects anomalies and remaining useful life (RUL), alerting mechanics to replace parts proactively.",
+  "technical_approach": [
+    "IoT Edge processing",
+    "Anomaly Detection",
+    "RUL Prediction"
+  ],
+  "technologies": [
+    "Python",
+    "scikit-learn",
+    "MQTT",
+    "Grafana"
+  ],
+  "key_components": [
+    "Edge Sensor Node",
+    "Prediction Algorithm",
+    "Maintenance Dashboard"
+  ],
+  "outcome": "winner",
+  "outcome_verified": true,
+  "decision_features": {
+    "problem_type": [
+      "prediction",
+      "maintenance"
+    ],
+    "solution_type": [
+      "hardware_integration",
+      "dashboard"
+    ],
+    "primary_value": [
+      "risk_reduction",
+      "cost_saving"
+    ],
+    "user_type": [
+      "mechanic",
+      "commander"
+    ],
+    "workflow_intervention": true,
+    "requires_ml": true,
+    "requires_llm": false,
+    "prototype_complexity": "high",
+    "measurable_impact": true
+  },
+  "sources": [
+    {
+      "source_url": "https://www.sih.gov.in/sih2022_results",
+      "source_title": "SIH 2022 Defence Problem Statements",
+      "source_type": "official",
+      "retrieved_at": "2026-08-09T12:28:57.572645",
+      "extracted_text": "Winner: Predictive maintenance for logistics vehicles.",
+      "notes": "IoT + ML pattern."
+    }
+  ]
+}

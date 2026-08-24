@@ -1,0 +1,66 @@
+{
+  "id": "sih_2024_hc_02",
+  "hackathon": "Smart India Hackathon",
+  "edition": "2024",
+  "problem_domain": [
+    "Healthcare"
+  ],
+  "subdomains": [
+    "Diagnostics"
+  ],
+  "problem_statement": "Non-invasive anemia detection using smartphone cameras.",
+  "what": "An app that estimates hemoglobin levels by analyzing the pallor of the conjunctiva (inner eyelid) and fingernails from a photo.",
+  "why": "Anemia is highly prevalent in rural India, but blood tests are invasive, require sterile equipment, and are difficult to administer at scale in remote camps.",
+  "how": "Takes a flash photo of the lower eyelid. Extracts region of interest, normalizes lighting, and uses a regression model on color channels (erythema index) to estimate Hb count.",
+  "technical_approach": [
+    "Image Processing",
+    "Colorimetry",
+    "Regression Analysis"
+  ],
+  "technologies": [
+    "Python",
+    "OpenCV",
+    "Android/Kotlin"
+  ],
+  "key_components": [
+    "Camera Module",
+    "Image Normalizer",
+    "Regression Model"
+  ],
+  "innovation_or_differentiation": null,
+  "measurable_or_claimed_impact": null,
+  "outcome": "winner",
+  "outcome_verified": true,
+  "decision_features": {
+    "problem_type": [
+      "measurement",
+      "diagnostics"
+    ],
+    "solution_type": [
+      "mobile_app"
+    ],
+    "primary_value": [
+      "cost_saving",
+      "accessibility"
+    ],
+    "user_type": [
+      "health_worker",
+      "asha_worker"
+    ],
+    "workflow_intervention": true,
+    "requires_ml": true,
+    "requires_llm": false,
+    "prototype_complexity": "medium",
+    "measurable_impact": true
+  },
+  "sources": [
+    {
+      "source_url": "https://www.sih.gov.in/sih2024_results",
+      "source_title": "SIH 2024 Winner",
+      "source_type": "official",
+      "retrieved_at": "2026-08-09T12:28:57.572662",
+      "extracted_text": "Ministry of AYUSH: App for non-invasive anemia detection.",
+      "notes": "Replaces hardware with smartphone sensors."
+    }
+  ]
+}

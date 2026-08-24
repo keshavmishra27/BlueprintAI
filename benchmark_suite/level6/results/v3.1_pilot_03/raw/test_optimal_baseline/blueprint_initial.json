@@ -1,0 +1,63 @@
+{
+  "session_id": "v3.1_pilot_03-test_optimal_baseline-session",
+  "project_state": {
+    "user_idea": {
+      "what": "Dashboard",
+      "why": "Need to see data",
+      "how_raw": "Query DB",
+      "how_structured": {
+        "inputs": [],
+        "processing": [],
+        "decision": [],
+        "output": [],
+        "capabilities": [],
+        "data_required": [],
+        "resources_required": [],
+        "constraints": []
+      }
+    },
+    "current_constraints": [
+      "budget <= $1000/month",
+      "reliable internet"
+    ],
+    "current_requirements": [
+      {
+        "name": "fast query",
+        "required": true
+      }
+    ]
+  },
+  "initial_architecture": {
+    "inputs": [
+      "Direct database queries"
+    ],
+    "processing": [
+      "Lightweight cron job"
+    ],
+    "decision": [
+      "Rule-based engine"
+    ],
+    "output": [
+      "Dashboard"
+    ],
+    "capabilities": [
+      "daily baseline"
+    ],
+    "data_required": [
+      "historical data"
+    ],
+    "resources_required": [
+      "existing cloud instance"
+    ],
+    "constraints": [
+      "budget <= $1000/month",
+      "reliable internet"
+    ],
+    "evidence_provenance": [],
+    "historical_decisions": [],
+    "architectural_decisions": {
+      "compute_location": "cloud"
+    }
+  },
+  "candidate_uncertainties": []
+}

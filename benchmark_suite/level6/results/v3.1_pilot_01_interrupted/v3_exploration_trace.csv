@@ -1,0 +1,3 @@
+﻿Scenario,QuestionID,QuestionText,ImpactScore,Selected,UserAnswer,BranchGenerated,BranchValid,BranchFeasible,BranchScore
+test_hidden_assumption,unc-db-access-01,Do existing hospital computers have permission for direct database access?,10,True,NO,True,True,True,0.0
+test_hidden_assumption,unc-db-access-01,Do existing hospital computers have permission for direct database access?,10,True,NO,True,True,True,0.0

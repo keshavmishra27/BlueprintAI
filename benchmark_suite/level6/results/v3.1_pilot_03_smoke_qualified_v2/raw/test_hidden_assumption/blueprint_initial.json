@@ -1,0 +1,207 @@
+{
+  "session_id": "test_hidden_assumption-session",
+  "project_state": {
+    "user_idea": {
+      "what": "Predict patient waiting times and identify overcrowding.",
+      "why": "Hospitals need earlier intervention without expensive infrastructure.",
+      "how_raw": "AI-based prediction using historical queue, appointment, staffing and arrival data.",
+      "how_structured": {
+        "inputs": [],
+        "processing": [],
+        "decision": [],
+        "output": [],
+        "capabilities": [],
+        "data_required": [],
+        "resources_required": [],
+        "constraints": []
+      }
+    },
+    "current_constraints": [
+      "budget <= $500/month",
+      "no cloud infrastructure",
+      "existing hospital computers only",
+      "unreliable internet",
+      "30-day prototype",
+      "patient data must remain local"
+    ],
+    "current_requirements": [
+      {
+        "name": "predict waiting time",
+        "required": true
+      },
+      {
+        "name": "identify overcrowding risk",
+        "required": true
+      },
+      {
+        "name": "useful accuracy",
+        "required": true
+      },
+      {
+        "name": "low operating cost",
+        "required": true
+      }
+    ]
+  },
+  "initial_architecture": {
+    "inputs": [
+      "Direct query to local hospital replica DB via ODBC"
+    ],
+    "processing": [
+      "Local Python script",
+      "XGBoost for prediction"
+    ],
+    "decision": [
+      "Threshold model for overcrowding alerts"
+    ],
+    "output": [
+      "Local web dashboard accessible on hospital intranet"
+    ],
+    "capabilities": [
+      "prediction",
+      "alerting",
+      "predict waiting time",
+      "identify overcrowding risk"
+    ],
+    "data_required": [
+      "historical queue",
+      "staffing",
+      "arrivals"
+    ],
+    "resources_required": [
+      "existing hospital computer"
+    ],
+    "constraints": [
+      "budget <= $500/month",
+      "no cloud infrastructure",
+      "existing hospital computers only",
+      "unreliable internet",
+      "30-day prototype",
+      "patient data must remain local"
+    ],
+    "evidence_provenance": [],
+    "historical_decisions": [],
+    "architectural_decisions": {
+      "compute_location": "local existing hospital computer",
+      "inference_strategy": "daily batch prediction",
+      "storage_location": "local file system",
+      "connectivity_strategy": "direct ODBC query",
+      "input_modality": "direct DB query",
+      "decision_mechanism": "XGBoost regression"
+    }
+  },
+  "candidate_uncertainties": [
+    {
+      "id": "unc-001",
+      "question_text": "Do the existing hospital computers have permission to execute direct database queries?",
+      "question_target": "Direct database query permissions",
+      "unknown_fact": "Database access policies",
+      "importance": "High",
+      "yes_mutation": {
+        "add_constraints": [],
+        "remove_constraints": []
+      },
+      "no_mutation": {
+        "add_constraints": [
+          "no direct db connection"
+        ],
+        "remove_constraints": []
+      },
+      "yes_candidate_architecture": {
+        "inputs": [
+          "Direct query to local hospital replica DB via ODBC"
+        ],
+        "processing": [
+          "Local Python script",
+          "XGBoost for prediction"
+        ],
+        "decision": [
+          "Threshold model for overcrowding alerts"
+        ],
+        "output": [
+          "Local web dashboard accessible on hospital intranet"
+        ],
+        "capabilities": [
+          "prediction",
+          "alerting",
+          "predict waiting time",
+          "identify overcrowding risk"
+        ],
+        "data_required": [
+          "historical queue",
+          "staffing",
+          "arrivals"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "budget <= $500/month",
+          "no cloud infrastructure",
+          "existing hospital computers only",
+          "unreliable internet",
+          "30-day prototype",
+          "patient data must remain local"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "architectural_decisions": {
+          "compute_location": "local existing hospital computer",
+          "inference_strategy": "daily batch prediction",
+          "storage_location": "local file system",
+          "connectivity_strategy": "direct ODBC query",
+          "input_modality": "direct DB query",
+          "decision_mechanism": "XGBoost regression"
+        }
+      },
+      "no_candidate_architecture": {
+        "inputs": [
+          "authorized CSV export from hospital IT staff",
+          "manual USB transfer by administrator"
+        ],
+        "processing": [
+          "Local script processing CSV data daily",
+          "Lightweight XGBoost model trained on historical data"
+        ],
+        "decision": [
+          "Risk threshold model predicting queue spikes 24hr in advance"
+        ],
+        "output": [
+          "Local static HTML dashboard hosted on existing machine"
+        ],
+        "capabilities": [
+          "daily wait time prediction baseline",
+          "overcrowding risk alerts",
+          "predict waiting time",
+          "identify overcrowding risk"
+        ],
+        "data_required": [
+          "historical queue data",
+          "staffing data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "budget <= $500/month",
+          "no cloud infrastructure",
+          "existing hospital computers only",
+          "unreliable internet",
+          "30-day prototype",
+          "patient data must remain local",
+          "no direct db connection"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "architectural_decisions": {
+          "compute_location": "local existing hospital computer",
+          "inference_strategy": "daily batch prediction",
+          "storage_location": "local file system",
+          "connectivity_strategy": "none (airgapped USB transfer)",
+          "input_modality": "manual CSV transfer",
+          "decision_mechanism": "XGBoost regression"
+        }
+      }
+    }
+  ]
+}

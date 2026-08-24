@@ -1,0 +1,188 @@
+{
+    "name": "Hospital Wait Time - Hidden DB Constraint",
+    "description": "A hospital needs wait time predictions, but has strict constraints on cloud and internet. The hidden constraint is that direct DB access is administratively blocked.",
+    "problem_what": "Predict patient waiting times and identify overcrowding.",
+    "problem_why": "Hospitals need earlier intervention without expensive infrastructure.",
+    "problem_how": "AI-based prediction using historical queue, appointment, staffing and arrival data.",
+    "constraints": [
+        "budget <= $500/month",
+        "no cloud infrastructure",
+        "existing hospital computers only",
+        "unreliable internet",
+        "30-day prototype",
+        "patient data must remain local"
+    ],
+    "requirements": [
+        {
+            "name": "predict waiting time",
+            "required": true
+        },
+        {
+            "name": "identify overcrowding risk",
+            "required": true
+        },
+        {
+            "name": "useful accuracy",
+            "required": true
+        },
+        {
+            "name": "low operating cost",
+            "required": true
+        }
+    ],
+    "scoring_anchors": {
+        "value_maximum": 100.0,
+        "cost_budget_limit": 500.0,
+        "latency_target_ms": 1000.0,
+        "timeline_maximum_days": 30.0
+    },
+    "optimization_weights": {
+        "w_value": 0.4,
+        "w_cost": 0.3,
+        "w_performance": 0.2,
+        "w_timeline": 0.1
+    },
+    "oracle_architecture": {
+        "inputs": [
+            "authorized CSV export from hospital DB",
+            "manual USB transfer by admin"
+        ],
+        "processing": [
+            "Local script processing CSV data daily",
+            "Lightweight XGBoost model trained on historical data"
+        ],
+        "decision": [
+            "Risk threshold model predicting queue spikes 24hr in advance"
+        ],
+        "output": [
+            "Local static HTML dashboard hosted on existing machine"
+        ],
+        "capabilities": [
+            "daily wait time prediction baseline",
+            "overcrowding risk alerts"
+        ],
+        "semantic_dependencies": [],
+        "data_required": [
+            "historical queue data",
+            "staffing data"
+        ],
+        "resources_required": [
+            "existing hospital computer"
+        ],
+        "constraints": [
+            "budget <= $500/month",
+            "no cloud infrastructure",
+            "existing hospital computers only",
+            "unreliable internet",
+            "30-day prototype",
+            "patient data must remain local"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "architectural_decisions": {
+            "compute_location": "local existing hospital computer",
+            "inference_strategy": "daily batch prediction",
+            "storage_location": "local file system",
+            "connectivity_strategy": "none (airgapped USB transfer)",
+            "input_modality": "manual CSV transfer",
+            "decision_mechanism": "XGBoost regression"
+        },
+        "candidate_status": "FEASIBLE",
+        "performance": null,
+        "cost": null,
+        "timeline": null
+    },
+    "hidden_facts_to_reveal": {
+        "Direct database query permissions": "NO"
+    },
+    "evaluation_rules": {
+        "base_cost": 100.0,
+        "base_latency_ms": 1000.0,
+        "base_timeline_days": 10.0,
+        "base_value": 80.0,
+        "rules": [
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "cloud",
+                "metric": "cost",
+                "operation": "add",
+                "value": 1000.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "aws",
+                "metric": "cost",
+                "operation": "add",
+                "value": 1000.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "cloud",
+                "metric": "timeline_days",
+                "operation": "add",
+                "value": 15.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "api",
+                "metric": "cost",
+                "operation": "add",
+                "value": 50.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "csv",
+                "metric": "latency_ms",
+                "operation": "set",
+                "value": 86400000.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "usb",
+                "metric": "latency_ms",
+                "operation": "set",
+                "value": 86400000.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "manual",
+                "metric": "latency_ms",
+                "operation": "set",
+                "value": 86400000.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "xgboost",
+                "metric": "value",
+                "operation": "set",
+                "value": 95.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "ml model",
+                "metric": "value",
+                "operation": "set",
+                "value": 95.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "moving average",
+                "metric": "value",
+                "operation": "set",
+                "value": 60.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "statistical",
+                "metric": "value",
+                "operation": "set",
+                "value": 60.0
+            }
+        ]
+    },
+    "metric_profile": {
+        "information_acquisition": true,
+        "hypothesis_exploration": false
+    },
+    "expected_relevant_branches": 0
+}

@@ -1,0 +1,67 @@
+{
+  "id": "sih_2020_ed_01",
+  "hackathon": "Smart India Hackathon",
+  "edition": "2020",
+  "problem_domain": [
+    "Education"
+  ],
+  "subdomains": [
+    "Accessibility"
+  ],
+  "problem_statement": "Platform for visually impaired students to access STEM educational content.",
+  "what": "A text-to-audio and braille-compatible interface that converts mathematical equations and diagrams into descriptive audio and tactile feedback formats.",
+  "why": "Visually impaired students struggle with STEM subjects because screen readers fail at complex mathematical notations and diagrams.",
+  "how": "Parses MathML and LaTeX into semantic audio descriptions. Uses computer vision to describe simple diagrams. Interfaces with electronic braille displays.",
+  "technical_approach": [
+    "Math parsing",
+    "Screen reader integration",
+    "Semantic audio generation"
+  ],
+  "technologies": [
+    "Python",
+    "MathJax",
+    "Web Speech API"
+  ],
+  "key_components": [
+    "Parser",
+    "Audio Engine",
+    "Braille Output Formatter"
+  ],
+  "innovation_or_differentiation": null,
+  "measurable_or_claimed_impact": null,
+  "outcome": "winner",
+  "outcome_verified": true,
+  "decision_features": {
+    "problem_type": [
+      "accessibility",
+      "translation"
+    ],
+    "solution_type": [
+      "software",
+      "hardware_interface"
+    ],
+    "primary_value": [
+      "inclusion",
+      "knowledge_access"
+    ],
+    "user_type": [
+      "student",
+      "visually_impaired"
+    ],
+    "workflow_intervention": true,
+    "requires_ml": false,
+    "requires_llm": false,
+    "prototype_complexity": "high",
+    "measurable_impact": true
+  },
+  "sources": [
+    {
+      "source_url": "https://www.sih.gov.in/sih2020",
+      "source_title": "SIH 2020 Winner Announcements",
+      "source_type": "official",
+      "retrieved_at": "2026-08-09T12:28:57.572580",
+      "extracted_text": "Winning project focused on making STEM accessible to visually impaired via audio equation parsing.",
+      "notes": "Notable accessibility winner."
+    }
+  ]
+}

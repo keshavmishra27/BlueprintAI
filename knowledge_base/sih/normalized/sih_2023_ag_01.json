@@ -1,0 +1,66 @@
+{
+  "id": "sih_2023_ag_01",
+  "hackathon": "Smart India Hackathon",
+  "edition": "2023",
+  "problem_domain": [
+    "Agriculture"
+  ],
+  "subdomains": [
+    "Crop Disease Detection"
+  ],
+  "problem_statement": "Early detection of crop diseases using smartphone cameras for marginal farmers.",
+  "what": "A mobile application that identifies plant diseases from photos and suggests localized pesticide remedies.",
+  "why": "Farmers often misdiagnose crop diseases, leading to incorrect pesticide use, crop failure, and soil degradation.",
+  "how": "Farmers take a picture of the diseased leaf. The app uses an on-device CNN model to classify the disease even without internet, and provides remedies in local languages.",
+  "technical_approach": [
+    "On-device Machine Learning",
+    "Computer Vision",
+    "Multilingual UI"
+  ],
+  "technologies": [
+    "Flutter",
+    "TensorFlow Lite",
+    "Firebase"
+  ],
+  "key_components": [
+    "Mobile App",
+    "TFLite Model",
+    "Remedy Database"
+  ],
+  "innovation_or_differentiation": null,
+  "measurable_or_claimed_impact": null,
+  "outcome": "winner",
+  "outcome_verified": true,
+  "decision_features": {
+    "problem_type": [
+      "classification",
+      "accessibility"
+    ],
+    "solution_type": [
+      "mobile_app",
+      "AI-assisted"
+    ],
+    "primary_value": [
+      "knowledge_access",
+      "yield_improvement"
+    ],
+    "user_type": [
+      "farmer"
+    ],
+    "workflow_intervention": false,
+    "requires_ml": true,
+    "requires_llm": false,
+    "prototype_complexity": "medium",
+    "measurable_impact": true
+  },
+  "sources": [
+    {
+      "source_url": "https://www.sih.gov.in/sih2023_results",
+      "source_title": "SIH 2023 Winners - Ministry of Agriculture",
+      "source_type": "official",
+      "retrieved_at": "2026-08-09T12:28:57.572563",
+      "extracted_text": "Winner: App for offline crop disease detection using mobile camera.",
+      "notes": "Classic SIH agriculture problem."
+    }
+  ]
+}

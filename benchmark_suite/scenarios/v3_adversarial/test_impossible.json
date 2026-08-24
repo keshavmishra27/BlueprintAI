@@ -1,0 +1,117 @@
+{
+    "name": "Impossible Scenario",
+    "description": "Requires 1ms latency for $1.",
+    "problem_what": "Realtime ML",
+    "problem_why": "Need speed",
+    "problem_how": "ML",
+    "constraints": [
+        "budget <= $1/month",
+        "latency <= 1ms"
+    ],
+    "requirements": [
+        {
+            "name": "fast",
+            "required": true
+        }
+    ],
+    "scoring_anchors": {
+        "value_maximum": 100.0,
+        "cost_budget_limit": 1.0,
+        "latency_target_ms": 1.0,
+        "timeline_maximum_days": 10.0
+    },
+    "optimization_weights": {
+        "w_value": 0.5,
+        "w_cost": 0.5,
+        "w_performance": 0.0,
+        "w_timeline": 0.0
+    },
+    "oracle_architecture": null,
+    "hidden_facts_to_reveal": {},
+    "evaluation_rules": {
+        "base_cost": 100.0,
+        "base_latency_ms": 1000.0,
+        "base_timeline_days": 10.0,
+        "base_value": 80.0,
+        "rules": [
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "cloud",
+                "metric": "cost",
+                "operation": "add",
+                "value": 1000.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "aws",
+                "metric": "cost",
+                "operation": "add",
+                "value": 1000.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "cloud",
+                "metric": "timeline_days",
+                "operation": "add",
+                "value": 15.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "api",
+                "metric": "cost",
+                "operation": "add",
+                "value": 50.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "csv",
+                "metric": "latency_ms",
+                "operation": "set",
+                "value": 86400000.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "usb",
+                "metric": "latency_ms",
+                "operation": "set",
+                "value": 86400000.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "manual",
+                "metric": "latency_ms",
+                "operation": "set",
+                "value": 86400000.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "xgboost",
+                "metric": "value",
+                "operation": "set",
+                "value": 95.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "ml model",
+                "metric": "value",
+                "operation": "set",
+                "value": 95.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "moving average",
+                "metric": "value",
+                "operation": "set",
+                "value": 60.0
+            },
+            {
+                "target_field": "architectural_decisions",
+                "match_string": "statistical",
+                "metric": "value",
+                "operation": "set",
+                "value": 60.0
+            }
+        ]
+    },
+    "expected_relevant_branches": 0
+}

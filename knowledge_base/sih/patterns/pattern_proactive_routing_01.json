@@ -1,0 +1,16 @@
+{
+  "pattern_id": "pattern_proactive_routing_01",
+  "domain": "Healthcare & Disaster Management",
+  "pattern": "Effective resource management projects shift the workflow from reactive assignment to proactive, predictive routing and load balancing.",
+  "observed_in_projects": [
+    "sih_2022_hc_01",
+    "sih_2020_dis_01",
+    "sih_2022_tr_01"
+  ],
+  "evidence": [
+    "sih_2022_hc_01: Predicts bed shortages and routes patients before bottlenecks occur.",
+    "sih_2020_dis_01: Pre-emptively routes rescue boats based on aggregated predictive map.",
+    "sih_2022_tr_01: Traffic lights are scheduled dynamically ahead of congestion."
+  ],
+  "confidence": "medium"
+}

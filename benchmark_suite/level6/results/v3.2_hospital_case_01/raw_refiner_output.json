@@ -1,0 +1,426 @@
+{
+  "project_state": {
+    "user_idea": {
+      "title": "Hospital Overcrowding Predictor",
+      "what": "Predict patient waiting times and identify overcrowding early.",
+      "why": "To manage queue times effectively.",
+      "how_raw": "using existing hospital computers, historical queue, appointment, staffing and arrival data.",
+      "how_structured": {}
+    },
+    "current_constraints": [
+      "budget_less_than_500_per_month",
+      "no_cloud_infrastructure",
+      "use_existing_hospital_computers",
+      "unreliable_internet",
+      "patient_data_remains_local",
+      "30_day_prototype"
+    ],
+    "current_requirements": [
+      {
+        "id": "req-1",
+        "name": "Predict Wait Times",
+        "description": "predict_patient_waiting_times",
+        "required": true
+      },
+      {
+        "id": "req-2",
+        "name": "Identify Overcrowding",
+        "description": "identify_overcrowding_early",
+        "required": true
+      }
+    ]
+  },
+  "initial_architecture": {
+    "inputs": [
+      "historical hospital operational data"
+    ],
+    "processing": [
+      "predictive model"
+    ],
+    "decision": [
+      "overcrowding risk assessment"
+    ],
+    "output": [
+      "local hospital dashboard"
+    ],
+    "capabilities": [
+      "predict_patient_waiting_times",
+      "identify_overcrowding_early"
+    ],
+    "data_required": [
+      "historical queue data",
+      "appointment data",
+      "staffing data",
+      "arrival data"
+    ],
+    "resources_required": [
+      "existing hospital computer"
+    ],
+    "constraints": [
+      "budget_less_than_500_per_month",
+      "no_cloud_infrastructure",
+      "use_existing_hospital_computers",
+      "unreliable_internet",
+      "patient_data_remains_local",
+      "30_day_prototype"
+    ],
+    "evidence_provenance": [],
+    "historical_decisions": [],
+    "semantic_dependencies": [
+      "requires_historical_data_access",
+      "requires_local_compute",
+      "requires_local_dashboard"
+    ],
+    "architectural_decisions": {
+      "compute_location": "local existing hospital computer",
+      "inference_strategy": "local predictive model",
+      "input_modality": "historical hospital operational data access"
+    }
+  },
+  "candidate_uncertainties": [
+    {
+      "id": "unc-001",
+      "question_text": "Is the historical queue, appointment, staffing, and arrival data stored in a structured, programmatically accessible format (e.g., SQL database, clean CSVs)?",
+      "question_target": "Data Format and Accessibility",
+      "unknown_fact": "Structured Data Availability",
+      "importance": "CRITICAL",
+      "yes_mutation": {
+        "add_constraints": [
+          "structured_data_available"
+        ],
+        "remove_constraints": []
+      },
+      "no_mutation": {
+        "add_constraints": [
+          "unstructured_data_only"
+        ],
+        "remove_constraints": []
+      },
+      "yes_candidate_architecture": {
+        "inputs": [
+          "historical hospital operational data"
+        ],
+        "processing": [
+          "predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "data_required": [
+          "historical queue data",
+          "appointment data",
+          "staffing data",
+          "arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "budget_less_than_500_per_month",
+          "no_cloud_infrastructure",
+          "use_existing_hospital_computers",
+          "unreliable_internet",
+          "patient_data_remains_local",
+          "30_day_prototype"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [
+          "requires_historical_data_access",
+          "requires_local_compute",
+          "requires_local_dashboard",
+          "requires_sql_or_csv_access"
+        ],
+        "architectural_decisions": {
+          "compute_location": "local existing hospital computer",
+          "inference_strategy": "local predictive model",
+          "input_modality": "historical hospital operational data access"
+        }
+      },
+      "no_candidate_architecture": {
+        "inputs": [
+          "historical hospital operational data"
+        ],
+        "processing": [
+          "predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "data_required": [
+          "historical queue data",
+          "appointment data",
+          "staffing data",
+          "arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "budget_less_than_500_per_month",
+          "no_cloud_infrastructure",
+          "use_existing_hospital_computers",
+          "unreliable_internet",
+          "patient_data_remains_local",
+          "30_day_prototype"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [
+          "requires_historical_data_access",
+          "requires_local_compute",
+          "requires_local_dashboard",
+          "requires_complex_scraping_or_manual_entry"
+        ],
+        "architectural_decisions": {
+          "compute_location": "local existing hospital computer",
+          "inference_strategy": "local predictive model",
+          "input_modality": "historical hospital operational data access"
+        }
+      }
+    },
+    {
+      "id": "unc-002",
+      "question_text": "Do the 'existing hospital computers' have reliable internal network access (LAN) to the systems holding the operational data?",
+      "question_target": "Local Network (LAN) Connectivity",
+      "unknown_fact": "LAN Connectivity",
+      "importance": "CRITICAL",
+      "yes_mutation": {
+        "add_constraints": [
+          "lan_available"
+        ],
+        "remove_constraints": []
+      },
+      "no_mutation": {
+        "add_constraints": [
+          "airgapped"
+        ],
+        "remove_constraints": []
+      },
+      "yes_candidate_architecture": {
+        "inputs": [
+          "historical hospital operational data"
+        ],
+        "processing": [
+          "predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "data_required": [
+          "historical queue data",
+          "appointment data",
+          "staffing data",
+          "arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "budget_less_than_500_per_month",
+          "no_cloud_infrastructure",
+          "use_existing_hospital_computers",
+          "unreliable_internet",
+          "patient_data_remains_local",
+          "30_day_prototype"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [
+          "requires_historical_data_access",
+          "requires_local_compute",
+          "requires_local_dashboard",
+          "requires_lan_access"
+        ],
+        "architectural_decisions": {
+          "compute_location": "local existing hospital computer",
+          "inference_strategy": "local predictive model",
+          "input_modality": "historical hospital operational data access"
+        }
+      },
+      "no_candidate_architecture": {
+        "inputs": [
+          "historical hospital operational data"
+        ],
+        "processing": [
+          "predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "data_required": [
+          "historical queue data",
+          "appointment data",
+          "staffing data",
+          "arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "budget_less_than_500_per_month",
+          "no_cloud_infrastructure",
+          "use_existing_hospital_computers",
+          "unreliable_internet",
+          "patient_data_remains_local",
+          "30_day_prototype"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [
+          "requires_historical_data_access",
+          "requires_local_compute",
+          "requires_local_dashboard",
+          "requires_manual_usb_transfer"
+        ],
+        "architectural_decisions": {
+          "compute_location": "local existing hospital computer",
+          "inference_strategy": "local predictive model",
+          "input_modality": "historical hospital operational data access"
+        }
+      }
+    },
+    {
+      "id": "unc-003",
+      "question_text": "Are we legally and administratively authorized to process patient operational data on these specific 'existing computers' without violating local privacy policies?",
+      "question_target": "Legal and Privacy Authorization",
+      "unknown_fact": "Local Data Processing Authorization",
+      "importance": "BLOCKER",
+      "yes_mutation": {
+        "add_constraints": [
+          "local_processing_authorized"
+        ],
+        "remove_constraints": []
+      },
+      "no_mutation": {
+        "add_constraints": [
+          "local_processing_forbidden"
+        ],
+        "remove_constraints": []
+      },
+      "yes_candidate_architecture": {
+        "inputs": [
+          "historical hospital operational data"
+        ],
+        "processing": [
+          "predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "data_required": [
+          "historical queue data",
+          "appointment data",
+          "staffing data",
+          "arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "budget_less_than_500_per_month",
+          "no_cloud_infrastructure",
+          "use_existing_hospital_computers",
+          "unreliable_internet",
+          "patient_data_remains_local",
+          "30_day_prototype"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [
+          "requires_historical_data_access",
+          "requires_local_compute",
+          "requires_local_dashboard"
+        ],
+        "architectural_decisions": {
+          "compute_location": "local existing hospital computer",
+          "inference_strategy": "local predictive model",
+          "input_modality": "historical hospital operational data access"
+        }
+      },
+      "no_candidate_architecture": {
+        "inputs": [
+          "historical hospital operational data"
+        ],
+        "processing": [
+          "predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "data_required": [
+          "historical queue data",
+          "appointment data",
+          "staffing data",
+          "arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "budget_less_than_500_per_month",
+          "no_cloud_infrastructure",
+          "use_existing_hospital_computers",
+          "unreliable_internet",
+          "patient_data_remains_local",
+          "30_day_prototype"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "semantic_dependencies": [
+          "requires_historical_data_access",
+          "requires_local_compute",
+          "requires_local_dashboard",
+          "requires_heavy_anonymization"
+        ],
+        "architectural_decisions": {
+          "compute_location": "local existing hospital computer",
+          "inference_strategy": "local predictive model",
+          "input_modality": "historical hospital operational data access"
+        }
+      }
+    }
+  ]
+}

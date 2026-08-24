@@ -1,0 +1,16 @@
+{
+  "pattern_id": "pattern_smartphone_substitution_01",
+  "domain": "Cross-Domain",
+  "pattern": "Winning solutions frequently democratize access by replacing expensive, specialized hardware with ubiquitous smartphone sensors (camera, IMU) paired with edge ML.",
+  "observed_in_projects": [
+    "sih_2023_ag_01",
+    "sih_2024_hc_02",
+    "sih_2024_trans_02"
+  ],
+  "evidence": [
+    "sih_2023_ag_01: Uses smartphone camera instead of specialized agronomy tests for crop disease.",
+    "sih_2024_hc_02: Uses flash photo of eyelid to estimate hemoglobin, replacing invasive blood tests.",
+    "sih_2024_trans_02: Uses phone IMU instead of specialized road surface profiling vehicles."
+  ],
+  "confidence": "high"
+}

@@ -1,0 +1,79 @@
+[
+  {
+    "id": "1c854183-05a8-4e60-9903-8ed73ea8dad7",
+    "version": 0,
+    "architecture": {
+      "components": [
+        {"name": "FastAPI", "type": "Backend Framework", "description": "High performance API layer"},
+        {"name": "PostgreSQL", "type": "Database", "description": "Relational data store"},
+        {"name": "Redis", "type": "Cache", "description": "In-memory caching"},
+        {"name": "XGBoost", "type": "ML Model", "description": "Hospital overcrowding predictor model"},
+        {"name": "Docker", "type": "Infrastructure", "description": "Containerization"}
+      ],
+      "decisions": [
+        {"component": "Database", "choice": "PostgreSQL", "rationale": "High data integrity required"}
+      ]
+    },
+    "governance": {
+      "action": "RECOMMEND",
+      "severity": "INFO",
+      "scores": {
+        "Performance": 92.0,
+        "Cost": 71.0,
+        "Robustness": 88.0,
+        "Complexity": 42.0,
+        "Epistemic Risk": 0.0
+      }
+    },
+    "alternatives": [
+      {
+        "description": "Candidate B: Lower cost, lower robustness",
+        "architecture": {
+          "components": [
+            {"name": "Flask", "type": "Backend Framework"},
+            {"name": "SQLite", "type": "Database"}
+          ],
+          "decisions": []
+        }
+      }
+    ],
+    "alignment": 0.63,
+    "decision_fingerprint": "df4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "graph_fingerprint": "gf4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "context_fingerprint": "cf4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "created_at": "2026-08-23T10:00:00Z"
+  },
+  {
+    "id": "2c854183-05a8-4e60-9903-8ed73ea8dad7",
+    "version": 1,
+    "architecture": {
+      "components": [
+        {"name": "FastAPI", "type": "Backend Framework", "description": "High performance API layer"},
+        {"name": "MongoDB", "type": "Database", "description": "NoSQL data store"},
+        {"name": "Redis", "type": "Cache", "description": "In-memory caching"},
+        {"name": "XGBoost", "type": "ML Model", "description": "Hospital overcrowding predictor model"},
+        {"name": "Docker", "type": "Infrastructure", "description": "Containerization"}
+      ],
+      "decisions": [
+        {"component": "Database", "choice": "MongoDB", "rationale": "Adapted to match repository state"}
+      ]
+    },
+    "governance": {
+      "action": "RECOMMEND",
+      "severity": "INFO",
+      "scores": {
+        "Performance": 95.0,
+        "Cost": 75.0,
+        "Robustness": 90.0,
+        "Complexity": 45.0,
+        "Epistemic Risk": 0.0
+      }
+    },
+    "alternatives": [],
+    "alignment": 0.81,
+    "decision_fingerprint": "df4new",
+    "graph_fingerprint": "gf4new",
+    "context_fingerprint": "cf4new",
+    "created_at": "2026-08-23T10:10:00Z"
+  }
+]

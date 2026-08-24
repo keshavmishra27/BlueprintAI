@@ -1,0 +1,481 @@
+{
+  "session_id": "v3.2c-diagnostic-session",
+  "decision_graph": [
+    {
+      "id": "78261443-2dfc-458c-8c88-5ba337dc5ada",
+      "parent_id": null,
+      "architecture": {
+        "inputs": [
+          "historical hospital operational data"
+        ],
+        "processing": [
+          "predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "semantic_dependencies": [
+          "requires_historical_data_access",
+          "requires_local_compute",
+          "requires_local_dashboard"
+        ],
+        "data_required": [
+          "historical queue data",
+          "appointment data",
+          "staffing data",
+          "arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "budget_less_than_500_per_month",
+          "no_cloud_infrastructure",
+          "use_existing_hospital_computers",
+          "unreliable_internet",
+          "patient_data_remains_local",
+          "30_day_prototype"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "architectural_decisions": {
+          "compute_location": "local existing hospital computer",
+          "inference_strategy": "local predictive model",
+          "input_modality": "historical hospital operational data access"
+        },
+        "candidate_status": "FEASIBLE",
+        "performance": null,
+        "cost": null,
+        "timeline": null
+      },
+      "question_that_produced_it": null,
+      "user_answer": null,
+      "state_mutation": [],
+      "dimension_evaluation": null,
+      "path_cost": 100.0,
+      "path_value": 80.0,
+      "path_latency": 1000.0,
+      "path_timeline": 10.0,
+      "path_score": -1000.0,
+      "status": "ACTIVE",
+      "selected_by_user": true
+    },
+    {
+      "id": "e0c96adc-6e0c-4146-8683-bfa237fae0ec",
+      "parent_id": "78261443-2dfc-458c-8c88-5ba337dc5ada",
+      "architecture": {
+        "inputs": [
+          "historical hospital operational data"
+        ],
+        "processing": [
+          "predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "semantic_dependencies": [
+          "requires_historical_data_access",
+          "requires_local_compute",
+          "requires_local_dashboard",
+          "requires_complex_scraping_or_manual_entry"
+        ],
+        "data_required": [
+          "historical queue data",
+          "appointment data",
+          "staffing data",
+          "arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "budget_less_than_500_per_month",
+          "no_cloud_infrastructure",
+          "use_existing_hospital_computers",
+          "unreliable_internet",
+          "patient_data_remains_local",
+          "30_day_prototype"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "architectural_decisions": {
+          "compute_location": "local existing hospital computer",
+          "inference_strategy": "local predictive model",
+          "input_modality": "historical hospital operational data access"
+        },
+        "candidate_status": "FEASIBLE",
+        "performance": null,
+        "cost": null,
+        "timeline": null
+      },
+      "question_that_produced_it": null,
+      "user_answer": "NO",
+      "state_mutation": [],
+      "dimension_evaluation": null,
+      "path_cost": 100.0,
+      "path_value": 80.0,
+      "path_latency": 1000.0,
+      "path_timeline": 10.0,
+      "path_score": -1000.0,
+      "status": "ACTIVE",
+      "selected_by_user": true
+    },
+    {
+      "id": "c27c3633-8f6c-4888-aab6-5307e6835056",
+      "parent_id": "e0c96adc-6e0c-4146-8683-bfa237fae0ec",
+      "architecture": {
+        "inputs": [
+          "historical hospital operational data"
+        ],
+        "processing": [
+          "predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "semantic_dependencies": [
+          "requires_historical_data_access",
+          "requires_local_compute",
+          "requires_local_dashboard",
+          "requires_manual_usb_transfer"
+        ],
+        "data_required": [
+          "historical queue data",
+          "appointment data",
+          "staffing data",
+          "arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "budget_less_than_500_per_month",
+          "no_cloud_infrastructure",
+          "use_existing_hospital_computers",
+          "unreliable_internet",
+          "patient_data_remains_local",
+          "30_day_prototype"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "architectural_decisions": {
+          "compute_location": "local existing hospital computer",
+          "inference_strategy": "local predictive model",
+          "input_modality": "historical hospital operational data access"
+        },
+        "candidate_status": "FEASIBLE",
+        "performance": null,
+        "cost": null,
+        "timeline": null
+      },
+      "question_that_produced_it": null,
+      "user_answer": "NO",
+      "state_mutation": [],
+      "dimension_evaluation": null,
+      "path_cost": 100.0,
+      "path_value": 80.0,
+      "path_latency": 1000.0,
+      "path_timeline": 10.0,
+      "path_score": -1000.0,
+      "status": "ACTIVE",
+      "selected_by_user": true
+    },
+    {
+      "id": "ddc9e6f8-aa1e-4e61-a6a3-abe451054d20",
+      "parent_id": "c27c3633-8f6c-4888-aab6-5307e6835056",
+      "architecture": {
+        "inputs": [
+          "historical hospital operational data"
+        ],
+        "processing": [
+          "predictive model"
+        ],
+        "decision": [
+          "overcrowding risk assessment"
+        ],
+        "output": [
+          "local hospital dashboard"
+        ],
+        "capabilities": [
+          "predict_patient_waiting_times",
+          "identify_overcrowding_early"
+        ],
+        "semantic_dependencies": [
+          "requires_historical_data_access",
+          "requires_local_compute",
+          "requires_local_dashboard",
+          "requires_heavy_anonymization"
+        ],
+        "data_required": [
+          "historical queue data",
+          "appointment data",
+          "staffing data",
+          "arrival data"
+        ],
+        "resources_required": [
+          "existing hospital computer"
+        ],
+        "constraints": [
+          "budget_less_than_500_per_month",
+          "no_cloud_infrastructure",
+          "use_existing_hospital_computers",
+          "unreliable_internet",
+          "patient_data_remains_local",
+          "30_day_prototype"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "architectural_decisions": {
+          "compute_location": "local existing hospital computer",
+          "inference_strategy": "local predictive model",
+          "input_modality": "historical hospital operational data access"
+        },
+        "candidate_status": "FEASIBLE",
+        "performance": null,
+        "cost": null,
+        "timeline": null
+      },
+      "question_that_produced_it": null,
+      "user_answer": "NO",
+      "state_mutation": [],
+      "dimension_evaluation": null,
+      "path_cost": 100.0,
+      "path_value": 80.0,
+      "path_latency": 1000.0,
+      "path_timeline": 10.0,
+      "path_score": -1000.0,
+      "status": "REJECTED",
+      "selected_by_user": true
+    }
+  ],
+  "project_state": {
+    "user_idea": {
+      "what": "Predict patient waiting times and identify overcrowding early.",
+      "why": "To manage queue times effectively.",
+      "how_raw": "using existing hospital computers, historical queue, appointment, staffing and arrival data.",
+      "how_structured": {
+        "inputs": [],
+        "processing": [],
+        "decision": [],
+        "output": [],
+        "capabilities": [],
+        "semantic_dependencies": [],
+        "data_required": [],
+        "resources_required": [],
+        "constraints": [],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "architectural_decisions": {},
+        "candidate_status": "FEASIBLE",
+        "performance": null,
+        "cost": null,
+        "timeline": null
+      }
+    },
+    "current_constraints": [
+      "budget_less_than_500_per_month",
+      "no_cloud_infrastructure",
+      "use_existing_hospital_computers",
+      "unreliable_internet",
+      "patient_data_remains_local",
+      "30_day_prototype"
+    ],
+    "current_requirements": [
+      {
+        "name": "Predict Wait Times",
+        "required": true
+      },
+      {
+        "name": "Identify Overcrowding",
+        "required": true
+      }
+    ]
+  },
+  "battle_history": [
+    {
+      "b_feasible": false,
+      "a_feasible": false,
+      "b_reqs_satisfied": false,
+      "a_reqs_satisfied": false,
+      "b_constraint_violations": [],
+      "a_constraint_violations": [],
+      "requirement_evaluations": [
+        {
+          "requirement": "Predict Wait Times",
+          "user_satisfies": false,
+          "player_b_satisfies": false,
+          "user_reason": "User capabilities lack explicit mechanisms for 'Predict Wait Times'.",
+          "player_b_reason": "Player B capabilities lack explicit mechanisms for 'Predict Wait Times'."
+        },
+        {
+          "requirement": "Identify Overcrowding",
+          "user_satisfies": false,
+          "player_b_satisfies": false,
+          "user_reason": "User capabilities lack explicit mechanisms for 'Identify Overcrowding'.",
+          "player_b_reason": "Player B capabilities lack explicit mechanisms for 'Identify Overcrowding'."
+        }
+      ],
+      "b_dimensions": {
+        "constraint": "PASS",
+        "requirement": "FAIL",
+        "performance": "UNKNOWN",
+        "cost": "UNKNOWN",
+        "timeline": "UNKNOWN"
+      },
+      "a_dimensions": {
+        "constraint": "PASS",
+        "requirement": "FAIL",
+        "performance": "UNKNOWN",
+        "cost": "UNKNOWN",
+        "timeline": "UNKNOWN"
+      },
+      "winner": "tie",
+      "reasoning": "Both architectures are invalid (fail hard gates)."
+    },
+    {
+      "b_feasible": false,
+      "a_feasible": false,
+      "b_reqs_satisfied": false,
+      "a_reqs_satisfied": false,
+      "b_constraint_violations": [
+        "budget_less_than_500_per_month_violated_by_complex_scraping"
+      ],
+      "a_constraint_violations": [],
+      "requirement_evaluations": [
+        {
+          "requirement": "Predict Wait Times",
+          "user_satisfies": false,
+          "player_b_satisfies": false,
+          "user_reason": "User capabilities lack explicit mechanisms for 'Predict Wait Times'.",
+          "player_b_reason": "Player B capabilities lack explicit mechanisms for 'Predict Wait Times'."
+        },
+        {
+          "requirement": "Identify Overcrowding",
+          "user_satisfies": false,
+          "player_b_satisfies": false,
+          "user_reason": "User capabilities lack explicit mechanisms for 'Identify Overcrowding'.",
+          "player_b_reason": "Player B capabilities lack explicit mechanisms for 'Identify Overcrowding'."
+        }
+      ],
+      "b_dimensions": {
+        "constraint": "FAIL",
+        "requirement": "FAIL",
+        "performance": "UNKNOWN",
+        "cost": "UNKNOWN",
+        "timeline": "UNKNOWN"
+      },
+      "a_dimensions": {
+        "constraint": "PASS",
+        "requirement": "FAIL",
+        "performance": "UNKNOWN",
+        "cost": "UNKNOWN",
+        "timeline": "UNKNOWN"
+      },
+      "winner": "tie",
+      "reasoning": "Both architectures are invalid (fail hard gates)."
+    },
+    {
+      "b_feasible": false,
+      "a_feasible": false,
+      "b_reqs_satisfied": false,
+      "a_reqs_satisfied": false,
+      "b_constraint_violations": [],
+      "a_constraint_violations": [],
+      "requirement_evaluations": [
+        {
+          "requirement": "Predict Wait Times",
+          "user_satisfies": false,
+          "player_b_satisfies": false,
+          "user_reason": "User capabilities lack explicit mechanisms for 'Predict Wait Times'.",
+          "player_b_reason": "Player B capabilities lack explicit mechanisms for 'Predict Wait Times'."
+        },
+        {
+          "requirement": "Identify Overcrowding",
+          "user_satisfies": false,
+          "player_b_satisfies": false,
+          "user_reason": "User capabilities lack explicit mechanisms for 'Identify Overcrowding'.",
+          "player_b_reason": "Player B capabilities lack explicit mechanisms for 'Identify Overcrowding'."
+        }
+      ],
+      "b_dimensions": {
+        "constraint": "PASS",
+        "requirement": "FAIL",
+        "performance": "UNKNOWN",
+        "cost": "UNKNOWN",
+        "timeline": "UNKNOWN"
+      },
+      "a_dimensions": {
+        "constraint": "PASS",
+        "requirement": "FAIL",
+        "performance": "UNKNOWN",
+        "cost": "UNKNOWN",
+        "timeline": "UNKNOWN"
+      },
+      "winner": "tie",
+      "reasoning": "Both architectures are invalid (fail hard gates)."
+    },
+    {
+      "b_feasible": false,
+      "a_feasible": false,
+      "b_reqs_satisfied": false,
+      "a_reqs_satisfied": false,
+      "b_constraint_violations": [
+        "30_day_prototype_violated_by_heavy_anonymization"
+      ],
+      "a_constraint_violations": [],
+      "requirement_evaluations": [
+        {
+          "requirement": "Predict Wait Times",
+          "user_satisfies": false,
+          "player_b_satisfies": false,
+          "user_reason": "User capabilities lack explicit mechanisms for 'Predict Wait Times'.",
+          "player_b_reason": "Player B capabilities lack explicit mechanisms for 'Predict Wait Times'."
+        },
+        {
+          "requirement": "Identify Overcrowding",
+          "user_satisfies": false,
+          "player_b_satisfies": false,
+          "user_reason": "User capabilities lack explicit mechanisms for 'Identify Overcrowding'.",
+          "player_b_reason": "Player B capabilities lack explicit mechanisms for 'Identify Overcrowding'."
+        }
+      ],
+      "b_dimensions": {
+        "constraint": "FAIL",
+        "requirement": "FAIL",
+        "performance": "UNKNOWN",
+        "cost": "UNKNOWN",
+        "timeline": "UNKNOWN"
+      },
+      "a_dimensions": {
+        "constraint": "PASS",
+        "requirement": "FAIL",
+        "performance": "UNKNOWN",
+        "cost": "UNKNOWN",
+        "timeline": "UNKNOWN"
+      },
+      "winner": "tie",
+      "reasoning": "Both architectures are invalid (fail hard gates)."
+    }
+  ]
+}

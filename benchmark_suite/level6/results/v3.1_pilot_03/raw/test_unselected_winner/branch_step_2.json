@@ -1,0 +1,38 @@
+{
+  "session_id": "v3.1_pilot_03-test_unselected_winner-session",
+  "parent_node_id": "e66d1dfa-932e-4d25-a1f5-899c81427d2f",
+  "answer": "NO",
+  "is_user_selected": false,
+  "generated_architecture": {
+    "inputs": [
+      "Fast API"
+    ],
+    "processing": [
+      "Optimized C++ Engine"
+    ],
+    "decision": [
+      "Advanced Rules"
+    ],
+    "output": [
+      "High Speed Dashboard"
+    ],
+    "capabilities": [
+      "Sub-millisecond processing"
+    ],
+    "data_required": [
+      "stream"
+    ],
+    "resources_required": [
+      "high end server"
+    ],
+    "constraints": [
+      "budget <= $5000/month"
+    ],
+    "evidence_provenance": [],
+    "historical_decisions": [],
+    "architectural_decisions": {
+      "engine": "cpp"
+    }
+  },
+  "candidate_uncertainties": []
+}

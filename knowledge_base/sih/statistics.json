@@ -1,0 +1,31 @@
+{
+  "total_records": 30,
+  "verified_winners": 28,
+  "editions_covered": {
+    "2020": 5,
+    "2022": 9,
+    "2023": 9,
+    "2024": 7
+  },
+  "domains_covered": {
+    "Agriculture": 4,
+    "Disaster Management": 1,
+    "Education": 3,
+    "Governance": 3,
+    "Healthcare": 4,
+    "FinTech": 2,
+    "Cybersecurity": 3,
+    "Defence": 2,
+    "Environment": 3,
+    "Manufacturing": 2,
+    "Transportation": 3,
+    "Energy": 1
+  },
+  "projects_with_problem_statement": 30,
+  "projects_with_solution_defined": 30,
+  "projects_with_technical_info": 30,
+  "projects_with_measurable_impact": 0,
+  "projects_with_only_one_source": 30,
+  "projects_with_multiple_sources": 0,
+  "projects_without_sources": 0
+}

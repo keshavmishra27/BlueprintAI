@@ -1,0 +1,2 @@
+RunID,RequestedSessionID,ActualSessionID,Scenario,Baseline_Public_F,Baseline_Real_F,BP_F,Delta_F,UAR,HER,BGR_processable,Questions,Irr_Q,Terminals,Oracle_Hit,Unselected_Winner,Final_Status
+v3.1_pilot_03_smoke_qualified,v3.1_pilot_03_smoke_qualified-test_hidden_assumption-session,v3.1_pilot_03_smoke_qualified-test_hidden_assumption-session,test_hidden_assumption,True,True,False,0,0,0,0,1,0,0,False,False,RUNTIME_FAILURE

@@ -1,0 +1,139 @@
+{
+  "session_id": "v3.1_pilot_03-test_unselected_winner-session",
+  "project_state": {
+    "user_idea": {
+      "what": "High freq trading",
+      "why": "Profit",
+      "how_raw": "C++ or Python",
+      "how_structured": {
+        "inputs": [],
+        "processing": [],
+        "decision": [],
+        "output": [],
+        "capabilities": [],
+        "data_required": [],
+        "resources_required": [],
+        "constraints": []
+      }
+    },
+    "current_constraints": [
+      "budget <= $5000/month"
+    ],
+    "current_requirements": [
+      {
+        "name": "lowest possible latency",
+        "required": true
+      }
+    ]
+  },
+  "initial_architecture": {
+    "inputs": [
+      "Fast API"
+    ],
+    "processing": [
+      "Python trading engine"
+    ],
+    "decision": [
+      "Rule-based execution logic"
+    ],
+    "output": [
+      "High Speed Dashboard"
+    ],
+    "capabilities": [
+      "Sub-millisecond processing"
+    ],
+    "data_required": [
+      "stream"
+    ],
+    "resources_required": [
+      "high end server"
+    ],
+    "constraints": [
+      "budget <= $5000/month"
+    ],
+    "evidence_provenance": [],
+    "historical_decisions": [],
+    "architectural_decisions": {
+      "engine": "python"
+    }
+  },
+  "candidate_uncertainties": [
+    {
+      "id": "unc-001",
+      "question_text": "Should the core trading execution engine be implemented in Python or C++?",
+      "question_target": "Core engine programming language choice",
+      "unknown_fact": "Performance latency vs development language",
+      "importance": "High",
+      "yes_mutation": {
+        "add_constraints": [],
+        "remove_constraints": []
+      },
+      "no_mutation": {
+        "add_constraints": [],
+        "remove_constraints": []
+      },
+      "yes_candidate_architecture": {
+        "inputs": [
+          "Fast API"
+        ],
+        "processing": [
+          "Python trading engine"
+        ],
+        "decision": [
+          "Rule-based execution logic"
+        ],
+        "output": [
+          "High Speed Dashboard"
+        ],
+        "capabilities": [
+          "Sub-millisecond processing"
+        ],
+        "data_required": [
+          "stream"
+        ],
+        "resources_required": [
+          "high end server"
+        ],
+        "constraints": [
+          "budget <= $5000/month"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "architectural_decisions": {
+          "engine": "python"
+        }
+      },
+      "no_candidate_architecture": {
+        "inputs": [
+          "Fast API"
+        ],
+        "processing": [
+          "Optimized C++ Engine"
+        ],
+        "decision": [
+          "Advanced Rules"
+        ],
+        "output": [
+          "High Speed Dashboard"
+        ],
+        "capabilities": [
+          "Sub-millisecond processing"
+        ],
+        "data_required": [
+          "stream"
+        ],
+        "resources_required": [
+          "high end server"
+        ],
+        "constraints": [
+          "budget <= $5000/month"
+        ],
+        "evidence_provenance": [],
+        "historical_decisions": [],
+        "architectural_decisions": {
+          "engine": "cpp"
+        }
+      }
+    }
+  ]
+}

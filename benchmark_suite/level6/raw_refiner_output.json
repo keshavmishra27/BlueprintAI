@@ -1,0 +1,136 @@
+{
+  "base_architecture": {
+    "inputs": [
+      "historical queue logs",
+      "appointment schedules",
+      "staffing data",
+      "real-time arrival streams"
+    ],
+    "processing": [
+      "data anonymization",
+      "feature extraction",
+      "local model inference",
+      "bottleneck prediction"
+    ],
+    "decision": [
+      "identify high risk of overcrowding",
+      "predict wait time delta"
+    ],
+    "output": [
+      "local dashboard alerts",
+      "staffing reassignment recommendations"
+    ],
+    "capabilities": [
+      "offline prediction",
+      "HIPAA-compliant processing",
+      "queue forecasting"
+    ],
+    "data_required": [
+      "historical queue data",
+      "staffing schedules",
+      "appointment book"
+    ],
+    "resources_required": [
+      "on-premise application server",
+      "local database",
+      "inference engine"
+    ],
+    "constraints": [
+      "HIPAA compliance required",
+      "no external internet access (air-gapped)",
+      "no cloud infrastructure",
+      "strict budget constraint"
+    ],
+    "semantic_dependencies": [
+      "requires_emr_database_integration",
+      "requires_historical_patient_export_api",
+      "requires_data_anonymization_pipeline",
+      "requires_staffing_schedule_access"
+    ],
+    "evidence_provenance": [],
+    "architectural_decisions": {
+      "compute_location": "on-premise server",
+      "inference_strategy": "local batch and stream inference",
+      "storage_location": "air-gapped local database",
+      "connectivity_strategy": "intranet only",
+      "input_modality": "automated database extracts",
+      "decision_mechanism": "predictive thresholds",
+      "human_approval": "human-in-the-loop dashboard",
+      "deployment_model": "local container deployment"
+    }
+  },
+  "uncertainties": [
+    {
+      "question_target": "emr_event_stream",
+      "unknown_fact": "Is a real-time EMR event stream available for arrival data?",
+      "yes_mutation": {
+        "add_constraints": ["real-time EMR event stream available"],
+        "remove_constraints": []
+      },
+      "no_mutation": {
+        "add_constraints": ["no real-time EMR event stream"],
+        "remove_constraints": []
+      },
+      "yes_arch_dependencies": [
+        "requires_emr_event_stream",
+        "requires_data_anonymization_pipeline",
+        "requires_staffing_schedule_access"
+      ],
+      "no_arch_dependencies": [
+        "requires_manual_data_export",
+        "requires_batch_processing_queue",
+        "requires_data_anonymization_pipeline"
+      ]
+    },
+    {
+      "question_target": "local_gpu_hardware",
+      "unknown_fact": "Is local GPU acceleration available on the existing hospital computers?",
+      "yes_mutation": {
+        "add_constraints": ["local GPU acceleration available"],
+        "remove_constraints": []
+      },
+      "no_mutation": {
+        "add_constraints": ["no local GPU hardware"],
+        "remove_constraints": []
+      },
+      "yes_arch_dependencies": [
+        "requires_emr_database_integration",
+        "requires_local_gpu_acceleration",
+        "requires_historical_patient_export_api",
+        "requires_data_anonymization_pipeline",
+        "requires_staffing_schedule_access"
+      ],
+      "no_arch_dependencies": [
+        "requires_emr_database_integration",
+        "requires_cpu_optimized_inference",
+        "requires_historical_patient_export_api",
+        "requires_data_anonymization_pipeline",
+        "requires_staffing_schedule_access"
+      ]
+    },
+    {
+      "question_target": "staffing_api",
+      "unknown_fact": "Is automated staffing schedule access permitted via API?",
+      "yes_mutation": {
+        "add_constraints": ["staffing API access permitted"],
+        "remove_constraints": []
+      },
+      "no_mutation": {
+        "add_constraints": ["no staffing API access permitted"],
+        "remove_constraints": []
+      },
+      "yes_arch_dependencies": [
+        "requires_emr_database_integration",
+        "requires_historical_patient_export_api",
+        "requires_data_anonymization_pipeline",
+        "requires_staffing_schedule_api"
+      ],
+      "no_arch_dependencies": [
+        "requires_emr_database_integration",
+        "requires_historical_patient_export_api",
+        "requires_data_anonymization_pipeline",
+        "requires_daily_staffing_csv_upload"
+      ]
+    }
+  ]
+}

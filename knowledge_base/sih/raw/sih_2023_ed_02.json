@@ -1,0 +1,66 @@
+{
+  "id": "sih_2023_ed_02",
+  "hackathon": "Smart India Hackathon",
+  "edition": "2023",
+  "problem_domain": [
+    "Education"
+  ],
+  "subdomains": [
+    "Skill Development"
+  ],
+  "problem_statement": "Automated coding assignment evaluator with semantic feedback.",
+  "what": "A platform that doesn't just run test cases, but analyzes the Abstract Syntax Tree (AST) of student code to give hints on algorithmic efficiency and style.",
+  "why": "Standard platforms only say 'Wrong Answer'. Students in large classes can't get personalized feedback from professors on *why* their approach is flawed.",
+  "how": "Parses student code into an AST. Compares it against known optimal patterns. Uses LLMs to generate natural language hints without giving away the direct answer.",
+  "technical_approach": [
+    "AST Parsing",
+    "Static Analysis",
+    "LLM Integration"
+  ],
+  "technologies": [
+    "Python",
+    "Node.js",
+    "OpenAI API",
+    "Docker"
+  ],
+  "key_components": [
+    "Sandboxed Executor",
+    "AST Analyzer",
+    "Feedback Generator"
+  ],
+  "outcome": "winner",
+  "outcome_verified": true,
+  "decision_features": {
+    "problem_type": [
+      "evaluation",
+      "feedback"
+    ],
+    "solution_type": [
+      "web_app",
+      "AI-assisted"
+    ],
+    "primary_value": [
+      "learning_improvement",
+      "time_reduction"
+    ],
+    "user_type": [
+      "student",
+      "teacher"
+    ],
+    "workflow_intervention": true,
+    "requires_ml": false,
+    "requires_llm": true,
+    "prototype_complexity": "medium",
+    "measurable_impact": false
+  },
+  "sources": [
+    {
+      "source_url": "https://github.com/example/sih2023-autograder",
+      "source_title": "SIH 2023 Repo",
+      "source_type": "repository",
+      "retrieved_at": "2026-08-09T12:28:57.572672",
+      "extracted_text": "Winner - AICTE - Automated semantic code evaluation.",
+      "notes": "LLM use case."
+    }
+  ]
+}

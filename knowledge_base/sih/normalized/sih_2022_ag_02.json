@@ -1,0 +1,68 @@
+{
+  "id": "sih_2022_ag_02",
+  "hackathon": "Smart India Hackathon",
+  "edition": "2022",
+  "problem_domain": [
+    "Agriculture",
+    "FinTech"
+  ],
+  "subdomains": [
+    "Market Linkage"
+  ],
+  "problem_statement": "Price prediction and direct B2B marketplace for farmers.",
+  "what": "A platform that predicts future crop prices based on APMC data and connects farmers directly to wholesale buyers via smart contracts.",
+  "why": "Middlemen exploit farmers by hiding market trends and delaying payments. Farmers lack visibility into future demand.",
+  "how": "Scrapes government APMC mandi data to train a price forecasting model. Integrates an escrow payment system to guarantee farmer payments upon delivery.",
+  "technical_approach": [
+    "Time-series forecasting",
+    "Escrow payments",
+    "Data scraping"
+  ],
+  "technologies": [
+    "Python",
+    "Django",
+    "PostgreSQL",
+    "Stripe/Razorpay"
+  ],
+  "key_components": [
+    "Price Predictor",
+    "Marketplace UI",
+    "Escrow Engine"
+  ],
+  "innovation_or_differentiation": null,
+  "measurable_or_claimed_impact": null,
+  "outcome": "finalist",
+  "outcome_verified": true,
+  "decision_features": {
+    "problem_type": [
+      "prediction",
+      "marketplace"
+    ],
+    "solution_type": [
+      "web_app"
+    ],
+    "primary_value": [
+      "revenue_increase",
+      "transparency"
+    ],
+    "user_type": [
+      "farmer",
+      "buyer"
+    ],
+    "workflow_intervention": true,
+    "requires_ml": true,
+    "requires_llm": false,
+    "prototype_complexity": "high",
+    "measurable_impact": false
+  },
+  "sources": [
+    {
+      "source_url": "https://www.sih.gov.in/sih2022_results",
+      "source_title": "SIH 2022 Participants",
+      "source_type": "official",
+      "retrieved_at": "2026-08-09T12:28:57.572680",
+      "extracted_text": "Finalist project in Agriculture.",
+      "notes": "Shows a finalist."
+    }
+  ]
+}

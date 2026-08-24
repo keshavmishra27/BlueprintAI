@@ -1,0 +1,187 @@
+import json
+import os
+
+def create_payload():
+    payload = {
+        "project_state": {
+            "user_idea": {
+                "title": "Hospital Overcrowding Predictor",
+                "what": "Predict patient waiting times.",
+                "why": "To manage queue times effectively.",
+                "how_raw": "using existing hospital computers.",
+                "how_structured": {}
+            },
+            "current_constraints": [
+                "budget_less_than_500_per_month",
+                "30_day_prototype"
+            ],
+            "current_requirements": [
+                {
+                    "id": "req-1",
+                    "name": "Predict waiting time",
+                    "description": "predict_patient_waiting_times",
+                    "required": True
+                }
+            ]
+        },
+        "initial_architecture": {
+            "inputs": ["historical hospital operational data"],
+            "processing": ["local predictive model"],
+            "decision": ["overcrowding risk assessment"],
+            "output": ["local hospital dashboard"],
+            "capabilities": ["predict_patient_waiting_times"],
+            "data_required": ["historical queue data"],
+            "resources_required": ["existing hospital computer"],
+            "constraints": [
+                "budget_less_than_500_per_month",
+                "30_day_prototype"
+            ],
+            "evidence_provenance": [],
+            "historical_decisions": [],
+            "semantic_dependencies": [
+                "requires_local_compute"
+            ],
+            "architectural_decisions": {}
+        },
+        "candidate_uncertainties": [
+            {
+                "id": "unc-001",
+                "question_text": "Case B: Frozen reject - EMR integration, Authorization Missing",
+                "question_target": "Data Extraction Method",
+                "unknown_fact": "Data Accessibility",
+                "importance": "CRITICAL",
+                "yes_mutation": {
+                    "add_constraints": [],
+                    "remove_constraints": []
+                },
+                "no_mutation": {
+                    "add_constraints": [],
+                    "remove_constraints": []
+                },
+                "yes_candidate_architecture": {
+                    "inputs": ["historical hospital operational data"],
+                    "processing": ["local predictive model"],
+                    "decision": ["overcrowding risk assessment"],
+                    "output": ["local hospital dashboard"],
+                    "capabilities": ["predict_patient_waiting_times"],
+                    "data_required": ["historical queue data"],
+                    "resources_required": ["existing hospital computer"],
+                    "constraints": [], # NO authorization
+                    "evidence_provenance": [],
+                    "historical_decisions": [],
+                    "semantic_dependencies": [
+                        "requires_emr_database_integration"
+                    ],
+                    "architectural_decisions": {}
+                },
+                "no_candidate_architecture": {}
+            },
+            {
+                "id": "unc-002",
+                "question_text": "Case A: Authorized pass - EMR integration, Authorization Present",
+                "question_target": "Data Extraction Method",
+                "unknown_fact": "Data Accessibility",
+                "importance": "CRITICAL",
+                "yes_mutation": {
+                    "add_constraints": ["emr_direct_access_authorized"],
+                    "remove_constraints": []
+                },
+                "no_mutation": {
+                    "add_constraints": [],
+                    "remove_constraints": []
+                },
+                "yes_candidate_architecture": {
+                    "inputs": ["historical hospital operational data"],
+                    "processing": ["local predictive model"],
+                    "decision": ["overcrowding risk assessment"],
+                    "output": ["local hospital dashboard"],
+                    "capabilities": ["predict_patient_waiting_times"],
+                    "data_required": ["historical queue data"],
+                    "resources_required": ["existing hospital computer"],
+                    "constraints": ["emr_direct_access_authorized"], # HAS authorization
+                    "evidence_provenance": [],
+                    "historical_decisions": [],
+                    "semantic_dependencies": [
+                        "requires_emr_database_integration"
+                    ],
+                    "architectural_decisions": {}
+                },
+                "no_candidate_architecture": {}
+            },
+            {
+                "id": "unc-003",
+                "question_text": "Case C: Unknown baseline - Alien-tech dependency",
+                "question_target": "Data Extraction Method",
+                "unknown_fact": "Data Accessibility",
+                "importance": "CRITICAL",
+                "yes_mutation": {
+                    "add_constraints": [],
+                    "remove_constraints": []
+                },
+                "no_mutation": {
+                    "add_constraints": [],
+                    "remove_constraints": []
+                },
+                "yes_candidate_architecture": {
+                    "inputs": ["historical hospital operational data"],
+                    "processing": ["local predictive model"],
+                    "decision": ["overcrowding risk assessment"],
+                    "output": ["local hospital dashboard"],
+                    "capabilities": ["predict_patient_waiting_times"],
+                    "data_required": ["historical queue data"],
+                    "resources_required": ["existing hospital computer"],
+                    "constraints": [],
+                    "evidence_provenance": [],
+                    "historical_decisions": [],
+                    "semantic_dependencies": [
+                        "requires_unknown_alien_tech"
+                    ],
+                    "architectural_decisions": {}
+                },
+                "no_candidate_architecture": {}
+            },
+            {
+                "id": "unc-004",
+                "question_text": "Case D: Composition - EMR + Alien-tech",
+                "question_target": "Data Extraction Method",
+                "unknown_fact": "Data Accessibility",
+                "importance": "CRITICAL",
+                "yes_mutation": {
+                    "add_constraints": [],
+                    "remove_constraints": []
+                },
+                "no_mutation": {
+                    "add_constraints": [],
+                    "remove_constraints": []
+                },
+                "yes_candidate_architecture": {
+                    "inputs": ["historical hospital operational data"],
+                    "processing": ["local predictive model"],
+                    "decision": ["overcrowding risk assessment"],
+                    "output": ["local hospital dashboard"],
+                    "capabilities": ["predict_patient_waiting_times"],
+                    "data_required": ["historical queue data"],
+                    "resources_required": ["existing hospital computer"],
+                    "constraints": [], # NO authorization
+                    "evidence_provenance": [],
+                    "historical_decisions": [],
+                    "semantic_dependencies": [
+                        "requires_emr_database_integration",
+                        "requires_unknown_alien_tech"
+                    ],
+                    "architectural_decisions": {}
+                },
+                "no_candidate_architecture": {}
+            }
+        ]
+    }
+    
+    os.makedirs(os.path.join(os.path.dirname(__file__), "results", "v3.5_hospital_case"), exist_ok=True)
+    out_path = os.path.join(os.path.dirname(__file__), "results", "v3.5_hospital_case", "raw_refiner_output.json")
+    with open(out_path, "w") as f:
+        json.dump(payload, f, indent=2)
+        
+    print(f"Generated unprompted payload at {out_path}")
+
+if __name__ == "__main__":
+    create_payload()

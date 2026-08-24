@@ -1,0 +1,3 @@
+RunID,RequestedSessionID,ActualSessionID,Scenario,QuestionID,QuestionText,ImpactScore,Selected,UserAnswer,BranchGenerated,BranchValid,BranchFeasible,BranchScore
+v3.1_pilot_03,v3.1_pilot_03-test_hidden_assumption-session,v3.1_pilot_03-test_hidden_assumption-session,test_hidden_assumption,unc-001,Do the existing hospital computers have permission to execute direct database queries?,10,True,NO,True,True,True,0.0,False
+v3.1_pilot_03,v3.1_pilot_03-test_unselected_winner-session,v3.1_pilot_03-test_unselected_winner-session,test_unselected_winner,unc-001,Should the core trading execution engine be implemented in Python or C++?,5,True,I don't have a specific policy on that. Proceed with your best judgment.,True,True,True,0.0,False
