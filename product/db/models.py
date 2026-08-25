@@ -25,6 +25,10 @@ class DecisionRecord(Base):
     decision_fingerprint = Column(String, nullable=False)
     graph_fingerprint = Column(String, nullable=False)
     context_fingerprint = Column(String, nullable=False)
+    requirement_set_fingerprint = Column(String, nullable=False)
+    
+    # Lifecycle status (ACTIVE, SUPERSEDED, REVOKED)
+    status = Column(String, nullable=False, default="ACTIVE")
     
     created_at = Column(DateTime, default=datetime.utcnow)
     
@@ -36,7 +40,7 @@ class DecisionRecord(Base):
 
 @event.listens_for(DecisionRecord, 'before_update')
 def receive_before_update(mapper, connection, target):
-    protected_fields = ['architecture_json', 'governance_json', 'alternatives_json', 'decision_fingerprint']
+    protected_fields = ['architecture_json', 'governance_json', 'alternatives_json', 'decision_fingerprint', 'requirement_set_fingerprint']
     for field in protected_fields:
         history = get_history(target, field)
         if history.has_changes():

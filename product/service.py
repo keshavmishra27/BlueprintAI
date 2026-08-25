@@ -34,6 +34,8 @@ class ProductService:
             decision_fingerprint=record.decision_fingerprint,
             graph_fingerprint=record.graph_fingerprint,
             context_fingerprint=record.context_fingerprint,
+            requirement_set_fingerprint=record.requirement_set_fingerprint,
+            status=record.status,
             created_at=record.created_at
         )
 
@@ -83,6 +85,15 @@ class ProductService:
             fingerprints={"canonical": decision_record.decision_fingerprint},
             explanation="Structural projection from DecisionRecord"
         )
+
+    def _compute_requirement_fingerprint(self, decision_record: DecisionRecord) -> str:
+        canonical_projection = self._map_to_engine_artifact(decision_record)
+        expected_comps = set(canonical_projection.databases)
+        for c in canonical_projection.components:
+            expected_comps.add(c)
+        import hashlib
+        req_str = ",".join(sorted(list(expected_comps)))
+        return hashlib.md5(req_str.encode()).hexdigest()
 
     def analyze_idea(self, idea: str, context: Optional[Dict[str, Any]] = None, parser=None) -> Decision:
         if context is None:
@@ -138,8 +149,12 @@ class ProductService:
             alternatives_json=alt_json,
             decision_fingerprint=decision_fingerprint,
             graph_fingerprint=graph_fingerprint,
-            context_fingerprint=context_fingerprint
+            context_fingerprint=context_fingerprint,
+            status="ACTIVE",
+            requirement_set_fingerprint="" # Temporary until computed
         )
+        
+        record.requirement_set_fingerprint = self._compute_requirement_fingerprint(record)
         
         self.repository.save_decision(record)
         return self._map_to_product_decision(record)
@@ -149,6 +164,9 @@ class ProductService:
         if not decision_record:
             return None
             
+        if decision_record.status != "ACTIVE":
+            raise ValueError(f"Cannot evaluate a non-ACTIVE decision. Decision {decision_id} is {decision_record.status}.")
+            
         extractor = RepoExtractor(repo_path)
         repo_artifact = extractor.extract_deterministic()
         
@@ -156,21 +174,21 @@ class ProductService:
         decision_artifact = _injected_artifact if _injected_artifact else self._map_to_engine_artifact(decision_record)
         
         # Calculate expected structural fingerprint directly from the canonical projection
-        canonical_projection = self._map_to_engine_artifact(decision_record)
-        expected_comps = set(canonical_projection.databases)
-        for c in canonical_projection.components:
-            expected_comps.add(c)
-        import hashlib
-        req_str = ",".join(sorted(list(expected_comps)))
-        expected_requirement_fingerprint = hashlib.md5(req_str.encode()).hexdigest()
+        fresh_requirement_fingerprint = self._compute_requirement_fingerprint(decision_record)
+        
+        if fresh_requirement_fingerprint != decision_record.requirement_set_fingerprint:
+            raise ValueError(
+                f"Provenance violation: Stored requirement fingerprint ({decision_record.requirement_set_fingerprint}) "
+                f"does not match freshly derived projection fingerprint ({fresh_requirement_fingerprint})."
+            )
         
         engine = GapEngine()
         gap_report_artifact = engine.evaluate(decision_artifact, repo_artifact)
         
-        if gap_report_artifact.requirement_set_fingerprint != expected_requirement_fingerprint:
+        if gap_report_artifact.requirement_set_fingerprint != fresh_requirement_fingerprint:
             raise ValueError(
                 f"Provenance violation: Engine evaluated structural requirements ({gap_report_artifact.requirement_set_fingerprint}) "
-                f"that do not match the canonical projection for Decision {decision_id} ({expected_requirement_fingerprint})."
+                f"that do not match the canonical projection for Decision {decision_id} ({fresh_requirement_fingerprint})."
             )
         
         repo_fingerprint = self._hash_dict(getattr(repo_artifact, 'components', repo_artifact.__dict__))
@@ -291,8 +309,11 @@ class ProductService:
             alternatives_json=source_record.alternatives_json,
             decision_fingerprint=decision_fingerprint,
             graph_fingerprint=self._hash_dict({"arch": arch_json}),
-            context_fingerprint=source_record.context_fingerprint
+            context_fingerprint=source_record.context_fingerprint,
+            status="ACTIVE",
+            requirement_set_fingerprint=""
         )
+        new_record.requirement_set_fingerprint = self._compute_requirement_fingerprint(new_record)
         
         self.repository.save_decision(new_record)
         
@@ -322,4 +343,18 @@ class ProductService:
 
     def get_recent_decisions(self, limit: int = 10) -> List[Decision]:
         records = self.repository.get_recent_decisions(limit)
+        return [self._map_to_product_decision(r) for r in records]
+
+    def update_decision_status(self, decision_id: str, status: str) -> Optional[Decision]:
+        record = self.repository.update_decision_status(decision_id, status)
+        if not record:
+            return None
+        return self._map_to_product_decision(record)
+
+    def get_decision_children(self, decision_id: str) -> List[Decision]:
+        records = self.repository.get_decision_children(decision_id)
+        return [self._map_to_product_decision(r) for r in records]
+
+    def get_decisions_by_root(self, root_decision_id: str, status: Optional[str] = None) -> List[Decision]:
+        records = self.repository.get_decisions_by_root(root_decision_id, status)
         return [self._map_to_product_decision(r) for r in records]

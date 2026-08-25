@@ -31,11 +31,16 @@ class Decision(BaseModel):
     decision_fingerprint: str
     graph_fingerprint: str
     context_fingerprint: str
+    requirement_set_fingerprint: str
+    status: str
     created_at: datetime
 
 class IdeaAnalyzeRequest(BaseModel):
     idea: str
     context: Optional[Dict[str, Any]] = None
+
+class DecisionStatusUpdateRequest(BaseModel):
+    status: str
 
 class RepoAnalyzeRequest(BaseModel):
     decision_id: str

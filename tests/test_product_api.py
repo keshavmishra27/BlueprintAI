@@ -27,6 +27,8 @@ def test_ideas_analyze_contract(MockService):
         decision_fingerprint="abc",
         graph_fingerprint="def",
         context_fingerprint="ghi",
+        requirement_set_fingerprint="req-abc",
+        status="ACTIVE",
         created_at="2026-08-23T12:00:00Z"
     )
     mock_service_instance.analyze_idea.return_value = mock_decision
@@ -52,6 +54,7 @@ def test_repositories_analyze_contract(MockService):
         id="gap-123",
         decision_id="test-123",
         decision_fingerprint="test-fingerprint",
+        requirement_set_fingerprint="req-abc",
         repository_fingerprint="repo-abc",
         expected_architecture={
             "components": [{"name": "React", "type": "frontend"}],

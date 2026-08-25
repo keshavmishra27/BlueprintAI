@@ -12,6 +12,14 @@ class ProductRepository:
         self.db.refresh(decision)
         return decision
 
+    def update_decision_status(self, decision_id: str, new_status: str) -> Optional[DecisionRecord]:
+        decision = self.get_decision(decision_id)
+        if decision:
+            decision.status = new_status
+            self.db.commit()
+            self.db.refresh(decision)
+        return decision
+
     def get_decision(self, decision_id: str) -> Optional[DecisionRecord]:
         return self.db.query(DecisionRecord).filter(DecisionRecord.id == decision_id).first()
 
@@ -37,6 +45,38 @@ class ProductRepository:
         Retrieves the most recent decisions.
         """
         return self.db.query(DecisionRecord).order_by(DecisionRecord.created_at.desc()).limit(limit).all()
+
+    def get_decision_children(self, decision_id: str) -> List[DecisionRecord]:
+        return self.db.query(DecisionRecord).filter(DecisionRecord.parent_id == decision_id).all()
+
+    def get_decisions_by_root(self, root_decision_id: str, status: Optional[str] = None) -> List[DecisionRecord]:
+        # Simple iterative retrieval for the graph (can be optimized with CTEs later)
+        # Find all nodes connected to root
+        all_nodes = {}
+        
+        # We can just fetch all nodes and build the tree in memory if it's small, 
+        # or just traverse down from root
+        to_process = [root_decision_id]
+        
+        while to_process:
+            curr_id = to_process.pop(0)
+            if curr_id in all_nodes:
+                continue
+            
+            node = self.get_decision(curr_id)
+            if not node:
+                continue
+                
+            all_nodes[curr_id] = node
+            
+            children = self.get_decision_children(curr_id)
+            to_process.extend([c.id for c in children])
+            
+        results = list(all_nodes.values())
+        if status:
+            results = [r for r in results if r.status == status]
+            
+        return results
 
     def save_gap_report(self, gap_report: GapReportRecord) -> GapReportRecord:
         self.db.add(gap_report)

@@ -6,7 +6,8 @@ import uuid
 
 from .models import (
     IdeaAnalyzeRequest, Decision, RepoAnalyzeRequest, GapReport,
-    RefinementCreateRequest, RefinementCreateResponse, RefinementApplyRequest
+    RefinementCreateRequest, RefinementCreateResponse, RefinementApplyRequest,
+    DecisionStatusUpdateRequest
 )
 from .journey_models import (
     StartJourneyRequest, JourneyStepResponse, AnswerQuestionRequest
@@ -203,7 +204,11 @@ def get_journey(session_id: str):
 
 @router.post("/repositories/analyze", response_model=GapReport)
 def analyze_repository(request: RepoAnalyzeRequest, service: ProductService = Depends(get_product_service)):
-    gap_report = service.analyze_repository(request.decision_id, request.repo_path)
+    try:
+        gap_report = service.analyze_repository(request.decision_id, request.repo_path)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+        
     if not gap_report:
         raise HTTPException(status_code=404, detail="Decision not found or analysis failed")
     return gap_report
@@ -240,7 +245,45 @@ def get_decision_history(decision_id: str, service: ProductService = Depends(get
         raise HTTPException(status_code=404, detail="Decision not found")
     return history
 
+@router.get("/decisions/{decision_id}/lineage", response_model=List[Decision])
+def get_decision_lineage(decision_id: str, service: ProductService = Depends(get_product_service)):
+    lineage = service.get_decision_history(decision_id)
+    if not lineage:
+        raise HTTPException(status_code=404, detail="Decision not found")
+    return lineage
+
+@router.get("/decisions/{decision_id}/children", response_model=List[Decision])
+def get_decision_children(decision_id: str, service: ProductService = Depends(get_product_service)):
+    # Verify decision exists first
+    decision = service.get_decision(decision_id)
+    if not decision:
+        raise HTTPException(status_code=404, detail="Decision not found")
+    return service.get_decision_children(decision_id)
+
+@router.patch("/decisions/{decision_id}/status", response_model=Decision)
+def update_decision_status(
+    decision_id: str, 
+    request: DecisionStatusUpdateRequest, 
+    service: ProductService = Depends(get_product_service)
+):
+    if request.status not in ["ACTIVE", "SUPERSEDED", "REVOKED"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    decision = service.update_decision_status(decision_id, request.status)
+    if not decision:
+        raise HTTPException(status_code=404, detail="Decision not found")
+    return decision
+
 @router.get("/decisions", response_model=List[Decision])
-def get_recent_decisions(limit: int = 10, service: ProductService = Depends(get_product_service)):
+def get_decisions(
+    limit: int = 10, 
+    root_decision_id: str = None,
+    status: str = None,
+    service: ProductService = Depends(get_product_service)
+):
+    if root_decision_id:
+        return service.get_decisions_by_root(root_decision_id, status)
+    
     decisions = service.get_recent_decisions(limit)
+    if status:
+        decisions = [d for d in decisions if d.status == status]
     return decisions
