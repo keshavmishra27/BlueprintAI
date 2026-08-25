@@ -58,7 +58,21 @@ def test_gap_persistence(client, monkeypatch):
         def extract_deterministic(self): return MockRepoArtifact()
         
     class MockGapEngine:
-        def evaluate(self, *args, **kwargs): return MockGapReportArtifact()
+        def evaluate(self, *args, **kwargs): 
+            expected = args[0]
+            expected_comps = set(expected.databases)
+            for c in expected.components:
+                expected_comps.add(c)
+            import hashlib
+            req_str = ",".join(sorted(list(expected_comps)))
+            fp = hashlib.md5(req_str.encode()).hexdigest()
+            
+            class MockGapReportArtifact:
+                findings = [{"category": "MISSING", "expected": "React Component"}]
+                evidence = [{"source_file": "test.py", "location": "line 1", "evidence_type": "USED", "observed_entity": "React", "confidence": 1.0}]
+                alignment_score = 0.75
+                requirement_set_fingerprint = fp
+            return MockGapReportArtifact()
         
     import product.service
     monkeypatch.setattr(product.service, "RepoExtractor", MockRepoExtractor)
@@ -127,10 +141,20 @@ def test_repository_identity(client, monkeypatch):
             
     class MockGapEngine:
         def evaluate(self, *args, **kwargs):
+            # Calculate what ProductService expects to avoid Provenance violation
+            expected = args[0]
+            expected_comps = set(expected.databases)
+            for c in expected.components:
+                expected_comps.add(c)
+            import hashlib
+            req_str = ",".join(sorted(list(expected_comps)))
+            fp = hashlib.md5(req_str.encode()).hexdigest()
+            
             class GapReport:
                 findings = []
                 evidence = []
                 alignment_score = 1.0
+                requirement_set_fingerprint = fp
             return GapReport()
             
     import product.service

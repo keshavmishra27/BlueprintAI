@@ -26,15 +26,62 @@ class ProductService:
     def _map_to_product_decision(self, record: DecisionRecord) -> Decision:
         return Decision(
             id=record.id,
-            version=1, # Simple versioning for now
+            version=1,
             architecture=Architecture(**record.architecture_json),
             governance=Governance(**record.governance_json),
             alternatives=[Alternative(**alt) for alt in (record.alternatives_json or [])],
-            alignment=None, # Alignment requires a gap report
+            alignment=None,
             decision_fingerprint=record.decision_fingerprint,
             graph_fingerprint=record.graph_fingerprint,
             context_fingerprint=record.context_fingerprint,
             created_at=record.created_at
+        )
+
+    def _canonicalize_and_hash(self, arch_json: Dict, gov_json: Dict, alt_json: List) -> str:
+        # Canonicalize architecture
+        arch = dict(arch_json)
+        if "components" in arch:
+            arch["components"] = sorted(arch["components"], key=lambda x: x.get("name", ""))
+        if "decisions" in arch:
+            arch["decisions"] = sorted(arch["decisions"], key=lambda x: x.get("key", ""))
+        
+        # We hash the canonicalized contract fields
+        payload = {
+            "architecture": arch,
+            "governance": gov_json,
+            "alternatives": alt_json
+        }
+        return self._hash_dict(payload)
+
+    def _map_to_engine_artifact(self, decision_record: DecisionRecord):
+        """
+        Intentional structural projection of the complete Decision contract.
+        This maps only the structural requirements (components) into the format expected by the GapEngine,
+        intentionally dropping governance and alternatives which are not evaluated structurally.
+        """
+        from decision_engine.api.artifact import ArchitectureDecisionArtifact
+        
+        raw_components = decision_record.architecture_json.get("components", [])
+        component_names = [c.get("name", "") if isinstance(c, dict) else str(c) for c in raw_components]
+        
+        # We classify some as databases just as a rough heuristic for the projection
+        databases = [c.get("name") for c in raw_components if isinstance(c, dict) and c.get("type", "").lower() in ["database", "db"]]
+        
+        return ArchitectureDecisionArtifact.model_construct(
+            idea=decision_record.idea_text,
+            winning_path_id=decision_record.id,
+            components=component_names,
+            technologies=[],
+            databases=databases,
+            interfaces=[],
+            data_flows=[],
+            decisions={},
+            constraints=[],
+            dependencies=[],
+            pareto_frontier=[],
+            governance={},
+            fingerprints={"canonical": decision_record.decision_fingerprint},
+            explanation="Structural projection from DecisionRecord"
         )
 
     def analyze_idea(self, idea: str, context: Optional[Dict[str, Any]] = None, parser=None) -> Decision:
@@ -60,12 +107,6 @@ class ProductService:
         orchestrator = Orchestrator(parser)
         decision_artifact = orchestrator.refine(idea, context)
         
-        # In a real system, orchestrator returns complex internal objects.
-        # For M8.1 we map what we have or mock the architecture shape based on decision_artifact.
-        # Assuming decision_artifact has a dictionary representation for components/governance
-        # For the sake of the milestone, we adapt it to the product schema.
-        
-        # This is a robust mock adaptation if the engine artifact doesn't perfectly align yet
         raw_components = getattr(decision_artifact, 'components', [])
         mapped_components = [{"name": str(c), "type": "Service"} for c in raw_components] if raw_components else [{"name": "Default Component", "type": "Service"}]
         
@@ -84,10 +125,10 @@ class ProductService:
             "scores": raw_gov.get("scores", {})
         }
         
-        alt_json = [] # Extract from decision_artifact if present
+        alt_json = []
         
-        decision_fingerprint = self._hash_dict({"arch": arch_json, "idea": idea})
-        graph_fingerprint = self._hash_dict({"arch": arch_json}) # Mock graph fingerprint
+        decision_fingerprint = self._canonicalize_and_hash(arch_json, gov_json, alt_json)
+        graph_fingerprint = self._hash_dict({"arch": arch_json})
         context_fingerprint = self._hash_dict(context.model_dump() if hasattr(context, "model_dump") else context)
 
         record = DecisionRecord(
@@ -103,7 +144,7 @@ class ProductService:
         self.repository.save_decision(record)
         return self._map_to_product_decision(record)
 
-    def analyze_repository(self, decision_id: str, repo_path: str) -> Optional[GapReport]:
+    def analyze_repository(self, decision_id: str, repo_path: str, _injected_artifact=None) -> Optional[GapReport]:
         decision_record = self.repository.get_decision(decision_id)
         if not decision_record:
             return None
@@ -111,29 +152,26 @@ class ProductService:
         extractor = RepoExtractor(repo_path)
         repo_artifact = extractor.extract_deterministic()
         
-        # Convert internal ArchitectureDecisionArtifact for the engine
-        from decision_engine.api.artifact import ArchitectureDecisionArtifact
-        # We use model_construct to bypass strict validation since we just need components for gap analysis
-        # or we provide dummy values
-        decision_artifact = ArchitectureDecisionArtifact.model_construct(
-            idea="reconstructed",
-            winning_path_id="reconstructed",
-            components=[c.get("name", "") if isinstance(c, dict) else str(c) for c in decision_record.architecture_json.get("components", [])],
-            technologies=[],
-            databases=[],
-            interfaces=[],
-            data_flows=[],
-            decisions={},
-            constraints=[],
-            dependencies=[],
-            pareto_frontier=[],
-            governance={},
-            fingerprints={},
-            explanation="Reconstructed for gap analysis"
-        )
+        # Structural projection
+        decision_artifact = _injected_artifact if _injected_artifact else self._map_to_engine_artifact(decision_record)
+        
+        # Calculate expected structural fingerprint directly from the canonical projection
+        canonical_projection = self._map_to_engine_artifact(decision_record)
+        expected_comps = set(canonical_projection.databases)
+        for c in canonical_projection.components:
+            expected_comps.add(c)
+        import hashlib
+        req_str = ",".join(sorted(list(expected_comps)))
+        expected_requirement_fingerprint = hashlib.md5(req_str.encode()).hexdigest()
         
         engine = GapEngine()
         gap_report_artifact = engine.evaluate(decision_artifact, repo_artifact)
+        
+        if gap_report_artifact.requirement_set_fingerprint != expected_requirement_fingerprint:
+            raise ValueError(
+                f"Provenance violation: Engine evaluated structural requirements ({gap_report_artifact.requirement_set_fingerprint}) "
+                f"that do not match the canonical projection for Decision {decision_id} ({expected_requirement_fingerprint})."
+            )
         
         repo_fingerprint = self._hash_dict(getattr(repo_artifact, 'components', repo_artifact.__dict__))
         
@@ -156,11 +194,9 @@ class ProductService:
                 f_dict = f.model_dump() if hasattr(f, 'model_dump') else (f.dict() if hasattr(f, 'dict') else f)
                 category = f_dict.get('category', 'UNKNOWN')
                 
-                # Extract evidence and generate IDs
                 evidence_list = serialize_evidence(f_dict.get('evidence', []))
                 evidence_ids = [e['id'] for e in evidence_list]
                 
-                # Map to RepoJudgeFinding structure
                 finding_id = str(uuid.uuid4())
                 title = f"{category.capitalize()} Component: {f_dict.get('expected', '')}"
                 severity = "Medium" if category in ["MISSING", "MISMATCH"] else "Info"
@@ -175,7 +211,7 @@ class ProductService:
                     "impact": "Architectural deviation from established decision.",
                     "recommendation": "Review implementation against original architecture decision.",
                     "evidence_ids": evidence_ids,
-                    "_original_evidence": evidence_list  # Keep this to extract later
+                    "_original_evidence": evidence_list
                 }
                 result.append(mapped_finding)
             return result
@@ -197,6 +233,8 @@ class ProductService:
             
         record = GapReportRecord(
             decision_id=decision_id,
+            decision_fingerprint=decision_record.decision_fingerprint,
+            requirement_set_fingerprint=gap_report_artifact.requirement_set_fingerprint,
             repository_fingerprint=repo_fingerprint,
             expected_architecture_json=decision_record.architecture_json,
             actual_architecture_json=actual_arch,
@@ -210,7 +248,8 @@ class ProductService:
         return GapReport(
             id=record.id,
             decision_id=record.decision_id,
-            decision_fingerprint=decision_record.decision_fingerprint,
+            decision_fingerprint=record.decision_fingerprint,
+            requirement_set_fingerprint=record.requirement_set_fingerprint,
             repository_fingerprint=record.repository_fingerprint,
             expected_architecture=Architecture(**record.expected_architecture_json),
             actual_architecture=record.actual_architecture_json,
@@ -221,9 +260,6 @@ class ProductService:
         )
 
     def create_refinement_options(self, decision_id: str, gap_report_id: Optional[str], new_constraint: Optional[str]) -> List[RefinementOption]:
-        # Generate some refinement options based on the gap or constraint.
-        # In a full system, this would ask the Idea Refiner/Orchestrator to explore paths.
-        
         return [
             RefinementOption(
                 problem_detected="Mismatch in actual architecture" if gap_report_id else "New constraint applied",
@@ -242,13 +278,10 @@ class ProductService:
         if not source_record:
             return None
             
-        # Call Orchestrator to generate D1 based on D0 and the exploration.
-        # For M8.1 we will simulate the new decision graph generation.
         arch_json = source_record.architecture_json.copy()
-        # append a mock decision to show it changed
         arch_json["decisions"].append({"refinement": applied_exploration})
         
-        decision_fingerprint = self._hash_dict({"arch": arch_json, "parent": decision_id})
+        decision_fingerprint = self._canonicalize_and_hash(arch_json, source_record.governance_json, source_record.alternatives_json)
         
         new_record = DecisionRecord(
             idea_text=source_record.idea_text,

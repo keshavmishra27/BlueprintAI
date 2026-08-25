@@ -45,6 +45,7 @@ class GapReport(BaseModel):
     id: str
     decision_id: str
     decision_fingerprint: str
+    requirement_set_fingerprint: str
     repository_fingerprint: str
     expected_architecture: Architecture
     actual_architecture: Dict[str, Any]
