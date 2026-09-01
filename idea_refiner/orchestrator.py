@@ -32,7 +32,6 @@ class Orchestrator:
             )
             original_hyp = hyp
         
-        # Deterministic evaluation mock for M2/M3
         has_unknowns = len(arch.semantic_dependencies) > 0
         passes_hard_gates = True
         for c in arch.constraints:
@@ -50,8 +49,9 @@ class Orchestrator:
             parent_id=getattr(original_hyp, 'parent_id', None) or "root",
             architecture=arch,
             status=status,
-            path_cost=10.0,
-            path_score=50.0,
+            path_cost=getattr(original_hyp, 'path_cost', 10.0),
+            path_score=getattr(original_hyp, 'path_score', 50.0),
+            operational_complexity=getattr(original_hyp, 'operational_complexity', 0.0),
             epistemic_provenance=getattr(original_hyp, 'provenance', None)
         )
 
@@ -66,10 +66,8 @@ class Orchestrator:
         """
         from decision_engine.tree.graph import DecisionGraph
         
-        # 1. Parse Idea to Hypotheses (Seeds)
         seeds = self.parser.parse_idea_to_graph(idea)
         
-        # 1.3 Graph Generation (Expansion)
         if self.graph_generator:
             expanded_hypotheses = self.graph_generator.expand_seeds(seeds)
         else:
@@ -84,7 +82,6 @@ class Orchestrator:
                         s.id = f"seed_{i}"
                     expanded_hypotheses.append(s)
         
-        # 1.5 Deterministic Engine Evaluation
         decision_graph = DecisionGraph()
         for i, h in enumerate(expanded_hypotheses):
             node = self._evaluate_hypothesis(h, context, i)
@@ -92,12 +89,10 @@ class Orchestrator:
             
         decision_graph.freeze()
         
-        # 2. Evaluate Candidates (Graph Search) / Optimizer
         nodes_list = decision_graph.get_nodes()
         opt_result = optimize_tree(nodes_list, context, graph_version=current_graph_version)
         opt_result.graph_fingerprint = decision_graph.get_fingerprint()
         
-        # 3. Governance
         serialized_opt = opt_result.model_dump_json()
         gov_report = generate_recommendation(
             serialized_opt, 
@@ -106,6 +101,5 @@ class Orchestrator:
             current_graph_version=current_graph_version
         )
         
-        # 4. Presentation
         return create_product_response(idea, opt_result, gov_report, decision_graph)
 

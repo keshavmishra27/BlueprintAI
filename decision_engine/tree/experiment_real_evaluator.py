@@ -10,7 +10,6 @@ from decision_engine.input_layer.evaluator import check_violations, evaluate_bat
 def run_unit_tests():
     print("=== UNIT TESTS ===")
     
-    # 1. Small Local Classifier + CPU vs no_gpu
     arch1 = ArchitectureNode(
         inputs=[], processing=["Small Local Classifier"], decision=[], output=[], capabilities=[], 
         data_required=["local_data"], resources_required=["CPU"], constraints=[]
@@ -18,7 +17,6 @@ def run_unit_tests():
     v1 = check_violations(arch1, ["no_gpu"])
     print(f"Test 1 (CPU vs no_gpu): {'PASS' if len(v1)==0 else 'FAIL - ' + str(v1)}")
     
-    # 2. Small Local Classifier + GPU vs no_gpu
     arch2 = ArchitectureNode(
         inputs=[], processing=["Small Local Classifier"], decision=[], output=[], capabilities=[], 
         data_required=["local_data"], resources_required=["GPU"], constraints=[]
@@ -26,7 +24,6 @@ def run_unit_tests():
     v2 = check_violations(arch2, ["no_gpu"])
     print(f"Test 2 (GPU vs no_gpu): {'FAIL' if len(v2)>0 else 'PASS'}")
 
-    # 3. Cloud LLM API + live_data vs no_historical_data
     arch3 = ArchitectureNode(
         inputs=[], processing=["Cloud LLM API"], decision=[], output=[], capabilities=[], 
         data_required=["live_data"], resources_required=["API"], constraints=[]
@@ -34,7 +31,6 @@ def run_unit_tests():
     v3 = check_violations(arch3, ["no_historical_data"])
     print(f"Test 3 (Cloud LLM/live_data vs no_historical_data): {'PASS' if len(v3)==0 else 'FAIL - ' + str(v3)}")
     
-    # 4. Predictive ML Model + historical_patient_data vs no_historical_data
     arch4 = ArchitectureNode(
         inputs=[], processing=["Predictive ML Model"], decision=[], output=[], capabilities=[], 
         data_required=["historical_patient_data"], resources_required=["GPU"], constraints=[]
@@ -142,7 +138,7 @@ def get_architectures():
             )
         },
         "Cybersecurity": {
-            "constraints": ["no_external_storage", "no_gpu"], # Sovereignty -> no_external_storage, Local -> no_gpu
+            "constraints": ["no_external_storage", "no_gpu"],
             "requirements": [Requirement(name="phishing detection", required=True)],
             "a_baseline": ArchitectureNode(
                 inputs=[], processing=["On-Premise Local LLM"], decision=[], output=[], capabilities=[], 

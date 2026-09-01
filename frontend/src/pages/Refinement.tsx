@@ -11,7 +11,6 @@ const Refinement = () => {
   const [d0, setD0] = useState<Decision | null>(null);
   const [d1, setD1] = useState<Decision | null>(null);
 
-  // Fetch D0 on mount (mocked)
   useEffect(() => {
     const fetchD0 = async () => {
       const result = await getDecision('1c854183-05a8-4e60-9903-8ed73ea8dad7');
@@ -24,7 +23,7 @@ const Refinement = () => {
     setStatus('loading');
     setErrorMessage('');
     try {
-      // Mocking the call to applyRefinement
+
       const result = await applyRefinement('1c854183-05a8-4e60-9903-8ed73ea8dad7', id || null, 'Mock Exploration', [], 'MISMATCH detected');
       setD1(result);
       setStatus('success');

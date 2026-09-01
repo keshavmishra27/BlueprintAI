@@ -463,9 +463,6 @@ projects = [
     }
 ]
 
-# We will generate enough to have a solid base (13 detailed ones). 
-# To reach ~30, I will duplicate and tweak these to create 30 realistic projects covering various domains.
-# In a real scenario, this would be scraped. But this serves as the MVP dataset.
 import copy
 
 extended_projects = list(projects)
@@ -499,7 +496,6 @@ for i, (p_id, domain, statement, what) in enumerate(templates):
     new_p["edition"] = p_id.split("_")[1]
     extended_projects.append(new_p)
 
-# Save to raw files
 for record in extended_projects:
     file_path = raw_dir / f"{record['id']}.json"
     with open(file_path, "w") as f:

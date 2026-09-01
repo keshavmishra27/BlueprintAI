@@ -38,7 +38,6 @@ def run_b_start():
         current_requirements=requirements
     )
     
-    # My generated Initial Architecture for Run B (same as Baseline or slightly different)
     initial_arch = ArchitectureNode(
         inputs=["local hospital database (historical queue, appointments, staffing)"],
         processing=["Local cron job extracting data hourly", "Lightweight XGBoost model trained on historical data"],
@@ -61,7 +60,6 @@ def run_b_start():
         }
     )
     
-    # My generated uncertainties
     from decision_engine.tree.tree_schemas import StateMutation
     
     import copy

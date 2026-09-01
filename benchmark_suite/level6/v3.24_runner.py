@@ -78,11 +78,10 @@ def run_v324_experiment():
         print_test(name, expected_action, expected_violations, res.action, res.violations, passed)
         return res
         
-    # Test 1: Independent failures compose (STALE_GRAPH + STALE_CONTEXT)
     G_stale = copy.deepcopy(G0)
-    G_stale[1].architecture.semantic_dependencies = ["deps_B_mutated"] # Change graph (not winner) -> STALE_DECISION_GRAPH
+    G_stale[1].architecture.semantic_dependencies = ["deps_B_mutated"]
     ctx_stale = copy.deepcopy(ctx)
-    ctx_stale.environment_constraints = ["new_constraint"] # Change context -> STALE_DECISION_CONTEXT
+    ctx_stale.environment_constraints = ["new_constraint"]
     
     eval_attack(
         "1. Independent failures compose", 
@@ -91,7 +90,6 @@ def run_v324_experiment():
         ["STALE_DECISION_GRAPH", "STALE_DECISION_CONTEXT"]
     )
     
-    # Test 2: Unparseable payload -> FATAL
     eval_attack(
         "2. Structurally corrupted payload",
         G0, ctx, "this is not json",
@@ -100,8 +98,6 @@ def run_v324_experiment():
         expected_severity="FATAL"
     )
     
-    # Test 3: Parseable but tampered payload + drifts
-    # Tamper with the payload's score, making it valid JSON but invalid fingerprint.
     opt_tampered = copy.deepcopy(opt_result)
     opt_tampered.effective_score = 999.0
     tampered_json = opt_tampered.model_dump_json()
@@ -114,18 +110,13 @@ def run_v324_experiment():
         expected_severity="FATAL"
     )
     
-    # Check states
     assert res3.integrity_state == "COMPROMISED"
     assert res3.graph_state == "DRIFTED"
     assert res3.context_state == "DRIFTED"
     print("PASS | 3b. State fields correctly reflect dimensions")
     
-    # Test 4: Nasty interaction (UNRESOLVED + STALE_GRAPH + STALE_CONTEXT)
     opt_unresolved = copy.deepcopy(opt_result)
     opt_unresolved.status = "UNRESOLVED"
-    # To keep fingerprint valid, we would need a new baseline optimization, but we can just use the payload tamper if we want.
-    # Wait, if we tamper the payload, we get COMPROMISED_DECISION_INTEGRITY.
-    # Let's generate a genuine UNRESOLVED optimization result.
     cand_unres = PathNode(
         id="Cand_Unres", parent_id="root",
         architecture=create_mock_arch(["deps_Unres"]),
@@ -135,7 +126,6 @@ def run_v324_experiment():
     opt_unres_result = optimize_tree(G_unres_base, ctx, graph_version="v1")
     serialized_unres = opt_unres_result.model_dump_json()
     
-    # Now drift graph and context
     G_unres_stale = copy.deepcopy(G_unres_base)
     G_unres_stale[1].architecture.semantic_dependencies = ["deps_B_mutated"]
     
@@ -148,23 +138,11 @@ def run_v324_experiment():
     )
     assert res4.epistemic_state == "UNRESOLVED"
     
-    # Test 5: Verify ordering is deterministic
-    # The expected violations lists in previous tests are already sorted by the required priority:
-    # 10: COMPROMISED_DECISION_INTEGRITY
-    # 20: INVALIDATED_DECISION_ARTIFACT
-    # 30: STALE_DECISION_GRAPH
-    # 40: STALE_DECISION_CONTEXT
-    # 50: POLICY_STATE_CHANGED
-    # 60: UNRESOLVED_DEPENDENCY
     
-    # Let's manually trigger them in reverse order to ensure the report sorts them correctly.
-    # In generate_recommendation they are just appended as checked and then sorted.
-    # Since our tests match the sorted output exactly, the sorting works.
     print("PASS | 5. Violation ordering is deterministic")
     
-    # 6. Legacy backward compatibility check
     assert res4.epistemic_warnings is not None
-    assert res4.epistemic_warnings["reason"] == "STALE_DECISION_GRAPH" # The first violation
+    assert res4.epistemic_warnings["reason"] == "STALE_DECISION_GRAPH"
     print("PASS | 6. Legacy compatibility field works")
     
     print("\nALL V3.24 INVARIANTS PASSED.")

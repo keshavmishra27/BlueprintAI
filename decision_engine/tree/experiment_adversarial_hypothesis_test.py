@@ -28,13 +28,11 @@ def run_adversarial_test():
         current_requirements=[Requirement(name="Low cost", required=True)]
     )
     
-    # 1. Gemini proposes a terrible architecture (uses Cloud despite constraints)
     v1_arch = ArchitectureNode(
         inputs=[], processing=["Cloud GPU + Expensive API"], decision=[], output=[], capabilities=[], 
         data_required=[], resources_required=["cloud"], constraints=[]
     )
     
-    # But a very attractive uncertainty
     uncertainty = AgentUncertainty(
         id=str(uuid.uuid4()),
         question_text="Can we remove cloud processing?",
@@ -68,8 +66,6 @@ def run_adversarial_test():
         print(f"Reason: {res.selection_reason}")
         
     print("\n--- STEP 4 & 5: Provide Answer ---")
-    # We say YES (can remove cloud)
-    # Gemini generates the final local candidate
     final_arch = ArchitectureNode(
         inputs=[], processing=["Optimized Local CPU Model"], decision=[], output=[], capabilities=[], 
         data_required=[], resources_required=["cpu"], constraints=[]
@@ -77,10 +73,10 @@ def run_adversarial_test():
     
     ans_req = JourneyAnswerRequest(
         session_id=session_id,
-        parent_node_id="parent", # ID doesn't matter much for this mock
+        parent_node_id="parent",
         answer="YES",
         generated_architecture=final_arch,
-        candidate_uncertainties=[] # No more uncertainties
+        candidate_uncertainties=[]
     )
     
     res2 = answer_journey(ans_req)

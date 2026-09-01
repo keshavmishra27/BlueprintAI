@@ -40,13 +40,11 @@ def evaluate_requirements(arch: ArchitectureNode, env_requirements: List[Require
             else:
                 results.append(False)
         elif "useful accuracy" in req_name:
-            # We assume any ML/statistical model gives some accuracy, so we check for ML/model presence
             if "ml" in " ".join(arch.processing).lower() or "model" in " ".join(arch.processing).lower() or "xgboost" in " ".join(arch.processing).lower():
                 results.append(True)
             else:
                 results.append(False)
         elif "low operating cost" in req_name:
-            # Check if it doesn't require cloud or paid APIs
             if any("cloud" in res.lower() or "paid" in res.lower() for res in arch.resources_required):
                 results.append(False)
             else:
@@ -151,7 +149,6 @@ def evaluate_dimensions(arch: ArchitectureNode, env_constraints: List[str], env_
     combined_constraints = list(set(env_constraints + arch.constraints))
     violations = check_violations(arch, combined_constraints)
     
-    # Ontology evaluation
     ontology_res = evaluate_ontology(arch, combined_constraints, env_requirements)
     violations.extend(ontology_res.constraint_failures)
     
@@ -159,7 +156,6 @@ def evaluate_dimensions(arch: ArchitectureNode, env_constraints: List[str], env_
     
     req_results = evaluate_requirements(arch, env_requirements)
     
-    # Ontology can fail specific requirements
     for idx, req in enumerate(env_requirements):
         if req.name in ontology_res.requirement_failures:
             req_results[idx] = False

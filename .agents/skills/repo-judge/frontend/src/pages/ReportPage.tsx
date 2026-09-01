@@ -49,11 +49,11 @@ export default function ReportPage() {
 
   const gapReport = data.structural.report;
   const semantic = data.semantic.report;
-  
+
   return (
     <div className="container mt-4">
       <Header meta={data.metadata} confidence={semantic?.overall?.confidence || "Medium"} />
-      
+
       <div className="card mb-8" style={{ borderLeft: '4px solid var(--color-brand)' }}>
         <h3 className="font-bold mb-2">Decision Context</h3>
         <div className="flex gap-8">
@@ -75,7 +75,7 @@ export default function ReportPage() {
       </div>
 
       <div className="grid gap-8 mb-8">
-        {/* STRUCTURAL ANALYSIS */}
+        {}
         <div className="card" style={{ borderLeft: '4px solid var(--color-success)' }}>
           <div className="flex justify-between items-center border-b pb-4 mb-4" style={{ borderColor: 'var(--border)' }}>
             <div>
@@ -86,7 +86,7 @@ export default function ReportPage() {
               <span className="badge badge-warning">Status: {data.structural.status}</span>
             )}
           </div>
-          
+
           {data.structural.status === 'success' && gapReport ? (
             <div className="grid" style={{ gridTemplateColumns: '1fr 3fr', gap: '2rem' }}>
               <div className="text-center">
@@ -106,7 +106,7 @@ export default function ReportPage() {
                   components={gapReport.actual_architecture?.components || []} 
                   icon={<FileCode size={20} className="text-muted" />} 
                 />
-                
+
                 <div>
                   <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                     <AlertTriangle size={20} style={{ color: 'var(--color-warning)' }} /> 
@@ -121,7 +121,7 @@ export default function ReportPage() {
           )}
         </div>
 
-        {/* SEMANTIC ANALYSIS */}
+        {}
         <div className="card" style={{ borderLeft: '4px solid var(--color-warning)' }}>
           <div className="flex justify-between items-center border-b pb-4 mb-4" style={{ borderColor: 'var(--border)' }}>
             <div>
@@ -132,7 +132,7 @@ export default function ReportPage() {
               <span className="badge badge-warning">Status: {data.semantic.status}</span>
             )}
           </div>
-          
+
           {data.semantic.status === 'success' && semantic ? (
             <div className="grid" style={{ gridTemplateColumns: '1fr 3fr', gap: '2rem' }}>
               <div>

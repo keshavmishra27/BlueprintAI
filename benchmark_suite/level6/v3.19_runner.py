@@ -13,7 +13,6 @@ from decision_engine.tree.context import DecisionContext
 from decision_engine.api.recommendation import generate_recommendation
 import decision_engine.input_layer.ontology as ontology_module
 
-# Freeze ontology to V3.12 semantics
 ontology_module.ONTOLOGY_VERSION = "v3.12"
 
 def create_mock_arch():
@@ -35,10 +34,8 @@ def run_v319_experiment():
     print(" V3.19: TEMPORAL GOVERNANCE & STALE-BLUEPRINT")
     print("==================================================")
     
-    # Base environment representing the world when the decision was made
     base_env_constraints = ["emr_direct_access_authorized", "staffing_api_authorized"]
     
-    # Base context
     ctx_base = DecisionContext(
         ontology_version="v3.12",
         registry_policy_hashes=["hash_policy_1"],
@@ -46,7 +43,6 @@ def run_v319_experiment():
         optimizer_preferences={"epistemic_lambda": 0.5}
     )
     
-    # Create an initially valid OptimizationResult
     node = PathNode(
         id="Cand_A",
         parent_id="root",
@@ -58,47 +54,42 @@ def run_v319_experiment():
         epistemic_provenance=None
     )
     
-    # Test 1: Initial Validity
     print_test_header(1, "Initial Validity (Control)")
     opt_1 = optimize_tree([node], ctx_base)
     opt_1_json = opt_1.model_dump_json()
     resp_1 = generate_recommendation(opt_1_json, ctx_base)
     print(f"Action: {resp_1.action} | Reason: {resp_1.epistemic_warnings}")
     
-    # Test 2: Environment Mutation Stale Replay
     print_test_header(2, "Environment Mutation Stale Replay")
     ctx_env_stale = DecisionContext(
         ontology_version="v3.12",
         registry_policy_hashes=["hash_policy_1"],
-        environment_constraints=["emr_direct_access_authorized"], # Missing staffing_api_authorized
+        environment_constraints=["emr_direct_access_authorized"],
         optimizer_preferences={"epistemic_lambda": 0.5}
     )
     resp_2 = generate_recommendation(opt_1_json, ctx_env_stale)
     print(f"Action: {resp_2.action} | Reason: {resp_2.epistemic_warnings}")
 
-    # Test 3: Ontology/Policy Mutation Stale Replay
     print_test_header(3, "Ontology/Policy Mutation Stale Replay")
     ctx_policy_stale = DecisionContext(
         ontology_version="v3.12",
-        registry_policy_hashes=["hash_policy_1", "hash_policy_2"], # Added policy
+        registry_policy_hashes=["hash_policy_1", "hash_policy_2"],
         environment_constraints=base_env_constraints,
         optimizer_preferences={"epistemic_lambda": 0.5}
     )
     resp_3 = generate_recommendation(opt_1_json, ctx_policy_stale)
     print(f"Action: {resp_3.action} | Reason: {resp_3.epistemic_warnings}")
 
-    # Test 4: Preference Mutation Stale Replay
     print_test_header(4, "Preference Mutation Stale Replay")
     ctx_pref_stale = DecisionContext(
         ontology_version="v3.12",
         registry_policy_hashes=["hash_policy_1"],
         environment_constraints=base_env_constraints,
-        optimizer_preferences={"epistemic_lambda": 1.0} # Changed lambda
+        optimizer_preferences={"epistemic_lambda": 1.0}
     )
     resp_4 = generate_recommendation(opt_1_json, ctx_pref_stale)
     print(f"Action: {resp_4.action} | Reason: {resp_4.epistemic_warnings}")
     
-    # Test 5: Identical State Control Replay
     print_test_header(5, "Identical State Control Replay")
     ctx_identical = DecisionContext(
         ontology_version="v3.12",
@@ -109,9 +100,7 @@ def run_v319_experiment():
     resp_5 = generate_recommendation(opt_1_json, ctx_identical)
     print(f"Action: {resp_5.action} | Reason: {resp_5.epistemic_warnings}")
     
-    # Test 6: Semantically Equivalent Context Replay
     print_test_header(6, "Semantically Equivalent Context Replay")
-    # Swapped list order
     ctx_equiv = DecisionContext(
         ontology_version="v3.12",
         registry_policy_hashes=["hash_policy_1"],
@@ -121,10 +110,8 @@ def run_v319_experiment():
     resp_6 = generate_recommendation(opt_1_json, ctx_equiv)
     print(f"Action: {resp_6.action} | Reason: {resp_6.epistemic_warnings}")
     
-    # Test 7: Malicious Decision Alteration
     print_test_header(7, "Malicious Decision Alteration")
     malicious_opt_dict = json.loads(opt_1_json)
-    # Attacker alters the best architecture payload but keeps context fingerprint
     malicious_opt_dict["best_architecture"]["semantic_dependencies"] = ["requires_quantum_hospital_network"]
     malicious_opt_json = json.dumps(malicious_opt_dict)
     

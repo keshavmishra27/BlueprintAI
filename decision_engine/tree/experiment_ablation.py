@@ -9,7 +9,6 @@ def simulate_ablation():
     print("    KB ABLATION EXPERIMENT (HOSPITAL DOMAIN)      ")
     print("==================================================\n")
     
-    # Condition A: No KB (Pure LLM Generation)
     print(">>> CONDITION A: LLM ONLY (No Knowledge Base)")
     print("Prompt: 'Propose an AI architecture to reduce hospital waiting times.'")
     print("Simulated Output: 'Use AWS, Kubernetes, and train a Deep Learning model on hospital data to predict waiting times. Build a mobile app using React Native for patients to check their times.'")
@@ -21,7 +20,6 @@ def simulate_ablation():
     
     print("\n--------------------------------------------------\n")
     
-    # Condition B: KB (Retrieval Augmented)
     print(">>> CONDITION B: LLM + KNOWLEDGE BASE RETRIEVAL")
     print("Prompt: 'Here is SIH evidence. Propose an AI architecture to reduce hospital waiting times.'")
     print("Simulated Output: 'Based on SIH projects, use predictive bottleneck detection and proactive routing. Also, implement a blockchain layer for secure patient data transfer.'")
@@ -33,7 +31,6 @@ def simulate_ablation():
     
     print("\n--------------------------------------------------\n")
     
-    # Condition C: KB + Strict Evidence Grounding
     print(">>> CONDITION C: LLM + KB + STRICT EVIDENCE GROUNDING")
     print("Prompt: 'Propose an architecture using ONLY the provided SIH patterns. You must cite evidence for every architectural decision.'")
     print("Simulated Output: '1. Demand prediction (Source: sih_2022_hc_01). 2. Proactive resource routing (Source: sih_2020_dis_01). 3. Dynamic queue optimization (Source: sih_2022_tr_01).'")

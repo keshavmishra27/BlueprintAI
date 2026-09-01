@@ -91,19 +91,15 @@ def run_v311_experiment():
         print(f"Status C: {status_map['Node-C']}")
         print(f"Status D: {status_map['Node-D']}")
         
-        # 1. Collateral Immunity & Blast Radius Proof
         assert status_map["Node-C"] == "TERMINAL", "Candidate C must remain unchanged."
         
-        # 2. Symmetry
         assert status_map["Node-A"] == status_map["Node-B"], "A and B must behave identically."
         
         if env["expected_winner"] == "Node-C":
-            # 3. Conditional / Precedence Correctness
             assert status_map["Node-A"] == "REJECTED"
             assert status_map["Node-B"] == "REJECTED"
             assert status_map["Node-D"] == "REJECTED"
             
-            # 6. Deterministic rejection reasons
             for node_id in ["Node-A", "Node-B", "Node-D"]:
                 reasons = rejection_map[node_id]
                 assert any(r in reasons for r in env["expected_rejections"]), f"Missing expected rejection in {node_id}: {reasons}"
@@ -112,16 +108,12 @@ def run_v311_experiment():
             assert status_map["Node-B"] == "TERMINAL"
             assert status_map["Node-D"] == "TERMINAL"
             
-        # 5. Composition Correctness
-        # Node D has another unknown dependency (requires_advanced_patient_tracking)
-        # Even if D is rejected, the dependency should remain independently represented in its semantic dependencies
         node_d = next(n for n in nodes if n.id == "Node-D")
         assert "requires_advanced_patient_tracking" in node_d.architecture.semantic_dependencies
             
         opt_only = optimize_tree(nodes, {})
         opt_audit = optimize_tree(nodes, {})
         
-        # 7. Optimizer Neutrality, 10. Audit Neutrality
         assert opt_only.best_path_id == opt_audit.best_path_id
         
         winner_id = opt_audit.best_path_id

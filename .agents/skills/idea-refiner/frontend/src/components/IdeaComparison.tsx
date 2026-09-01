@@ -16,7 +16,7 @@ export default function IdeaComparison({ originalIdea, refinedIdea }: Props) {
         <p><strong>Solution:</strong> {originalIdea.solution}</p>
         <p><strong>Differentiation:</strong> {originalIdea.differentiation}</p>
       </div>
-      
+
       <div className="card" style={{ border: "2px solid var(--score-positive)" }}>
         <h3>Refined Idea</h3>
         <p><strong>Concept:</strong> {refinedIdea.concise_concept}</p>

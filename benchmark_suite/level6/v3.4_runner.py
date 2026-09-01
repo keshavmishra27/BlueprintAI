@@ -17,7 +17,6 @@ def run_v34_experiment():
     session_id = "v3.4-experiment-session"
     payload["session_id"] = session_id
     
-    # 1. Start Journey
     print("\n1. Submitting JourneyStartRequest...")
     try:
         resp = requests.post(url_start, json=payload, timeout=10)
@@ -28,7 +27,6 @@ def run_v34_experiment():
         
     print(f"Session ID: {session_id}")
     
-    # Get State to find root node ID
     state_resp = requests.get(f"http://127.0.0.1:8089/api/journey/{session_id}/state", timeout=10)
     tree_state = state_resp.json()
     decision_graph = tree_state["decision_graph"]
@@ -42,7 +40,6 @@ def run_v34_experiment():
     print(f"unc-001 (NO branch): requires_unknown_alien_tech -> Expecting UNKNOWN (Informational)")
     print(f"unc-002 (YES branch): requires_manual_usb_transfer -> Expecting KNOWN (Failure)")
 
-    # 2. Test the Known Dependency (unc-002 -> YES)
     print("\n2. Testing Known Dependency: unc-002 -> YES")
     answer_payload_002 = {
         "session_id": session_id,
@@ -59,13 +56,11 @@ def run_v34_experiment():
     
     state_resp = requests.get(f"http://127.0.0.1:8089/api/journey/{session_id}/state", timeout=10)
     tree_state = state_resp.json()
-    # Find the node that was just created as a child of root, containing manual usb transfer
     node_002 = next(n for n in tree_state["decision_graph"] if n["parent_id"] == root_node["id"] and "requires_manual_usb_transfer" in n["architecture"]["semantic_dependencies"])
     
     print(f"  Result Node Status: {node_002['status']}")
     assert node_002['status'] == 'REJECTED', "Known dependency failed to propagate REJECTED status!"
     
-    # 3. Test the Unknown Dependency (unc-001 -> NO)
     print("\n3. Testing Unknown Dependency: unc-001 -> NO")
     answer_payload_001 = {
         "session_id": session_id,

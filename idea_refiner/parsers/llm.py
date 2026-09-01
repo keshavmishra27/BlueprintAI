@@ -46,7 +46,6 @@ class LLMIdeaParser(BaseIdeaParser):
         
         hypotheses = []
         for item in response.get("hypotheses", []):
-            # Enforce boundary: strictly strip authority fields
             for forbidden_key in ["status", "feasibility", "confidence", "candidate_status"]:
                 item.pop(forbidden_key, None)
                 

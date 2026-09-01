@@ -11,7 +11,6 @@ from decision_engine.tree.optimizer import optimize_tree, PathNode
 from decision_engine.optimizer.epistemic_audit import run_epistemic_audit
 import decision_engine.input_layer.ontology as ontology_module
 
-# Freeze ontology to V3.12 semantics
 ontology_module.ONTOLOGY_VERSION = "v3.12"
 
 def create_mock_arch(dependencies):
@@ -48,7 +47,7 @@ def compute_metrics(candidates):
     u_count = len(discovered_deps - known_global)
     n_count = len(discovered_deps)
     coverage = (k_count / n_count * 100) if n_count > 0 else 100.0
-    epistemic_risk = u_count * 1.0 # weight=1.0
+    epistemic_risk = u_count * 1.0
     
     return n_count, k_count, u_count, coverage, epistemic_risk
 
@@ -57,7 +56,6 @@ def run_attack_1():
     print(" ATTACK 1: UNKNOWN ESCAPE HATCH (Governance Laundering)")
     print("==================================================")
     
-    # Missing 'emr_direct_access_authorized' to trigger deterministic failure
     constraints = ["HIPAA compliance required"]
     
     base_deps = ["requires_emr_database_integration"]
@@ -83,7 +81,6 @@ def run_attack_2():
     print(" ATTACK 2: SEEKING IGNORANCE (Pareto Boundary Test)")
     print("==================================================")
     
-    # Provide all constraints to make known dependencies feasible
     constraints = [
         "emr_direct_access_authorized",
         "approved_hl7_interface_available",

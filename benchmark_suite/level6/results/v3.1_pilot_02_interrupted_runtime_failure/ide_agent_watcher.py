@@ -19,7 +19,6 @@ def run_watcher():
             if current_hash and current_hash != last_hash:
                 print(f"[{time.strftime('%X')}] Detected new prompt. Running IDE Agent...", flush=True)
                 
-                # The agent instruction
                 prompt = (
                     "Read current_prompt.md. Based on its instructions, generate the requested JSON payload "
                     "(either baseline architecture, blueprint start payload, or branch architecture) and write it "
@@ -28,7 +27,6 @@ def run_watcher():
                     "After writing the file, create a file named ready.txt."
                 )
                 
-                # agy --print runs a headless prompt through the Antigravity engine
                 subprocess.run(["agy", "--print", prompt, "--dangerously-skip-permissions"], shell=True)
                 print(f"[{time.strftime('%X')}] IDE Agent finished processing prompt.", flush=True)
                 last_hash = current_hash

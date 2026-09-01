@@ -40,7 +40,6 @@ def run_v35_experiment():
     
     print("\n--- TEST CASE EXECUTION ---")
     
-    # Helper to execute answer and check status
     def test_case(name, unc_node, expected_status):
         print(f"\n{name}")
         answer_payload = {
@@ -57,7 +56,6 @@ def run_v35_experiment():
         state_resp = requests.get(f"http://127.0.0.1:8089/api/journey/{session_id}/state", timeout=10)
         tree_state = state_resp.json()
         try:
-            # Find the new node. We know it's a child of root and has the exact constraints and semantic dependencies from the payload.
             expected_deps = unc_node["yes_candidate_architecture"]["semantic_dependencies"]
             expected_constraints = unc_node["yes_candidate_architecture"].get("constraints", [])
             new_node = next(
@@ -74,34 +72,29 @@ def run_v35_experiment():
         
         print(f"  Result Node Status: {new_node['status']}")
         
-        # print causation trace from rejected reasons if rejected
         if new_node['status'] == 'REJECTED':
             print(f"  Rejection reasons: {new_node.get('reject_reasons', 'None')}")
             
         assert new_node['status'] == expected_status, f"{name} failed! Expected {expected_status}, got {new_node['status']}. Reasons: {new_node.get('reject_reasons')}"
 
-    # 1. Test B: Frozen reject
     test_case(
         "Test B: Frozen reject (EMR integration, Auth Missing) -> Expecting REJECTED",
         unc_001,
         "REJECTED"
     )
 
-    # 2. Test A: Authorized pass
     test_case(
         "Test A: Authorized pass (EMR integration, Auth Present) -> Expecting TERMINAL",
         unc_002,
         "TERMINAL"
     )
     
-    # 3. Test C: Unknown baseline
     test_case(
         "Test C: Unknown baseline (Alien-tech, Irrelevant Auth) -> Expecting TERMINAL",
         unc_003,
         "TERMINAL"
     )
     
-    # 4. Test D: Composition
     test_case(
         "Test D: Composition (EMR + Alien-tech, Auth Missing) -> Expecting REJECTED",
         unc_004,

@@ -23,7 +23,7 @@ export default function AnalysisView() {
   }, [id]);
 
   if (loading) return <div className="state-container"><h2>Loading Decision...</h2></div>;
-  
+
   if (error) {
     return (
       <div className="state-container">
@@ -48,7 +48,7 @@ export default function AnalysisView() {
       <div style={{ marginBottom: "1rem" }}>
         <Link to="/" className="badge badge-verified">← Back to Dashboard</Link>
       </div>
-      
+
       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <h2>Decision Record</h2>
         <div className="grid-2">
@@ -76,7 +76,7 @@ export default function AnalysisView() {
           </div>
         </div>
       </div>
-      
+
       <div className="card" style={{ marginTop: '1rem' }}>
         <h2>Target Architecture</h2>
         <h3>Components</h3>

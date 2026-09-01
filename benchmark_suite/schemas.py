@@ -15,7 +15,6 @@ class BenchmarkScenario(BaseModel):
     optimization_weights: OptimizationWeights
     oracle_architecture: Optional[ArchitectureNode] = None
     
-    # Internal variables for the benchmark to know hidden assumptions
     hidden_facts_to_reveal: Dict[str, str] = {}
     evaluation_rules: DeterministicEvaluationRules = DeterministicEvaluationRules()
     expected_relevant_branches: int = 0
@@ -42,7 +41,7 @@ class GenerationLog(BaseModel):
     response_hash: Optional[str] = None
     raw_response: str
     attempt: int = 1
-    result: str = "VALID" # VALID, INVALID_JSON, GENERATION_FAILURE
+    result: str = "VALID"
     latency_ms: Optional[float] = None
     input_tokens: Optional[int] = None
     output_tokens: Optional[int] = None

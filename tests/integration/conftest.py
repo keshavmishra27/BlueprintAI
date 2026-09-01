@@ -15,14 +15,12 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 @pytest.fixture(scope="function")
 def db_session():
-    # Create the database
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     try:
         yield db
     finally:
         db.close()
-        # Drop the database after each test for clean slate
         Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="function")
@@ -35,12 +33,15 @@ def client(db_session, monkeypatch):
 
     app.dependency_overrides[get_db] = override_get_db
     
-    # Mock Orchestrator to avoid LLM calls and initialization errors
     class MockArtifact:
         components = ["FastAPI", "PostgreSQL"]
         decisions = {"db": "PostgreSQL"}
         scores = {"performance": 0.9}
         governance = {"action": "RECOMMEND", "severity": "INFO"}
+        winner_id = "mock-winner"
+        candidates_evaluated = []
+        pareto_frontier_ids = []
+        explanation = "mock explanation"
         
     class MockOrchestrator:
         def __init__(self, *args, **kwargs): pass

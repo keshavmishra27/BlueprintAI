@@ -3,7 +3,6 @@ from collections import Counter
 import sys
 from pathlib import Path
 
-# Add the parent directory to sys.path so we can import schema
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from schema.project import SIHProject, OutcomeEnum

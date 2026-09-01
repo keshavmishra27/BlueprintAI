@@ -15,7 +15,7 @@ class Evidence(BaseModel):
     location: str
     evidence_type: EvidenceType
     observed_entity: str
-    confidence: float # 0.0 to 1.0
+    confidence: float
 
 class RepositoryArchitectureArtifact(BaseModel):
     components: List[str]

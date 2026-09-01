@@ -10,7 +10,6 @@ from product.api.v1.models import (
     GapReport, RefinementOption
 )
 
-# We import the internal engines
 from idea_refiner.orchestrator import Orchestrator
 from repo_checker.extractor import RepoExtractor
 from repo_checker.gap_engine import GapEngine
@@ -24,12 +23,17 @@ class ProductService:
         return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
     def _map_to_product_decision(self, record: DecisionRecord) -> Decision:
+        from product.api.v1.models import CandidateEvaluation
         return Decision(
             id=record.id,
             version=1,
             architecture=Architecture(**record.architecture_json),
             governance=Governance(**record.governance_json),
             alternatives=[Alternative(**alt) for alt in (record.alternatives_json or [])],
+            winner_id=record.winner_id or "",
+            candidates_evaluated=[CandidateEvaluation(**c) for c in (record.candidates_json or [])],
+            pareto_frontier_ids=record.pareto_frontier_json or [],
+            explanation=record.explanation or "",
             alignment=None,
             decision_fingerprint=record.decision_fingerprint,
             graph_fingerprint=record.graph_fingerprint,
@@ -40,14 +44,12 @@ class ProductService:
         )
 
     def _canonicalize_and_hash(self, arch_json: Dict, gov_json: Dict, alt_json: List) -> str:
-        # Canonicalize architecture
         arch = dict(arch_json)
         if "components" in arch:
             arch["components"] = sorted(arch["components"], key=lambda x: x.get("name", ""))
         if "decisions" in arch:
             arch["decisions"] = sorted(arch["decisions"], key=lambda x: x.get("key", ""))
         
-        # We hash the canonicalized contract fields
         payload = {
             "architecture": arch,
             "governance": gov_json,
@@ -66,12 +68,14 @@ class ProductService:
         raw_components = decision_record.architecture_json.get("components", [])
         component_names = [c.get("name", "") if isinstance(c, dict) else str(c) for c in raw_components]
         
-        # We classify some as databases just as a rough heuristic for the projection
         databases = [c.get("name") for c in raw_components if isinstance(c, dict) and c.get("type", "").lower() in ["database", "db"]]
         
         return ArchitectureDecisionArtifact.model_construct(
+            decision_id=decision_record.id,
             idea=decision_record.idea_text,
-            winning_path_id=decision_record.id,
+            winner_id=decision_record.id,
+            candidates_evaluated=[],
+            pareto_frontier_ids=[],
             components=component_names,
             technologies=[],
             databases=databases,
@@ -80,7 +84,6 @@ class ProductService:
             decisions={},
             constraints=[],
             dependencies=[],
-            pareto_frontier=[],
             governance={},
             fingerprints={"canonical": decision_record.decision_fingerprint},
             explanation="Structural projection from DecisionRecord"
@@ -101,7 +104,6 @@ class ProductService:
             
         from decision_engine.tree.context import DecisionContext
         if isinstance(context, dict):
-            # Try to build a DecisionContext from the dict
             context = DecisionContext(
                 ontology_version="1.0.0",
                 registry_policy_hashes=[],
@@ -147,11 +149,17 @@ class ProductService:
             architecture_json=arch_json,
             governance_json=gov_json,
             alternatives_json=alt_json,
+            
+            winner_id=decision_artifact.winner_id,
+            candidates_json=[c.model_dump() for c in decision_artifact.candidates_evaluated],
+            pareto_frontier_json=decision_artifact.pareto_frontier_ids,
+            explanation=decision_artifact.explanation,
+            
             decision_fingerprint=decision_fingerprint,
             graph_fingerprint=graph_fingerprint,
             context_fingerprint=context_fingerprint,
             status="ACTIVE",
-            requirement_set_fingerprint="" # Temporary until computed
+            requirement_set_fingerprint=""
         )
         
         record.requirement_set_fingerprint = self._compute_requirement_fingerprint(record)
@@ -170,10 +178,8 @@ class ProductService:
         extractor = RepoExtractor(repo_path)
         repo_artifact = extractor.extract_deterministic()
         
-        # Structural projection
         decision_artifact = _injected_artifact if _injected_artifact else self._map_to_engine_artifact(decision_record)
         
-        # Calculate expected structural fingerprint directly from the canonical projection
         fresh_requirement_fingerprint = self._compute_requirement_fingerprint(decision_record)
         
         if fresh_requirement_fingerprint != decision_record.requirement_set_fingerprint:

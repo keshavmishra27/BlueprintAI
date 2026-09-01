@@ -13,9 +13,11 @@ READY_FILE = "ready.txt"
 HUMAN_PROMPT_FILE = "current_prompt.md"
 
 class InstructionType(str, Enum):
-    START = "START"                  # Baseline & Blueprint Start
-    BRANCH = "BRANCH"                # Oracle Answer / Branch Resolution
-    QUALIFICATION = "QUALIFICATION"  # Control Plane Qualification Probing
+    START = "START"
+    BRANCH = "BRANCH"
+    QUALIFICATION = "QUALIFICATION"
+    IMPLEMENT = "IMPLEMENT"
+    FIX_GAPS = "FIX_GAPS"
 
 class ExecutionStatus(str, Enum):
     SUCCESS = "SUCCESS"

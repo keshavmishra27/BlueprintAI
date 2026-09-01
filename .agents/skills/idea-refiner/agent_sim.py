@@ -23,7 +23,6 @@ def run_simulation():
 
     print("[1] STARTING JOURNEY")
     
-    # Mocking what the Agent would generate as Player B v1
     player_b_v1 = build_arch_node(
         processing=["Ingest Data", "ML Prediction Model", "Display Wait Time"],
         capabilities=["Predictive Analytics"],
@@ -31,7 +30,6 @@ def run_simulation():
         resources=["GPU", "Cloud Infrastructure"]
     )
     
-    # Mocking what the Agent would find as uncertainties and branch candidates
     uncertainties = [
         {
             "id": "unc-hist-data",
@@ -91,7 +89,6 @@ def run_simulation():
     
     print("\n[3] ANSWERING QUESTION (Simulating Agent Generating v2)")
     
-    # Simulating what the Agent would generate as Player B v2 after answering NO
     player_b_v2 = build_arch_node(
         processing=["Ingest Live Data", "Rule-based Queue", "Display Wait Time"],
         capabilities=["Real-time Queue Management"],
@@ -103,7 +100,7 @@ def run_simulation():
         "session_id": session_id,
         "selected_option": selected_option,
         "new_player_b_architecture": player_b_v2,
-        "new_uncertainties": [] # Resolving the only uncertainty
+        "new_uncertainties": []
     }
     
     r_ans = httpx.post(f"{base_url}/api/journey/answer", json=ans_payload, timeout=10.0)

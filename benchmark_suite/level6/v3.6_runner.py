@@ -34,7 +34,6 @@ def run_v36_experiment():
     tree_state = state_resp.json()
     root_node = next(n for n in tree_state["decision_graph"] if n.get("parent_id") is None)
     
-    # Calculate Telemetry: Ontology_Coverage
     discovered_deps = set()
     for unc in payload["candidate_uncertainties"]:
         for d in unc["yes_candidate_architecture"].get("semantic_dependencies", []):
@@ -54,7 +53,6 @@ def run_v36_experiment():
     
     print("\n--- TEST CASE EXECUTION ---")
     
-    # 1. Test Ambiguous Unknown Dependency (YES branch)
     print("Test A: Ambiguous Unknown (requires_approved_emr_interface) -> Expecting TERMINAL (Informational)")
     req_yes = {
         "session_id": session_id,
@@ -80,11 +78,9 @@ def run_v36_experiment():
     print(f"  Result Node Status: {node_yes['status']}")
     print(f"  Rejection reasons: {node_yes.get('reject_reasons')}")
     
-    # Acceptance Criteria Asserts
     assert node_yes['status'] == 'TERMINAL', f"Unknown dependency falsely fabricated a non-terminal status: {node_yes['status']}"
     assert not node_yes.get('reject_reasons'), f"Unknown dependency fabricated reject reasons: {node_yes.get('reject_reasons')}"
     
-    # 2. Test Known Dependency (NO branch)
     print("\nTest B: Known Dependency (requires_manual_usb_transfer) -> Expecting REJECTED")
     req_no = {
         "session_id": session_id,

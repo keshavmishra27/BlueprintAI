@@ -3,7 +3,6 @@ import requests
 import sys
 from pathlib import Path
 
-# Setup paths
 base_dir = Path(__file__).resolve().parent
 results_dir = base_dir / "results" / "v3.2_hospital_case_01"
 raw_file = results_dir / "raw_refiner_output.json"
@@ -16,7 +15,6 @@ if not raw_file.exists():
 with open(raw_file, "r") as f:
     payload = json.load(f)
 
-# Add session_id
 payload["session_id"] = "v3.2-hospital-case-01-session"
 
 print("Submitting JourneyStartRequest to backend...")

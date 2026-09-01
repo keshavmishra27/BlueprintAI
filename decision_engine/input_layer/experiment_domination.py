@@ -40,7 +40,6 @@ def print_battle(name: str, constraints: list, requirements: list, user_arch: Ar
 def main():
     print("Initializing Domination Experiment...")
 
-    # Define User Architecture
     user_arch = ArchitectureNode(
         inputs=["Patient appointment requests"],
         processing=["Maintain queue"],
@@ -52,7 +51,6 @@ def main():
         capabilities=["queue management", "appointment prediction"]
     )
 
-    # Define Player B Architecture
     player_b_arch = ArchitectureNode(
         inputs=["Patient demand", "Hospital resource state"],
         processing=["Demand prediction", "Bottleneck prediction"],
@@ -67,9 +65,6 @@ def main():
     req_wait = Requirement(name="Reduce waiting time", required=True)
     req_bottleneck = Requirement(name="Handle resource bottlenecks", required=True)
 
-    # Battle 1: B clearly wins
-    # Context: Historical data available, both requirements needed.
-    # User satisfies 1, B satisfies 2. Both feasible.
     print_battle(
         name="Battle 1: B Clearly Wins",
         constraints=["Historical data available"],
@@ -78,9 +73,6 @@ def main():
         player_b_arch=player_b_arch
     )
     
-    # Battle 2: B clearly loses
-    # Context: No historical data, basic laptop. 
-    # B is infeasible. User is feasible.
     print_battle(
         name="Battle 2: B Clearly Loses",
         constraints=["No historical data", "No external APIs", "Must run on a basic laptop"],
@@ -89,9 +81,6 @@ def main():
         player_b_arch=player_b_arch
     )
     
-    # Battle 3: Tie / Context-Dependent
-    # Context: Only the basic requirement is needed.
-    # Both are feasible and satisfy the explicit requirement equally.
     print_battle(
         name="Battle 3: Tie / Neither Dominates",
         constraints=["Historical data available", "Very small prototype", "Only 48 hours"],

@@ -13,7 +13,6 @@ from security import sanitize_payload
 
 app = FastAPI(title="Repo Judge API")
 
-# Setup CORS for future React frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],
@@ -32,17 +31,13 @@ import json
 
 @app.post("/api/analysis", response_model=RepositoryAssessment)
 def create_analysis(payload: RepoJudgeAnalysisPayload):
-    # 1. Pydantic validation is handled automatically by FastAPI/Pydantic
-    # 2. Referential integrity is handled by the @model_validator in RepoJudgeAnalysisPayload
     
-    # 3. Security Check
     if sanitize_payload(payload.model_dump()):
         raise HTTPException(
             status_code=400, 
             detail="Sensitive credential-like content was detected in the analysis payload. Request rejected for security."
         )
 
-    # 4. Fetch Canonical Decision from Product API
     product_api_url = f"http://localhost:8000/api/v1/decisions/{payload.decision_id}"
     try:
         req = urllib.request.Request(product_api_url)
@@ -61,10 +56,8 @@ def create_analysis(payload: RepoJudgeAnalysisPayload):
     except urllib.error.URLError as e:
         raise HTTPException(status_code=500, detail=f"Could not connect to Product API: {str(e)}")
 
-    # 5. Generate Semantic Result
     semantic_report = create_result_from_payload(payload, decision_fingerprint)
     
-    # 6. Fetch Structural Assessment (GapEngine)
     gap_api_url = "http://localhost:8000/api/v1/repositories/analyze"
     gap_payload = {
         "decision_id": payload.decision_id,
@@ -78,7 +71,6 @@ def create_analysis(payload: RepoJudgeAnalysisPayload):
             if response.status == 200:
                 gap_data = json.loads(response.read().decode())
                 
-                # Enforce identity consistency
                 if gap_data.get("decision_id") != semantic_report.metadata.decision_id:
                     raise HTTPException(status_code=400, detail="Decision ID mismatch between structural and semantic reports")
                 if gap_data.get("decision_fingerprint") != semantic_report.metadata.decision_fingerprint:
@@ -90,14 +82,12 @@ def create_analysis(payload: RepoJudgeAnalysisPayload):
     except urllib.error.URLError:
         structural_layer = StructuralLayer(status="failure", report=None)
 
-    # 7. Wrap into RepositoryAssessment
     assessment = RepositoryAssessment(
         metadata=semantic_report.metadata,
         structural=structural_layer,
         semantic=SemanticLayer(status="success", report=semantic_report)
     )
     
-    # 8. Persist
     save_analysis(assessment.model_dump())
     
     return assessment

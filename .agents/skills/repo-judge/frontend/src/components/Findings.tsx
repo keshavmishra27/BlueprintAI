@@ -24,7 +24,7 @@ export default function Findings({ findings, allEvidence }: { findings: RepoJudg
   const [sevFilter, setSevFilter] = useState<string>('All');
 
   const severities = ['All', 'Critical', 'High', 'Medium', 'Low', 'Info'];
-  
+
   const filtered = findings.filter(f => sevFilter === 'All' || f.severity === sevFilter);
 
   const getSeverityBadge = (sev: string) => {
@@ -53,7 +53,7 @@ export default function Findings({ findings, allEvidence }: { findings: RepoJudg
           ))}
         </div>
       </div>
-      
+
       {filtered.length === 0 ? (
         <div className="card text-center text-muted py-8">No findings match this filter.</div>
       ) : (
@@ -70,13 +70,13 @@ export default function Findings({ findings, allEvidence }: { findings: RepoJudg
                   <span className="badge badge-info">{f.category}</span>
                 </div>
               </div>
-              
+
               <div className="text-sm font-semibold text-muted mb-2">{f.classification}</div>
-              
+
               <p className="mb-2"><strong>Explanation:</strong> {f.explanation}</p>
               <p className="mb-2 text-muted"><strong>Impact:</strong> {f.impact}</p>
               <p className="mb-4"><strong>Recommendation:</strong> {f.recommendation}</p>
-              
+
               {f.evidence_ids.length > 0 && (
                 <div className="border-t pt-3">
                   <strong className="text-sm text-muted uppercase tracking-wider mb-2 block">Supporting Evidence</strong>

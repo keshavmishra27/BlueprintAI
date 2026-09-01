@@ -39,7 +39,6 @@ def run_evaluation():
     reqs_met = sum(1 for r in battle.requirement_evaluations if r.player_b_satisfies)
     print(f"Requirements Met: {reqs_met}/{len(requirements)}")
     
-    # Save the evaluation to markdown
     md = f"""# Run A: Baseline Evaluation
 
 ## Architecture

@@ -13,7 +13,6 @@ from decision_engine.tree.optimizer import optimize_tree, PathNode
 from decision_engine.optimizer.epistemic_audit import run_epistemic_audit
 import decision_engine.input_layer.ontology as ontology_module
 
-# Ensure ontology is at its latest tested state (V3.12)
 ontology_module.ONTOLOGY_VERSION = "v3.12"
 
 def load_organic_payload():
@@ -43,7 +42,6 @@ def run_v313_experiment():
         
     candidates = []
     
-    # Generate Base Architecture
     try:
         base_arch = ArchitectureNode(**base_arch_data)
         base_res = evaluate_ontology(base_arch, constraints, [])
@@ -63,12 +61,10 @@ def run_v313_experiment():
         print(f"FAILED TO EVALUATE BASE ARCHITECTURE: {e}")
         return
         
-    # Generate Mutated Branches
     for idx, u in enumerate(uncertainties):
         for branch_type, score_mod in [("yes", (idx+1)*5), ("no", -(idx+1)*5)]:
             try:
                 branch_arch = base_arch.model_copy(deep=True)
-                # Apply mutation
                 mut = u.get(f"{branch_type}_mutation", {})
                 branch_constraints = constraints + mut.get("add_constraints", [])
                 branch_arch.semantic_dependencies = u.get(f"{branch_type}_arch_dependencies", base_arch.semantic_dependencies)
@@ -83,20 +79,18 @@ def run_v313_experiment():
                     status="TERMINAL" if b_f else "REJECTED",
                     path_cost=100.0,
                     path_latency=1.0,
-                    path_score=80.0 + score_mod, # Differentiated scores
+                    path_score=80.0 + score_mod,
                     reject_reasons=res.constraint_failures + res.requirement_failures
                 ))
             except Exception as e:
                 print(f"FAILED TO EVALUATE BRANCH {idx+1}_{branch_type}: {e}")
                 
-    # Optimization
     opt = optimize_tree(candidates, {})
     
     print("\n==================================================")
     print(" V3.13 EVALUATION & AUDIT RESULTS")
     print("==================================================")
     
-    # Calculate Coverage
     known_global = get_known_dependencies()
     discovered_deps = set()
     for c in candidates:

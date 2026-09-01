@@ -25,10 +25,8 @@ def simulate_player_b_generation(v_num: int, project_state: ProjectState) -> Arc
     
     based_on = None
     
-    # Adapt to constraints
     env_str = " ".join(project_state.current_constraints).lower()
     
-    # Simple mocked adaptation rules based on constraints
     if "no historical data" in env_str:
         arch.processing = ["Real-time queue monitoring"]
         arch.decision = ["Rule-based bottleneck detection"]

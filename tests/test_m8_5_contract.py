@@ -19,21 +19,18 @@ def service(db_session):
     return ProductService(db_session)
 
 def test_a_deterministic_subset_mapping(service):
-    # Create Decision
     decision = service.analyze_idea('Test idea', context=None)
     record = service.repository.get_decision(decision.id)
     
-    # Map to engine artifact
     engine_artifact = service._map_to_engine_artifact(record)
     
     assert engine_artifact.idea == 'Test idea'
-    assert engine_artifact.winning_path_id == decision.id
+    assert engine_artifact.winner_id == decision.id
     assert 'Default Component' in engine_artifact.components or len(engine_artifact.components) > 0
     assert 'canonical' in engine_artifact.fingerprints
     assert engine_artifact.fingerprints['canonical'] == decision.decision_fingerprint
     
 def test_b_fingerprint_completeness(service):
-    # Mutating governance action or architecture components must change the decision_fingerprint
     arch = {'components': [{'name': 'A'}], 'decisions': []}
     gov1 = {'action': 'RECOMMEND'}
     gov2 = {'action': 'BLOCK'}
@@ -47,7 +44,6 @@ def test_b_fingerprint_completeness(service):
     assert fp1 != fp3, 'Architecture change should change fingerprint'
 
 def test_c_canonicalization(service):
-    # Two equivalent architectures with differently ordered components must yield identical fingerprints
     arch1 = {'components': [{'name': 'A'}, {'name': 'B'}], 'decisions': []}
     arch2 = {'components': [{'name': 'B'}, {'name': 'A'}], 'decisions': []}
     
@@ -57,12 +53,9 @@ def test_c_canonicalization(service):
     assert fp1 == fp2, 'Fingerprint should be order-independent for components'
 
 def test_d_immutability(service, db_session):
-    # Attempting to update architecture_json on an existing DecisionRecord must raise ValueError
     decision = service.analyze_idea('Immutability test')
     record = service.repository.get_decision(decision.id)
     
-    # The dictionary needs to be completely replaced or modified to trigger the SQLAlchemy JSON change tracking reliably depending on the JSON dialect. 
-    # To be safe, we assign a completely new dictionary
     record.architecture_json = {'components': [{'name': 'Hacked'}]}
     
     with pytest.raises(ValueError, match='is immutable'):
@@ -91,11 +84,9 @@ def test_e_and_f_evaluation_fidelity_and_provenance(service, monkeypatch):
     gap_report = service.analyze_repository(decision.id, '/dummy')
     assert gap_report is not None
     
-    # Test F (Provenance)
     assert gap_report.decision_fingerprint == record.decision_fingerprint
     assert gap_report.requirement_set_fingerprint != gap_report.decision_fingerprint
     
-    # Test E (Fidelity)
     assert len(gap_report.findings) > 0
 
 def test_g_contract_substitution_rejection(service, monkeypatch):
@@ -105,6 +96,10 @@ def test_g_contract_substitution_rejection(service, monkeypatch):
         components = ['DistinctiveComponentY']
         decisions = {}
         governance = {}
+        winner_id = "mock-winner"
+        candidates_evaluated = []
+        pareto_frontier_ids = []
+        explanation = "mock explanation"
     
     class MockOrchestrator:
         def __init__(self, *args, **kwargs): pass

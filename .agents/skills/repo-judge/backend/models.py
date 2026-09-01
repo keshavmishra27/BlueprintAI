@@ -95,32 +95,27 @@ class RepoJudgeAnalysisPayload(BaseModel):
         if len(finding_ids) != len(self.findings):
             raise ValueError("Duplicate finding IDs found.")
 
-        # Check evidence references in categories
         for cat_id, cat in self.categories.items():
             for e_id in cat.evidence_ids:
                 if e_id not in evidence_ids:
                     raise ValueError(f"Category '{cat_id}' references unknown evidence ID '{e_id}'")
 
-        # Check evidence references in findings
         for f in self.findings:
             for e_id in f.evidence_ids:
                 if e_id not in evidence_ids:
                     raise ValueError(f"Finding '{f.id}' references unknown evidence ID '{e_id}'")
 
-        # Check evidence references in positive decisions
         for pd in self.positive_decisions:
             for e_id in pd.evidence_ids:
                 if e_id not in evidence_ids:
                     raise ValueError(f"Positive decision '{pd.title}' references unknown evidence ID '{e_id}'")
 
-        # Check finding references in priorities
         for p in self.priorities:
             if p.related_finding_ids:
                 for f_id in p.related_finding_ids:
                     if f_id not in finding_ids:
                         raise ValueError(f"Priority '{p.priority_number}' references unknown finding ID '{f_id}'")
 
-        # Ensure all required categories exist
         required_categories = {
             "architecture", "code_quality", "security", 
             "testing_reliability", "maintainability", "documentation_hygiene"
@@ -130,10 +125,6 @@ class RepoJudgeAnalysisPayload(BaseModel):
             raise ValueError(f"Missing required categories: {missing}")
 
         return self
-
-# ---------------------------------------------------------
-# RESULT MODELS
-# ---------------------------------------------------------
 
 class AnalysisMetadata(BaseModel):
     analysis_id: str

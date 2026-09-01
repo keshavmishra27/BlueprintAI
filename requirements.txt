@@ -1,37 +1,50 @@
-# FastAPI backend
 fastapi>=0.115.0,<1.0
+
 uvicorn[standard]>=0.32.0,<1.0
+
 sqlalchemy>=2.0.36,<3.0
+
 psycopg2-binary>=2.9.10,<3.0
+
 pydantic>=2.10.0,<3.0
+
 python-dotenv>=1.0.1,<2.0
+
 requests>=2.32.0,<3.0
+
 slowapi>=0.1.9,<1.0
+
 typer[all]
-# LangChain + CrewAI
+
 crewai>=0.86.0,<1.0
+
 crewai-tools>=0.17.0,<1.0
+
 langchain-core>=0.3.0,<0.4
+
 langchain-openai>=0.2.0,<0.3
+
 langchain-ollama>=0.2.0,<0.3
+
 langchain-google-genai>=2.0.0,<3.0
+
 google-genai>=0.2.0
+
 duckduckgo-search>=6.3.0,<7.0
 
-# Static analysis (optional at runtime; used when installed)
 ruff>=0.8.0,<1.0
+
 bandit>=1.8.0,<2.0
 
-# DB migrations
 alembic>=1.14.0,<2.0
 
-# Solara frontend
 solara==1.57.3
+
 starlette>=0.41.0,<1.0
 
-# Testing
 pytest>=8.3.0,<9.0
+
 httpx>=0.28.0,<1.0
 
-# Scheduling (Option C – nightly skill-gap curator)
 apscheduler>=3.10.0,<4.0
+

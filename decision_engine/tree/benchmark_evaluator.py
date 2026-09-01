@@ -17,10 +17,10 @@ class OptimizationWeights(BaseModel):
     w_timeline: float
 
 class EvaluationRule(BaseModel):
-    target_field: str # e.g. "architectural_decisions.language", "processing"
+    target_field: str
     match_string: str
-    metric: str # "cost", "latency_ms", "timeline_days", "value"
-    operation: str # "add", "set", "multiply"
+    metric: str
+    operation: str
     value: float
 
 class DeterministicEvaluationRules(BaseModel):
@@ -43,7 +43,6 @@ def compute_s_abs(
     Computes the absolute score S_abs for a candidate architecture using the Global Anchor Scoring System (GASS).
     """
     if not is_feasible:
-        # Use module-level variable to allow dynamic overrides in tests
         return globals().get('INFEASIBLE_SENTINEL', -1000.0)
         
     v_n = min(1.0, estimated_value / anchors.value_maximum)

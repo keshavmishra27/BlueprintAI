@@ -10,7 +10,6 @@ def profile_user_idea(idea: UserIdea) -> ProjectProfile:
     print(f"WHY: {idea.why}")
     print(f"HOW: {idea.how}\n")
     
-    # Mocking the extraction for the hospital scenario
     return ProjectProfile(
         domains=["Healthcare"],
         problem_types=["optimization", "prediction"],

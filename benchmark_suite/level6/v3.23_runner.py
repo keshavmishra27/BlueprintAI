@@ -68,7 +68,6 @@ def run_v323_experiment():
     
     G0 = [cand_a, cand_b, cand_c]
     
-    # 0. Generate Baseline Decision
     opt_result = optimize_tree(G0, ctx, graph_version="v1")
     serialized_opt = opt_result.model_dump_json()
     
@@ -92,10 +91,8 @@ def run_v323_experiment():
         print_test(name, full_expected, full_actual, passed)
         return res
         
-    # Attack 1: Identical Graph Replay
     eval_attack("1. Identical graph replay", G0, ctx, serialized_opt, "RECOMMEND")
     
-    # Attack 2: Candidate added
     cand_d = PathNode(
         id="Cand_D", parent_id="root", architecture=create_mock_arch(["deps_D"]),
         status="TERMINAL", path_score=50.0, path_cost=10.0, operational_complexity=5.0
@@ -103,59 +100,42 @@ def run_v323_experiment():
     G_add = copy.deepcopy(G0) + [cand_d]
     eval_attack("2. Candidate added", G_add, ctx, serialized_opt, "HOLD_FOR_REVIEW", "STALE_DECISION_GRAPH")
     
-    # Attack 3: Candidate removed (specifically the winner!)
-    # If we remove a non-winner, it's just STALE_DECISION_GRAPH.
-    # The matrix implies "Candidate removed" invalidates the decision if the candidate removed is the winner.
     G_rem = [cand_b, cand_c]
     eval_attack("3. Winner removed", G_rem, ctx, serialized_opt, "REJECT", "INVALIDATED_DECISION_ARTIFACT")
     
-    # Attack 4: Non-winning architecture changed
     G_mod_nonwin = copy.deepcopy(G0)
     G_mod_nonwin[1].architecture.semantic_dependencies = ["deps_B_mutated"]
     eval_attack("4. Non-winning arch changed", G_mod_nonwin, ctx, serialized_opt, "HOLD_FOR_REVIEW", "STALE_DECISION_GRAPH")
     
-    # Attack 5: Winning architecture changed (in payload)
-    # The payload is tampered to reflect the new architecture.
     opt_tampered = copy.deepcopy(opt_result)
     opt_tampered.best_architecture.semantic_dependencies = ["deps_A_mutated"]
     tampered_json = opt_tampered.model_dump_json()
     eval_attack("5. Winning arch payload tampered", G0, ctx, tampered_json, "REJECT", "COMPROMISED_DECISION_INTEGRITY")
     
-    # Attack 6: Architecture substituted under same ID
     G_sub = copy.deepcopy(G0)
     G_sub[0].architecture.semantic_dependencies = ["deps_A_mutated"]
     eval_attack("6. Winner arch substituted in graph", G_sub, ctx, serialized_opt, "REJECT", "INVALIDATED_DECISION_ARTIFACT")
     
-    # Attack 7: Graph edge changed
     G_edge = copy.deepcopy(G0)
-    G_edge[2].parent_id = "Cand_A" # Cand_C now points to Cand_A
+    G_edge[2].parent_id = "Cand_A"
     eval_attack("7. Graph edge changed", G_edge, ctx, serialized_opt, "HOLD_FOR_REVIEW", "STALE_DECISION_GRAPH")
     
-    # Attack 8: Graph node reordered
     G_reordered = [cand_c, cand_a, cand_b]
     eval_attack("8. Graph node reordered", G_reordered, ctx, serialized_opt, "RECOMMEND")
     
-    # Attack 9: Edge ordering changed
-    # Actually, in our flat list, edge ordering IS node ordering. But let's verify.
     eval_attack("9. Edge ordering changed", G_reordered, ctx, serialized_opt, "RECOMMEND")
     
-    # Attack 10: Fake graph version
     eval_attack("10. Fake graph version", G0, ctx, serialized_opt, "REJECT", "INVALIDATED_DECISION_ARTIFACT", graph_version="v2")
     
-    # Attack 11: Fake fingerprint
     opt_fake_fp = copy.deepcopy(opt_result)
     opt_fake_fp.graph_fingerprint = "fake123"
     fake_fp_json = opt_fake_fp.model_dump_json()
-    # It fails payload integrity because the decision fingerprint won't match!
     eval_attack("11. Fake graph fingerprint (payload int.)", G0, ctx, fake_fp_json, "REJECT", "COMPROMISED_DECISION_INTEGRITY")
     
-    # Attack 12: Graph + context both changed
     ctx_mod = copy.deepcopy(ctx)
     ctx_mod.environment_constraints = ["new_constraint_to_change_fingerprint"]
     eval_attack("12. Graph + context both changed", G_add, ctx_mod, serialized_opt, "HOLD_FOR_REVIEW", "STALE_DECISION_GRAPH")
-    # Note: our code checks Graph Integrity before Context Integrity. If graph is stale, it returns HOLD.
     
-    # Attack 13: Re-optimization on G1
     print_test("13. Re-optimize on drifted graph", "", "", True)
     opt_new = optimize_tree(G_add, ctx, graph_version="v2")
     new_json = opt_new.model_dump_json()

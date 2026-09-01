@@ -17,7 +17,7 @@ class DecisionFeatures(BaseModel):
     workflow_intervention: bool = Field(default=False)
     requires_ml: bool = Field(default=False)
     requires_llm: bool = Field(default=False)
-    prototype_complexity: str = Field(default="unknown") # low, medium, high
+    prototype_complexity: str = Field(default="unknown")
     measurable_impact: bool = Field(default=False)
 
 class SIHProject(BaseModel):

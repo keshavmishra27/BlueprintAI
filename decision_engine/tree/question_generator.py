@@ -72,9 +72,7 @@ def evaluate_provided_uncertainties(
         architecture_changed = yes_outcome.architecture_name != no_outcome.architecture_name or \
                                yes_outcome.architecture_capabilities != no_outcome.architecture_capabilities
         
-        # We score impact heavily if it forces feasibility change.
         score = int(feasibility_changed) * 10 + int(winner_changed) * 5 + int(architecture_changed) * 2
-        # Add intrinsic importance from Agent
         if unc.importance.lower() == "high":
             score += 3
         elif unc.importance.lower() == "medium":

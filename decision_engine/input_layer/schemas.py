@@ -58,7 +58,6 @@ class UnvalidatedArchitectureHypothesis(BaseModel):
     constraints: List[str] = []
     architectural_decisions: Dict[str, str] = {}
     
-    # Metadata only (no feasibility/status fields)
     id: str = ""
     parent_id: Optional[str] = None
     generation_reason: Optional[str] = None
@@ -115,7 +114,6 @@ class ArchitectureNode(BaseModel):
         import hashlib
         import json
         
-        # Canonicalize by sorting lists and dictionaries
         canonical_dict = {
             "inputs": sorted(self.inputs),
             "processing": sorted(self.processing),

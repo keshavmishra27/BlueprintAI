@@ -11,8 +11,6 @@ from decision_engine.tree.tree_schemas import ProjectState, AgentUncertainty, St
 from decision_engine.tree.experiment_llm_adapters import llm_baseline, llm_generate_player_b
 from backend.app.routers.journey import start_journey, answer_journey, JourneyStartRequest, JourneyAnswerRequest, sessions
 
-# We'll mock the LLM uncertainty generation since it was removed from adapters
-# In a real API baseline, we'd use an LLM prompt to generate the uncertainties.
 def mock_agent_generate_uncertainties() -> list[AgentUncertainty]:
     return [
         AgentUncertainty(
@@ -32,7 +30,6 @@ def mock_agent_generate_uncertainties() -> list[AgentUncertainty]:
         )
     ]
 
-# Define 10 messy scenarios
 MESSY_SCENARIOS = [
     {
         "name": "Budget Constrained Healthcare",
@@ -48,7 +45,6 @@ MESSY_SCENARIOS = [
         "simulated_user_profile": ["no gpu instance", "cloud infrastructure available", "historical data available"],
         "requirements": [Requirement(name="Low cost", required=True), Requirement(name="High accuracy", required=True)]
     },
-    # ... more scenarios would be added here
 ]
 
 def run_experiment():
@@ -61,11 +57,9 @@ def run_experiment():
     for i, scenario in enumerate(MESSY_SCENARIOS):
         print(f"\nRunning Scenario {i+1}: {scenario['name']}")
         
-        # 1. Baseline: Single-shot Gemini
         print("  [Baseline] Running single-shot Gemini...")
         baseline_arch = llm_baseline(scenario['idea'], scenario['initial_constraints'])
         
-        # We evaluate the baseline using our strict deterministic evaluator
         from decision_engine.input_layer.evaluator import evaluate_battle
         baseline_battle = evaluate_battle(
             scenario['idea'].how_structured,
@@ -79,7 +73,6 @@ def run_experiment():
         
         print(f"    Baseline Feasible: {baseline_feasible}")
         
-        # 2. BlueprintAI (via simulated API calls)
         print("  [BlueprintAI] Running through API protocol...")
         session_id = str(uuid.uuid4())
         
@@ -89,11 +82,9 @@ def run_experiment():
             current_requirements=scenario['requirements']
         )
         
-        # Agent generates initial architecture
         agent_arch_response = llm_generate_player_b(project_state, "No previous evidence")
         candidate_uncertainties = mock_agent_generate_uncertainties()
         
-        # POST /api/journey/start
         start_req = JourneyStartRequest(
             session_id=session_id,
             project_state=project_state,
@@ -107,16 +98,13 @@ def run_experiment():
             loop_count += 1
             print(f"    API asked: {api_res.selected_uncertainty_text}")
             
-            # Simulate User answering
-            user_answer = "YES" # Simplified mock user
+            user_answer = "YES"
             
-            # Agent generates adapted architecture for this specific branch
             adapted_arch = llm_generate_player_b(project_state, "Adapted for NO branch")
             
-            # POST /api/journey/answer
             answer_req = JourneyAnswerRequest(
                 session_id=session_id,
-                parent_node_id="mock_parent", # Should pull from tree
+                parent_node_id="mock_parent",
                 answer=user_answer,
                 generated_architecture=adapted_arch.architecture,
                 candidate_uncertainties=mock_agent_generate_uncertainties()
@@ -128,7 +116,7 @@ def run_experiment():
         blueprint_reqs = 0
         if api_res.status == "BEST_ARCHITECTURE_FOUND":
             blueprint_feasible = True
-            blueprint_reqs = len(scenario['requirements']) # Assume satisfied if feasible for now
+            blueprint_reqs = len(scenario['requirements'])
             print(f"    BlueprintAI found feasible architecture! Score: {api_res.best_score}")
         elif api_res.status == "NO_FEASIBLE_ARCHITECTURE_FOUND":
             print(f"    BlueprintAI exhausted search, no feasible architecture found.")

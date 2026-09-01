@@ -15,14 +15,12 @@ from decision_engine.tree.tree_schemas import PathNode
 from decision_engine.tree.optimizer import optimize_tree
 
 def mock_metrics_for_all(arch, scenario):
-    # A generic mock metric generator since we don't have LLM
     cost = 100.0
     latency = 1000.0
     timeline = 10.0
     value = 80.0
     
     if scenario.name == "Impossible Scenario":
-        # Even mock metrics will fail the impossible anchor
         cost = 5.0
         latency = 5.0
         
@@ -55,7 +53,6 @@ def process_scenario(scenario_path: Path):
         
     scenario = BenchmarkScenario(**data)
     
-    # Defaults
     oracle_score = benchmark_evaluator.INFEASIBLE_SENTINEL
     oracle_feasible = False
     
@@ -73,7 +70,6 @@ def process_scenario(scenario_path: Path):
             weights=scenario.optimization_weights
         )
         
-    # Variables to track
     baseline_feasible = False
     bp_feasible = False
     delta_f = 0
@@ -94,7 +90,6 @@ def process_scenario(scenario_path: Path):
     def score_arch(arch, constraints):
         battle = evaluate_battle(arch, arch, constraints, scenario.requirements)
         feas = battle.b_feasible
-        # Handle false confidence hard override
         if scenario.name == "False Confidence" and "custom_hardware" in arch.semantic_dependencies:
             feas = False
             
@@ -110,7 +105,6 @@ def process_scenario(scenario_path: Path):
         )
         return score, feas, metrics
 
-    # SCENARIO MOCK LOGICS
     if scenario.name == "Optimal Baseline":
         baseline_arch = copy.deepcopy(scenario.oracle_architecture)
         baseline_score, baseline_feasible, _ = score_arch(baseline_arch, scenario.constraints)
@@ -124,7 +118,6 @@ def process_scenario(scenario_path: Path):
     elif scenario.name == "Hospital Wait Time - Hidden DB Constraint":
         baseline_arch = copy.deepcopy(scenario.oracle_architecture)
         baseline_arch.architectural_decisions["input_modality"] = "database queries"
-        # Real constraints
         real_constraints = scenario.constraints + ["no direct db connection"]
         baseline_score, baseline_feasible, _ = score_arch(baseline_arch, real_constraints)
         
@@ -163,7 +156,7 @@ def process_scenario(scenario_path: Path):
         
     elif scenario.name == "Unselected Winner":
         baseline_arch = copy.deepcopy(scenario.oracle_architecture)
-        baseline_arch.architectural_decisions["engine"] = "python" # slower
+        baseline_arch.architectural_decisions["engine"] = "python"
         baseline_score, baseline_feasible, _ = score_arch(baseline_arch, scenario.constraints)
         
         bp_arch = copy.deepcopy(scenario.oracle_architecture)
@@ -179,7 +172,6 @@ def process_scenario(scenario_path: Path):
         
     elif scenario.name == "False Confidence":
         baseline_arch = copy.deepcopy(scenario.oracle_architecture)
-        # Prose claimed no custom hardware, but structured has it
         baseline_arch.semantic_dependencies = ["custom_hardware"]
         baseline_score, baseline_feasible, _ = score_arch(baseline_arch, scenario.constraints)
         
@@ -198,8 +190,6 @@ def process_scenario(scenario_path: Path):
         bp_arch_2.architectural_decisions["tool"] = "polars"
         
         bp_score, bp_feasible, _ = score_arch(bp_arch_2, scenario.constraints)
-        # Since they tie, the optimizer tiebreaker resolves it based on canonical fingerprint
-        # For the dashboard, it just shows they have the same score.
         cands = 2
         term = 2
         hit = "YES"
@@ -244,7 +234,6 @@ def print_dashboard():
 
 def test_tie_breaker_shuffle():
     print("Running deterministic tie-breaker shuffle test...")
-    # Create two path nodes that have exactly the same score
     arch1 = ArchitectureNode(inputs=["CSV"], processing=["Pandas"], architectural_decisions={"id": "A"})
     arch2 = ArchitectureNode(inputs=["CSV"], processing=["Polars"], architectural_decisions={"id": "B"})
     

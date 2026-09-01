@@ -49,21 +49,18 @@ def run_v321_experiment():
     print(" V3.21: CORRELATED ENVIRONMENTAL SCENARIOS")
     print("==================================================")
 
-    # Candidate A: Fails Family A (EMR). Survives B, C.
     cand_a = PathNode(
         id="Cand_A", parent_id="root",
         architecture=create_mock_arch(["requires_emr_database_integration"]),
         status="TERMINAL", path_cost=100.0, path_score=100.0, reject_reasons=[], epistemic_provenance=None
     )
     
-    # Candidate B: Survives A, B. Fails Family C (RFID).
     cand_b = PathNode(
         id="Cand_B", parent_id="root",
         architecture=create_mock_arch(["requires_rfid_tracking_v3"]),
         status="TERMINAL", path_cost=100.0, path_score=94.0, reject_reasons=[], epistemic_provenance=None
     )
     
-    # Candidate C: Survives everything.
     cand_c = PathNode(
         id="Cand_C", parent_id="root",
         architecture=create_mock_arch([]),
@@ -87,7 +84,6 @@ def run_v321_experiment():
     from decision_engine.input_layer.ontology import get_known_dependencies
     known = get_known_dependencies()
     
-    # Test 1 & 2: Raw vs Family
     print_test_header("TEST 1 & 2: Raw vs Family Survival")
     fs_scenarios = [FutureScenario(**s) for s in scenarios]
     prof_a = evaluate_robustness(cand_a, fs_scenarios, known)
@@ -101,15 +97,12 @@ def run_v321_experiment():
     assert abs(prof_b.survival_rate - 0.750) < 1e-6
     assert abs(prof_b.family_worst_case_survival - 0.6666666666666666) < 1e-6
     
-    # Test 3: Duplication Attack
     print_test_header("TEST 3: Scenario Duplication Attack")
     duplicated_scenarios = copy.deepcopy(scenarios)
-    # Split A1 (0.05) into A1 (0.025) and A1_prime (0.025)
     duplicated_scenarios[0]["probability"] = 0.025
     dup_s1 = copy.deepcopy(duplicated_scenarios[0])
     dup_s1["id"] = "A1_prime"
     
-    # Split A2 (0.02) into A2 (0.01) and A2_prime (0.01)
     duplicated_scenarios[1]["probability"] = 0.01
     dup_s2 = copy.deepcopy(duplicated_scenarios[1])
     dup_s2["id"] = "A2_prime"
@@ -125,28 +118,21 @@ def run_v321_experiment():
     assert abs(prof_a.expected_robustness_loss - prof_a_dup.expected_robustness_loss) < 1e-6, "Deduplication probability normalization failed!"
     print("Deduplication resistance verified.")
     
-    # Internal Normalization Test
     malformed_scenarios = [
         {"id": "M1", "family_id": "F1", "environment_constraints": make_env(["emr_direct_access_authorized"]), "probability": 0.2, "impact": 10},
         {"id": "M2", "family_id": "F1", "environment_constraints": make_env(["staffing_feed_v3_available"]), "probability": 0.2, "impact": 5},
     ]
-    # Total probability is 0.4. Normalization should scale them to 0.5 and 0.5.
-    # Candidate A fails M1 (EMR) and survives M2 (Staffing).
-    # Expected loss should be 0.5 * 10 = 5.0
     prof_malformed = evaluate_robustness(cand_a, [FutureScenario(**s) for s in malformed_scenarios], known)
     assert abs(prof_malformed.expected_robustness_loss - 5.0) < 1e-6, "evaluate_robustness must normalize probabilities inherently"
     print("Probability distribution normalization invariant verified inside evaluate_robustness().")
     
-    # Test 4: High-impact minority scenario
     print_test_header("TEST 4: Expected Robustness Loss (Observational)")
     print(f"Cand A (Survival {prof_a.survival_rate:.2f}) -> Expected Loss: {prof_a.expected_robustness_loss:.2f}")
     print(f"Cand B (Survival {prof_b.survival_rate:.2f}) -> Expected Loss: {prof_b.expected_robustness_loss:.2f}")
     
-    # Candidate A has lower raw survival (0.625) than B (0.75), but should have LOWER expected loss (1.0 vs 1.5).
     assert prof_a.survival_rate < prof_b.survival_rate
     assert prof_a.expected_robustness_loss < prof_b.expected_robustness_loss
     
-    # Test 5: Robustness preference boundary
     print_test_header("TEST 5: Robustness Preference Boundary")
     candidates = [cand_a, cand_b, cand_c]
     
@@ -175,10 +161,8 @@ def run_v321_experiment():
     assert res_weight.best_path_id == "Cand_C"
     assert abs(res_weight.effective_score - 91.0) < 1e-6
     
-    # Assert exact crossing boundary logic
     assert res_raw.best_path_id != res_weight.best_path_id, "Strategy change did not produce expected decision boundary crossing!"
     
-    # Test 6: Nasty Test (Laundering)
     print_test_header("TEST 6: Robustness Laundering (Epistemic Integrity)")
     cand_a_nasty = PathNode(
         id="Cand_A_Nasty", parent_id="root",
@@ -205,7 +189,6 @@ def run_v321_experiment():
     res_nasty = optimize_tree([cand_a_nasty, cand_b_clean], ctx_nasty)
     print(f"Nasty Winner: {res_nasty.best_path_id} | Status: {res_nasty.status}")
     
-    # Debug print:
     prof_a_n = evaluate_robustness(cand_a_nasty, [FutureScenario(**s) for s in scenarios], get_known_dependencies())
     prof_b_c = evaluate_robustness(cand_b_clean, [FutureScenario(**s) for s in scenarios], get_known_dependencies())
     print(f"Cand A Nasty - Surv: {prof_a_n.survival_rate}, Raw: {cand_a_nasty.path_score}")

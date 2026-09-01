@@ -7,9 +7,7 @@ def ask_controller(filepath, question):
         
     hidden_facts = data.get('hidden_facts_to_reveal', {})
     
-    # Simple matching logic: check if key words in the hidden fact are in the question
     for fact_key, answer in hidden_facts.items():
-        # lowercase comparison
         if fact_key.lower() in question.lower() or any(word in question.lower() for word in fact_key.lower().split() if len(word) > 4):
             print(f"CONTROLLER POLICY ANSWER: {answer}")
             return

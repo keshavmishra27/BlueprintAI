@@ -19,7 +19,7 @@ class DecisionContext(BaseModel):
             "ontology_version": self.ontology_version,
             "registry_policy_hashes": sorted(self.registry_policy_hashes),
             "environment_constraints": sorted(self.environment_constraints),
-            "optimizer_preferences": self.optimizer_preferences, # json.dumps sorts keys automatically with sort_keys=True
+            "optimizer_preferences": self.optimizer_preferences,
             "future_scenarios": sorted(self.future_scenarios, key=lambda s: s["id"]) if self.future_scenarios else None
         }
         canonical_str = canonicalize_json(data)

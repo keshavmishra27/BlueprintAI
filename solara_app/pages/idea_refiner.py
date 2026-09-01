@@ -65,7 +65,6 @@ def ProjectCard(project):
         solara.Text(project.get("overview", ""), style={"font-size":"14px", "color":"#475569", "display":"block", "margin-bottom":"12px", "line-height":"1.6"})
         if project.get("evidence"):
             evidence = project["evidence"]
-            # Coerce: if LLM returned a plain string, wrap it in a list
             if isinstance(evidence, str):
                 evidence = [{"quote": evidence}]
             elif not isinstance(evidence, list):
@@ -104,7 +103,6 @@ def CheckResultView(result):
         if notes:
             solara.Text("Notes & Limitations", style={"font-size":"13px", "font-weight":"700", "color":"#1e293b", "display":"block", "margin-bottom":"8px"})
             solara.Text(str(notes), style={"font-size":"13px", "color":"#475569", "line-height":"1.6"})
-
 
 def RefinementView(ref):
     if not ref: return
@@ -170,10 +168,8 @@ def RefinementView(ref):
                 with solara.v.Html(tag="div", style_="margin-bottom:16px; padding:20px; border-radius:12px; background:rgba(2,132,199,0.05); border-left:5px solid #0284c7;"):
                     solara.Text(loop.get("issue",""), style={"font-size":"15px", "font-weight":"800", "color":"#1e293b", "display":"block", "margin-bottom":"8px"})
                     solara.Text(loop.get("description",""), style={"font-size":"14px", "color":"#475569", "margin-bottom":"12px", "display":"block"})
-                    # Try multiple key aliases the LLM might use
                     sol = loop.get("proposed_solution") or loop.get("solution") or loop.get("fix") or loop.get("proposed_fix") or {}
                     if isinstance(sol, str): sol = {"short": sol}
-                    # Try multiple content key aliases
                     fix_summary = sol.get("short") or sol.get("description") or sol.get("summary") or sol.get("solution") or sol.get("title") or ""
                     fix_details = sol.get("technical_details") or sol.get("details") or sol.get("explanation") or ""
                     if fix_summary or fix_details:

@@ -34,12 +34,10 @@ def evaluate_node_state(node: PathNode, is_leaf: bool, has_unknowns: bool, passe
         return "UNRESOLVED"
     if is_leaf:
         return "TERMINAL"
-    return "ACTIVE"  # Feasible, but not a leaf (needs refinement or is an intermediate step)
+    return "ACTIVE"
 
 def compute_graph_fingerprint(decision_graph: List[PathNode]) -> str:
-    # Deterministic canonical representation of the graph
     graph_representation = []
-    # Sorting by node.id guarantees reordering invariance
     for node in sorted(decision_graph, key=lambda x: x.id):
         deps = sorted(node.architecture.semantic_dependencies) if node.architecture else []
         node_rep = {
@@ -66,9 +64,7 @@ def optimize_tree(decision_graph: List[PathNode], context: DecisionContext, grap
     needs_info = [n for n in decision_graph if n.status == "NEEDS_INFORMATION"]
     unexplored = [n for n in decision_graph if n.status == "UNEXPLORED_HYPOTHESIS"]
     
-    # Check search exhaustion
     if needs_info or unexplored:
-        # We must continue exploring before declaring the global best
         return OptimizationResult(status="CONTINUE", candidates_evaluated=len(terminal_candidates))
         
     if not terminal_candidates:
@@ -94,7 +90,6 @@ def optimize_tree(decision_graph: List[PathNode], context: DecisionContext, grap
     best_raw_score = -float('inf')
     best_fingerprint = ""
     
-    # Pre-compute metrics for all terminal candidates
     metrics_map = {}
     for candidate in terminal_candidates:
         candidate_deps = candidate.architecture.semantic_dependencies
@@ -120,14 +115,12 @@ def optimize_tree(decision_graph: List[PathNode], context: DecisionContext, grap
             "rob_loss": expected_loss
         }
 
-    # Compute Pareto frontier (independent of governance strategy)
     pareto_frontier = []
     for cand_id, m1 in metrics_map.items():
         dominated = False
         for other_id, m2 in metrics_map.items():
             if cand_id == other_id:
                 continue
-            # m2 dominates m1 if m2 is better or equal on ALL dimensions, and strictly better on AT LEAST one
             better_or_eq_on_all = (
                 m2["perf"] >= m1["perf"] and
                 m2["cost"] <= m1["cost"] and
@@ -146,7 +139,6 @@ def optimize_tree(decision_graph: List[PathNode], context: DecisionContext, grap
         if not dominated:
             pareto_frontier.append(cand_id)
             
-    # Compute Governed Winner
     for candidate in terminal_candidates:
         m = metrics_map[candidate.id]
         
@@ -178,7 +170,6 @@ def optimize_tree(decision_graph: List[PathNode], context: DecisionContext, grap
                 best_family_survival = m["rob_fam"]
                 best_expected_loss = m["rob_loss"]
             elif abs(eff_score - best_effective_score) < 1e-6:
-                # Deterministic Tie-Breaker
                 if m["epis"] < best_epistemic_risk:
                     best_candidate = candidate
                     best_effective_score = eff_score
@@ -204,7 +195,6 @@ def optimize_tree(decision_graph: List[PathNode], context: DecisionContext, grap
                             best_expected_loss = m["rob_loss"]
             
     if best_candidate:
-        # Search is exhausted and we have a winner. Note: status preserves 'UNRESOLVED' if applicable.
         res = OptimizationResult(
             status=best_candidate.status, 
             best_path_id=best_candidate.id, 

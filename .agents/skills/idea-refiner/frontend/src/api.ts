@@ -17,9 +17,9 @@ export async function getAnalysis(id: string): Promise<IdeaRefinerResult> {
     }
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  
+
   const data = await response.json();
-  
+
   if (!data || typeof data !== "object") {
     throw new Error("Malformed Response: Data is not an object");
   }

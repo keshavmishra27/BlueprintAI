@@ -18,10 +18,7 @@ def test_sentinel_sensitivity():
         print(f"=======================================================")
         benchmark_evaluator.INFEASIBLE_SENTINEL = s
         benchmark_evaluator.globals = lambda: {"INFEASIBLE_SENTINEL": s}
-        # Actually globals() in compute_s_abs pulls from the module's globals.
-        # We can just update it in the module directly.
         setattr(benchmark_evaluator, "INFEASIBLE_SENTINEL", s)
-        # Python globals() inside benchmark_evaluator will naturally see this update.
         
         run_benchmark_scenario(scenario_path)
 

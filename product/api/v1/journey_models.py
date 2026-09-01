@@ -4,7 +4,6 @@ from pydantic_core import Url
 from datetime import datetime
 import uuid
 
-# 1. Enums/Types
 Confidence = Literal["High", "Medium", "Low"]
 DimensionStatus = Literal["scored", "not_applicable", "not_validated"]
 EvidenceClassification = Literal["verified", "reasoned_assessment", "assumption"]
@@ -28,7 +27,6 @@ ScoreDimensionId = Literal[
 RefinementType = Literal["minor_refinement", "major_refinement", "partial_pivot", "major_pivot"]
 GeographicStatus = Literal["applicable", "not_applicable", "not_validated"]
 
-# 2. Evidence Model
 class Evidence(BaseModel):
     id: str
     classification: EvidenceClassification
@@ -46,7 +44,6 @@ class Evidence(BaseModel):
                 raise ValueError("source must be provided for verified web_research evidence.")
         return self
 
-# 3. Competitor Model
 class Competitor(BaseModel):
     name: str
     geography: str
@@ -58,7 +55,6 @@ class Competitor(BaseModel):
     weaknesses: List[str]
     evidence_ids: List[str]
 
-# 4. Score-Dimension Model
 class ScoreDimension(BaseModel):
     status: DimensionStatus
     score_raw: Optional[int] = Field(None, ge=0, le=100)
@@ -77,7 +73,6 @@ class ScoreDimension(BaseModel):
                 raise ValueError("score_raw MUST be absent when status is 'not_applicable' or 'not_validated'")
         return self
 
-# 5. IdeaVersion Model
 class IdeaVersion(BaseModel):
     version_type: Literal["original", "refined"]
     refinement_type: Optional[RefinementType] = None
@@ -89,7 +84,6 @@ class IdeaVersion(BaseModel):
     differentiation: str
     likely_technical_approach: str
     
-    # Require EXACTLY all 8 dimensions
     score_dimensions: Dict[ScoreDimensionId, ScoreDimension]
     
     overall_confidence: Confidence
@@ -97,7 +91,6 @@ class IdeaVersion(BaseModel):
 
     @model_validator(mode='after')
     def validate_dimensions_and_refinement(self):
-        # Validate dimensions
         required_dims = {
             "problem_value", "differentiation", "technical_feasibility", "user_value", 
             "execution_scope", "market_evidence", "geographic_opportunity", "technical_depth"
@@ -108,7 +101,6 @@ class IdeaVersion(BaseModel):
             extra = provided_dims - required_dims
             raise ValueError(f"IdeaVersion must contain exactly the 8 predefined dimensions. Missing: {missing}. Extra: {extra}.")
         
-        # Validate refinement_type
         if self.version_type == "refined":
             if not self.refinement_type:
                 raise ValueError("refinement_type is required for 'refined' version")
@@ -118,7 +110,6 @@ class IdeaVersion(BaseModel):
                 
         return self
 
-# 6. Geographic-Analysis Model
 class GeographicAnalysis(BaseModel):
     status: GeographicStatus
     target_geography: Optional[str] = None
@@ -140,7 +131,6 @@ class GeographicAnalysis(BaseModel):
                 raise ValueError("Geographic details are required when status is 'applicable'.")
         return self
 
-# 7. Weak-Assumption Model
 class WeakAssumption(BaseModel):
     id: str
     assumption: str
@@ -149,7 +139,6 @@ class WeakAssumption(BaseModel):
     validation_method: str
     evidence_ids: List[str]
 
-# 8. Technical-Feasibility Model
 class TechnicalFeasibility(BaseModel):
     likely_architecture: str
     required_technologies: List[str]
@@ -160,7 +149,6 @@ class TechnicalFeasibility(BaseModel):
     cost_sensitive_components: List[str]
     freeform_reasoning: str
 
-# 9. MVP Model
 class MVP(BaseModel):
     core_user: str
     core_workflow: str
@@ -169,14 +157,12 @@ class MVP(BaseModel):
     likely_stack: List[str]
     success_criterion: str
 
-# 10. Next-Validation-Step Model
 class NextValidationStep(BaseModel):
     action: str
     hypothesis_tested: str
     success_signal: str
     failure_signal: str
 
-# 11. IdeaRefinerAnalysisPayload
 class IdeaRefinerAnalysisPayload(BaseModel):
     web_research_available: bool
     market_evidence_status: MarketEvidenceStatus
@@ -205,7 +191,6 @@ class IdeaRefinerAnalysisPayload(BaseModel):
         if len(unique_assumption_ids) != len(assumption_ids):
             raise ValueError("Duplicate weak-assumption IDs found.")
 
-        # Check references
         for comp in self.competitors:
             for eid in comp.evidence_ids:
                 if eid not in unique_evidence_ids:
@@ -228,7 +213,6 @@ class IdeaRefinerAnalysisPayload(BaseModel):
 
         return self
 
-# 12. Output/Result Models (Calculated by FastAPI)
 class DimensionComparison(BaseModel):
     dimension: ScoreDimensionId
     original_score: Optional[int] = None
@@ -266,7 +250,6 @@ base_dir = Path(__file__).resolve().parent.parent.parent.parent.parent
 sys.path.append(str(base_dir))
 from decision_engine.tree.tree_schemas import PathNode
 
-# 13. Tree Journey Models
 class StartJourneyRequest(BaseModel):
     what: str
     why: str
@@ -283,7 +266,6 @@ class AnswerQuestionRequest(BaseModel):
     selected_option: str
     new_player_b_architecture: Optional[Dict] = None
     new_uncertainties: Optional[List[Dict]] = None
-
 
 class JourneyStepResponse(BaseModel):
     session_id: str

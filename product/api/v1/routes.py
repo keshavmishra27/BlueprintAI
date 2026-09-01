@@ -18,7 +18,6 @@ from product.journey_service import JourneyService, serialize_pydantic_obj
 
 router = APIRouter()
 
-# Simple in-memory session store for journey states
 _journey_sessions = {}
 
 def get_product_service(db: Session = Depends(get_db)):
@@ -29,7 +28,6 @@ def get_journey_service():
 
 @router.post("/ideas/analyze", response_model=Decision)
 def analyze_idea(request: IdeaAnalyzeRequest, service: ProductService = Depends(get_product_service)):
-    # Synchronous execution for M8.1
     decision = service.analyze_idea(request.idea, request.context)
     return decision
 
@@ -79,7 +77,6 @@ def start_journey(req: StartJourneyRequest,
     )
     
     if result["is_complete"]:
-        # Delegate to ProductService for canonical persistence
         idea_text = f"What: {req.what} Why: {req.why}"
         context = {"architecture": serialize_pydantic_obj(tree_state.player_b_architecture.architecture)}
         decision = p_service.analyze_idea(idea_text, context)
@@ -254,7 +251,6 @@ def get_decision_lineage(decision_id: str, service: ProductService = Depends(get
 
 @router.get("/decisions/{decision_id}/children", response_model=List[Decision])
 def get_decision_children(decision_id: str, service: ProductService = Depends(get_product_service)):
-    # Verify decision exists first
     decision = service.get_decision(decision_id)
     if not decision:
         raise HTTPException(status_code=404, detail="Decision not found")

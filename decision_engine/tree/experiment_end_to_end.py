@@ -13,7 +13,6 @@ from decision_engine.tree.question_generator import select_best_question
 from decision_engine.tree.tree_runner import SimulatedUser
 from knowledge_base.sih.retrieval import load_json_files, retrieve_projects, retrieve_patterns
 
-# Pre-defined domains
 DOMAINS = [
     {
         "name": "Hospital Waiting Time",
@@ -23,7 +22,7 @@ DOMAINS = [
             how_raw="Maintain a queue and use an LLM to predict appointment timing.",
             how_structured=ArchitectureNode(
                 inputs=[], processing=[], decision=[], output=[], capabilities=[], data_required=[], resources_required=[], constraints=[]
-            ) # Dummy for initial state
+            )
         ),
         "requirements": [
             Requirement(name="Reduce waiting time", required=True),
@@ -109,7 +108,7 @@ def format_kb_evidence(projects, patterns):
     return evidence_str
 
 def calculate_metrics(final_arch: ArchitectureNode, project_state: ProjectState, requirements: list[Requirement], trace: list[DecisionTraceEntry], kb_ids: set):
-    battle = evaluate_battle(final_arch, final_arch, project_state.current_constraints, requirements) # Self vs self just for constraint check
+    battle = evaluate_battle(final_arch, final_arch, project_state.current_constraints, requirements)
     
     constraint_satisfaction = len(project_state.current_constraints) - len(battle.b_constraint_violations)
     total_constraints = len(project_state.current_constraints)
@@ -118,12 +117,10 @@ def calculate_metrics(final_arch: ArchitectureNode, project_state: ProjectState,
     
     supported = [d for d in final_arch.evidence_provenance if d in kb_ids]
     supported_count = len(supported)
-    unsupported_count = len(final_arch.evidence_provenance) - supported_count # Simplified metric based on provenance list
+    unsupported_count = len(final_arch.evidence_provenance) - supported_count
     
-    # Let's define decisions as processing + decision steps
     total_decisions = len(decisions)
     
-    # If the LLM returned multiple provenance IDs
     return {
         "constraint_violations": len(battle.b_constraint_violations),
         "constraint_satisfaction_num": constraint_satisfaction,
@@ -145,9 +142,7 @@ def run_experiment():
         print(f"==================================================\n")
         output_log.append(f"==================================================\n{domain['name'].upper()}\n==================================================\n")
         
-        # --- BASELINE ---
         print("Running Baseline...")
-        # Baseline only gets initial constraints + secret constraints directly
         baseline_constraints = domain['initial_constraints'] + domain['simulated_constraints']
         baseline_arch = llm_baseline(domain['idea'], baseline_constraints)
         
@@ -163,21 +158,17 @@ def run_experiment():
         print(baseline_output)
         output_log.append(baseline_output)
         
-        # --- ADAPTIVE SYSTEM ---
         print("Running Adaptive System...")
-        # 1. Retrieve KB
         top_projects = retrieve_projects(domain['profile'], all_projects, top_k=3)
         project_ids = [sp['project']['id'] for sp in top_projects]
         relevant_patterns = retrieve_patterns(project_ids, all_patterns)
         
         kb_evidence_text = format_kb_evidence(top_projects, relevant_patterns)
         
-        # Collect KB IDs for provenance checking
         kb_id_set = set(project_ids + [p['pattern'] for p in relevant_patterns])
         
         adaptive_output = f"ADAPTIVE SYSTEM\n\nRetrieved SIH evidence:\n{len(top_projects)} projects\n{len(relevant_patterns)} patterns\n\n"
         
-        # 2. Initial Setup
         p_state = ProjectState(
             user_idea=domain['idea'],
             current_constraints=domain['initial_constraints'].copy(),
@@ -199,7 +190,7 @@ def run_experiment():
         tree_state = TreeState(
             current_state_id="level_0",
             project_state=p_state,
-            user_architecture=b_arch_state, # Dummy
+            user_architecture=b_arch_state,
             player_b_architecture=b_arch_state,
             battle_history=[evaluate_battle(b_arch_state.architecture, b_arch_state.architecture, p_state.current_constraints, p_state.current_requirements)]
         )
@@ -216,40 +207,29 @@ def run_experiment():
             if not uncertainties:
                 break
                 
-            # Simulate branches in Python to score them
-            # For simplicity in this end-to-end, we will mock branch simulation since the real one requires LLM calls per branch.
-            # To save time and API costs, we will randomly assign a score or assume impact based on feasibility.
-            # Actually, the user specifically requested: Python evaluator remains authoritative, question ranking remains based on simulated branch consequences.
-            # Let's do the full branch simulation by calling LLM for YES and NO for the top 2 uncertainties to save cost.
             
-            # To strictly follow instructions without blowing up API limits, we'll only simulate the first 2 uncertainties.
             eval_uncs = []
             for unc in uncertainties[:2]:
                 print(f"  Simulating branches for: {unc.unknown_fact}")
                 yes_mut = StateMutation(add_constraints=[unc.question_target + " available"], remove_constraints=[])
                 no_mut = StateMutation(add_constraints=["no " + unc.question_target], remove_constraints=[])
                 
-                # Mock YES
                 mock_state_yes = copy.deepcopy(tree_state.project_state)
                 mock_state_yes.current_constraints.extend(yes_mut.add_constraints)
-                # LLM call for branch
                 yes_arch = llm_generate_player_b(mock_state_yes, kb_evidence_text, tree_state.player_b_architecture.architecture, f"Constraint added: {yes_mut.add_constraints}")
                 yes_battle = evaluate_battle(tree_state.user_architecture.architecture, yes_arch.architecture, mock_state_yes.current_constraints, mock_state_yes.current_requirements)
                 
-                # Mock NO
                 mock_state_no = copy.deepcopy(tree_state.project_state)
                 mock_state_no.current_constraints.extend(no_mut.add_constraints)
                 no_arch = llm_generate_player_b(mock_state_no, kb_evidence_text, tree_state.player_b_architecture.architecture, f"Constraint added: {no_mut.add_constraints}")
                 no_battle = evaluate_battle(tree_state.user_architecture.architecture, no_arch.architecture, mock_state_no.current_constraints, mock_state_no.current_requirements)
                 
-                # Impact
                 f_change = yes_battle.b_feasible != no_battle.b_feasible
                 w_change = yes_battle.winner != no_battle.winner
                 a_change = " -> ".join(yes_arch.architecture.processing) != " -> ".join(no_arch.architecture.processing)
                 
                 unc.decision_impact_score = int(f_change) + int(w_change) + int(a_change)
                 
-                # Just mock outcomes for trace
                 from decision_engine.tree.tree_schemas import BranchOutcome, UncertaintyImpact
                 unc.yes_outcome = BranchOutcome(b_feasible=yes_battle.b_feasible, winner=yes_battle.winner.value, architecture_name="->".join(yes_arch.architecture.processing), architecture_capabilities=[])
                 unc.no_outcome = BranchOutcome(b_feasible=no_battle.b_feasible, winner=no_battle.winner.value, architecture_name="->".join(no_arch.architecture.processing), architecture_capabilities=[])
@@ -300,7 +280,6 @@ def run_experiment():
             adaptive_output += f"User:\n{user_answer}\n\nState mutation:\n+ {new_constraints}\n\n"
             adaptive_output += f"Player B v{tree_state.player_b_architecture.generation}:\n{' -> '.join(tree_state.player_b_architecture.architecture.processing)}\n\n"
             
-        # Metrics
         metrics = calculate_metrics(tree_state.player_b_architecture.architecture, tree_state.project_state, domain['requirements'], decision_trace, kb_id_set)
         
         adaptive_output += f"Constraint satisfaction:\n{metrics['constraint_satisfaction_num']}/{metrics['constraint_satisfaction_den']}\n\n"

@@ -21,7 +21,6 @@ def run_experiment_3():
     
     print(f"Adversarial Constraints: {constraints}\n")
     
-    # Predefined versions simulating the LLM trying to escape constraints
     versions = [
         {
             "version": "v1",

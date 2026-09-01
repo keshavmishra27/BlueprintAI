@@ -4,7 +4,6 @@ import json
 import time
 
 def demo():
-    # 1. Check health
     try:
         req = urllib.request.Request("http://localhost:8088/health")
         with urllib.request.urlopen(req) as response:
@@ -15,7 +14,6 @@ def demo():
         print(f"Health check failed: {e}")
         return
 
-    # 2. Post a payload
     payload = {
         "project_name": "DemoProject",
         "tech_stack": ["Python", "FastAPI"],
@@ -110,6 +108,5 @@ def demo():
         print(f"Exception: {e}")
 
 if __name__ == "__main__":
-    # Give the server a moment if it just started
     time.sleep(1)
     demo()

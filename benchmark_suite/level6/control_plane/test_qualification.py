@@ -31,7 +31,6 @@ def test_gate1_stale_isolation_and_valid_dispatch():
         workspace = Path(tmp_dir)
         log_dir = workspace / "logs"
         
-        # 1. Write stale prompt packet
         stale_packet = create_prompt_packet(
             run_id="v3.1_pilot_01_stale",
             scenario_id="stale_scenario",
@@ -44,13 +43,11 @@ def test_gate1_stale_isolation_and_valid_dispatch():
         with open(stale_path, "w", encoding="utf-8") as f:
             f.write(stale_packet.model_dump_json())
 
-        # 2. Mock command that writes requested dummy.json
         def mock_cmd(packet: PromptPacket):
             dummy_target = workspace / "dummy.json"
             py_code = f"import json; open(r'{dummy_target}', 'w').write(json.dumps({{'status': 'ok'}}))"
             return [sys.executable, "-c", py_code]
 
-        # 3. Start watcher with active run_id
         active_run_id = "v3.1_pilot_03_active"
         watcher = HardenedWatcher(
             active_run_id=active_run_id,
@@ -59,12 +56,10 @@ def test_gate1_stale_isolation_and_valid_dispatch():
             custom_command_builder=mock_cmd,
         )
 
-        # Step 3a: Verify stale packet is ignored
         resp_stale = watcher.process_pending_packet()
         assert resp_stale is None, "Gate 1 Failure: Watcher executed a stale prompt packet!"
         assert watcher.total_invocations == 0, "Gate 1 Failure: Invocations count incremented on stale prompt!"
 
-        # 4. Dispatch valid prompt packet
         valid_packet = create_prompt_packet(
             run_id=active_run_id,
             scenario_id="test_scenario",
@@ -76,13 +71,11 @@ def test_gate1_stale_isolation_and_valid_dispatch():
         with open(stale_path, "w", encoding="utf-8") as f:
             f.write(valid_packet.model_dump_json())
 
-        # Step 4a: Verify valid packet is processed exactly once
         resp_valid = watcher.process_pending_packet()
         assert resp_valid is not None, "Gate 1 Failure: Watcher failed to process valid prompt packet!"
         assert resp_valid.status == ExecutionStatus.SUCCESS, f"Gate 1 Failure: Execution failed with {resp_valid.status}"
         assert watcher.total_invocations == 1, f"Gate 1 Failure: Expected 1 invocation, got {watcher.total_invocations}"
 
-        # Subsequent check on empty queue must return None
         resp_empty = watcher.process_pending_packet()
         assert resp_empty is None
         assert watcher.total_invocations == 1
@@ -99,7 +92,6 @@ def test_gate2_single_invocation_bounded_execution():
         log_dir = workspace / "logs"
         invoker = BoundedInvoker(log_dir=log_dir)
 
-        # Command that prints stdout and stderr
         py_code = "import sys; sys.stdout.write('OUT_MSG\\n'); sys.stderr.write('ERR_MSG\\n'); sys.exit(0)"
         cmd = [sys.executable, "-c", py_code]
 
@@ -137,7 +129,6 @@ def test_gate3_end_to_end_full_identity_matching():
         step_id = 42
         target_art = "output_arch.json"
 
-        # Mock command creating valid JSON artifact
         def mock_cmd(packet: PromptPacket):
             out_file = workspace / target_art
             data = {
@@ -154,7 +145,6 @@ def test_gate3_end_to_end_full_identity_matching():
             custom_command_builder=mock_cmd,
         )
 
-        # 1. Driver creates PromptPacket
         prompt = create_prompt_packet(
             run_id=run_id,
             scenario_id=scenario_id,
@@ -164,15 +154,12 @@ def test_gate3_end_to_end_full_identity_matching():
             prompt_text="Generate architecture payload",
         )
 
-        # Write prompt packet
         prompt_path = workspace / PROMPT_PACKET_FILE
         with open(prompt_path, "w", encoding="utf-8") as pf:
             pf.write(prompt.model_dump_json())
 
-        # 2. Watcher processes
         watcher.process_pending_packet()
 
-        # 3. Driver consumes ResponsePacket
         resp_path = workspace / RESPONSE_PACKET_FILE
         assert resp_path.exists(), "Gate 3 Failure: response_packet.json was not created!"
 
@@ -180,7 +167,6 @@ def test_gate3_end_to_end_full_identity_matching():
             response_data = json.load(rf)
         response = ResponsePacket(**response_data)
 
-        # 4. Identity validation
         id_check = validate_identity(prompt, response)
         assert id_check["valid"], f"Gate 3 Failure: Identity mismatch: {id_check['mismatches']}"
         assert response.run_id == prompt.run_id
@@ -191,7 +177,6 @@ def test_gate3_end_to_end_full_identity_matching():
         assert response.status == ExecutionStatus.SUCCESS
         assert target_art in response.artifacts_produced
 
-        # 5. Artifact verification
         art_path = workspace / target_art
         assert art_path.exists()
         with open(art_path, "r", encoding="utf-8") as af:
@@ -212,7 +197,6 @@ def test_gate4_failure_containment_and_hung_process_kill():
         
         run_id = "v3.1_pilot_03_timeout_test"
 
-        # Mock hung command: sleeps for 60 seconds
         def mock_hung_cmd(packet: PromptPacket):
             py_code = "import time; time.sleep(60)"
             return [sys.executable, "-c", py_code]
@@ -224,7 +208,6 @@ def test_gate4_failure_containment_and_hung_process_kill():
             custom_command_builder=mock_hung_cmd,
         )
 
-        # Driver dispatches prompt with short 1.5s timeout
         prompt = create_prompt_packet(
             run_id=run_id,
             scenario_id="hung_scenario",
@@ -239,12 +222,10 @@ def test_gate4_failure_containment_and_hung_process_kill():
         with open(prompt_path, "w", encoding="utf-8") as pf:
             pf.write(prompt.model_dump_json())
 
-        # Process packet
         t0 = time.time()
         response = watcher.process_pending_packet()
         elapsed = time.time() - t0
 
-        # Assertions
         assert response is not None, "Gate 4 Failure: No response packet emitted on timeout!"
         assert response.status in (ExecutionStatus.TIMEOUT, ExecutionStatus.RUNTIME_FAILURE), f"Gate 4 Failure: Unexpected status {response.status}"
         assert elapsed < 5.0, f"Gate 4 Failure: Hung process took {elapsed}s to terminate (expected ~1.5s)!"

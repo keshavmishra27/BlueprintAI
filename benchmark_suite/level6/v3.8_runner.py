@@ -17,9 +17,6 @@ def create_mock_node(node_id: str, score: float, cost: float, dependencies: list
         semantic_dependencies=dependencies,
         architectural_decisions={}
     )
-    # The V3 optimizer uses `path_score` and `path_cost` to optimize.
-    # We set status to TERMINAL so it's a valid candidate.
-    # For deterministic reproducibility, we'll set the path cost and score.
     node = PathNode(
         id=node_id,
         parent_id="root",
@@ -42,20 +39,15 @@ def run_v38_experiment():
     def test_case(name, nodes, expected_winner_id, expected_escalation, expected_gaps):
         print(f"\n{name}")
         
-        # 1. Optimizer Only (Counterfactual)
         opt_only = optimize_tree(nodes, {})
         winner_id_only = opt_only.best_path_id
         
-        # 2. Optimizer -> Epistemic Audit
         opt_then = optimize_tree(nodes, {})
         winner_id_then = opt_then.best_path_id
         
-        # Invariant 1: Optimizer produces identical winner
         assert winner_id_only == winner_id_then, "Audit implicitly affected optimization!"
         assert opt_only.status == opt_then.status, "Audit implicitly affected optimization status!"
         
-        # Invariant 8 & 9: Audit never mutates graph or feasibility
-        # Since audit is a pure function that takes ArchitectureNode, it can't mutate the graph.
         
         if not opt_then.best_architecture:
             print("  No winner found.")
@@ -72,39 +64,29 @@ def run_v38_experiment():
         if expected_gaps is not None:
             assert set(audit_result.ontology_gaps_in_winning_architecture) == set(expected_gaps), f"Expected gaps {expected_gaps}, got {audit_result.ontology_gaps_in_winning_architecture}"
             
-        # Invariant 10: requires_ontology_review=True iff gaps >= 1
         assert audit_result.requires_ontology_review == (len(audit_result.ontology_gaps_in_winning_architecture) >= 1)
 
-    # Base dependencies
     known_deps = ["requires_approved_emr_interface"]
     unknown_deps = ["requires_quantum_hospital_network"]
     
-    # Case 1: Unknown Irrelevant (Known A wins: 90 vs 50)
-    # Gate 2: Case 1 produces no escalation.
     nodes_case1 = [
         create_mock_node("Node-Known-A", score=90, cost=100, dependencies=known_deps),
         create_mock_node("Node-Unknown-B", score=50, cost=100, dependencies=unknown_deps)
     ]
     test_case("Case 1: Unknown but irrelevant (Known wins)", nodes_case1, "Node-Known-A", False, [])
     
-    # Case 2: Unknown Winner (Unknown B wins: 90 vs 50)
-    # Gate 3: Case 2 escalates the unknown dependency.
     nodes_case2 = [
         create_mock_node("Node-Known-A", score=50, cost=100, dependencies=known_deps),
         create_mock_node("Node-Unknown-B", score=90, cost=100, dependencies=unknown_deps)
     ]
     test_case("Case 2: Unknown enters the winner", nodes_case2, "Node-Unknown-B", True, unknown_deps)
     
-    # Case 3: Decision-critical (Unknown B wins by 1 point: 90 vs 89)
-    # Gate 4: Case 3 escalates the decision-critical unknown dependency.
     nodes_case3 = [
         create_mock_node("Node-Known-A", score=89, cost=100, dependencies=known_deps),
         create_mock_node("Node-Unknown-B", score=90, cost=100, dependencies=unknown_deps)
     ]
     test_case("Case 3: Unknown is decision-critical", nodes_case3, "Node-Unknown-B", True, unknown_deps)
     
-    # Empty dependency set
-    # Gate 6: Empty dependency set produces no escalation.
     nodes_empty = [
         create_mock_node("Node-Empty", score=90, cost=100, dependencies=[])
     ]

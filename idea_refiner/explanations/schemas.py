@@ -1,19 +1,9 @@
 from pydantic import BaseModel
 from typing import List
-
-class AlternativeComparison(BaseModel):
-    architecture_name: str
-    status: str
-    pros: List[str]
-    cons: List[str]
+from decision_engine.api.artifact import CandidateEvaluation
 
 class ExplanationFacts(BaseModel):
-    winner_name: str
-    winner_components: str
-    performance: float
-    cost: float
-    robustness: float
-    complexity: float
-    epistemic_risk: int
+    candidates_evaluated: List[CandidateEvaluation]
+    pareto_frontier_ids: List[str]
+    winner_id: str
     governance_action: str
-    alternatives: List[AlternativeComparison]

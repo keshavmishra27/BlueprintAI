@@ -20,7 +20,6 @@ def run_replay():
     
     payload["session_id"] = "v3.3d-replay-session"
     
-    # 1. Start Journey
     print("Submitting JourneyStartRequest...")
     try:
         resp = requests.post(url_start, json=payload, timeout=10)
@@ -33,7 +32,6 @@ def run_replay():
     session_id = "v3.3d-replay-session"
     print(f"Session ID: {session_id}")
     
-    # Get State to find root node ID
     state_resp = requests.get(f"http://127.0.0.1:8089/api/journey/{session_id}/state", timeout=10)
     tree_state = state_resp.json()
     decision_graph = tree_state["decision_graph"]
@@ -41,7 +39,6 @@ def run_replay():
     
     unc_002 = next(u for u in payload["candidate_uncertainties"] if u["id"] == "unc-002")
     
-    # 2. Answer unc-002 -> NO
     print("\nAnswering unc-002 -> NO")
     answer_payload = {
         "session_id": session_id,
@@ -63,15 +60,12 @@ def run_replay():
     print(f"ans_data: {ans_data}")
     new_node_id = ans_data.get("new_node_id")
     if not new_node_id:
-        # try getting it from the newly created node directly by parent_id
         pass
     
-    # Refetch state to get the updated node
     state_resp = requests.get(f"http://127.0.0.1:8089/api/journey/{session_id}/state", timeout=10)
     tree_state = state_resp.json()
     new_node = next(n for n in tree_state["decision_graph"] if n["parent_id"] == root_node["id"])
     
-    # 3. Assertions
     print("\n--- Verifying Causal Repaired State ---")
     print(f"Node Status: {new_node.get('status')}")
     print(f"Semantic Dependencies: {new_node.get('architecture', {}).get('semantic_dependencies')}")

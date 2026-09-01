@@ -43,14 +43,12 @@ def run_v320_experiment():
     print(" V3.20: ENVIRONMENT DRIFT & ROBUST ARCHITECTURE")
     print("==================================================")
     
-    # Candidate A: Requires EMR, RFID, and Staffing. Score 100.
     cand_a = PathNode(
         id="Cand_A", parent_id="root",
         architecture=create_mock_arch(["emr_direct_access_authorized", "rfid_infrastructure_v3_available", "staffing_feed_v3_available"]),
         status="TERMINAL", path_cost=100.0, path_score=100.0, reject_reasons=[], epistemic_provenance=None
     )
     
-    # Candidate B: Requires only EMR. Score 94.
     cand_b = PathNode(
         id="Cand_B", parent_id="root",
         architecture=create_mock_arch(["emr_direct_access_authorized"]),
@@ -70,7 +68,6 @@ def run_v320_experiment():
         {"id": "S10", "environment_constraints": ["emr_direct_access_authorized"]}
     ]
     
-    # Base context
     ctx_base_no_scenarios = DecisionContext(
         ontology_version="v3.12", registry_policy_hashes=[],
         environment_constraints=["emr_direct_access_authorized", "rfid_infrastructure_v3_available", "staffing_feed_v3_available"],
@@ -86,7 +83,6 @@ def run_v320_experiment():
     
     candidates = [cand_a, cand_b]
 
-    # Gate 1: Audit Neutrality
     print_test_header("GATE 1: Audit Neutrality")
     opt_no_audit = optimize_tree(candidates, ctx_base_no_scenarios)
     opt_with_audit = optimize_tree(candidates, ctx_base_with_scenarios)
@@ -94,8 +90,6 @@ def run_v320_experiment():
     print(f"No Audit Winner: {opt_no_audit.best_path_id} (Score: {opt_no_audit.effective_score})")
     print(f"With Audit Winner: {opt_with_audit.best_path_id} (Score: {opt_with_audit.effective_score})")
     
-    # Fingerprints should be different because scenarios are part of the context, 
-    # but the decision logic (Winner, score, status) must be identical.
     is_neutral = (
         opt_no_audit.best_path_id == opt_with_audit.best_path_id and
         opt_no_audit.effective_score == opt_with_audit.effective_score and
@@ -103,13 +97,11 @@ def run_v320_experiment():
     )
     print(f"Neutrality Maintained: {is_neutral}")
     
-    # Gate 2: Robustness Determinism
     print_test_header("GATE 2: Robustness Determinism")
     scenarios_reversed = scenarios[::-1]
     ctx_reversed = copy.deepcopy(ctx_base_with_scenarios)
     ctx_reversed.future_scenarios = scenarios_reversed
     
-    # Evaluate profiles explicitly
     from decision_engine.input_layer.ontology import get_known_dependencies
     known = get_known_dependencies()
     p_fwd = evaluate_robustness(cand_a, [FutureScenario(**s) for s in scenarios], known)
@@ -118,7 +110,6 @@ def run_v320_experiment():
     print(f"A Survival Fwd: {p_fwd.survival_rate} | Rev: {p_rev.survival_rate}")
     print(f"Profiles match exactly: {p_fwd.model_dump() == p_rev.model_dump()}")
     
-    # Threshold Sweep
     print_test_header("THRESHOLD SWEEP")
     lambdas_to_test = [0.0, 5.0, 6.666, 6.666666666666667, 7.0, 10.0]
     
@@ -131,11 +122,9 @@ def run_v320_experiment():
             robust_result = res
             robust_ctx = ctx
 
-    # Temporal Invariant Control
     print_test_header("TEMPORAL INVARIANT CONTROL")
-    # Mutate environment slightly
     mutated_ctx = copy.deepcopy(robust_ctx)
-    mutated_ctx.environment_constraints = ["emr_direct_access_authorized", "staffing_feed_v3_available"] # Missing RFID
+    mutated_ctx.environment_constraints = ["emr_direct_access_authorized", "staffing_feed_v3_available"]
     
     recom = generate_recommendation(robust_result.model_dump_json(), mutated_ctx)
     print(f"Recommendation Action: {recom.action} | Reason: {recom.epistemic_warnings}")

@@ -35,12 +35,8 @@ def run_benchmark_scenario(scenario_path: Path):
     
     print(f"--- Running Benchmark: {scenario.name} ---")
     
-    # 1. ORACLE
     oracle_score, oracle_feasible = score_architecture(scenario.oracle_architecture, scenario, scenario.constraints)
-    # print(f"Oracle Score (S_abs): {oracle_score:.4f} (Feasible: {oracle_feasible})")
     
-    # 2. BASELINE (Single-shot)
-    # The agent generates an architecture that relies on DB access.
     import copy
     baseline_arch = copy.deepcopy(scenario.oracle_architecture)
     baseline_arch.inputs = ["local hospital database (historical queue)"]
@@ -48,21 +44,13 @@ def run_benchmark_scenario(scenario_path: Path):
     baseline_arch.architectural_decisions["input_modality"] = "database queries"
     
     baseline_score, baseline_feasible = score_architecture(baseline_arch, scenario, scenario.constraints)
-    # print(f"Baseline Score (S_abs): {baseline_score:.4f} (Feasible: {baseline_feasible})")
     
-    # But wait, in reality, the baseline is infeasible due to the hidden constraint!
-    # If deployed, the hidden constraint blocks DB access.
-    # We simulate this by checking against the REAL constraints (with hidden fact revealed).
     real_constraints = scenario.constraints + ["no direct db connection"]
     real_baseline_score, real_baseline_feasible = score_architecture(baseline_arch, scenario, real_constraints)
     
-    # In a true evaluation against reality, the baseline fails.
     if not real_baseline_feasible:
         baseline_score = benchmark_evaluator.INFEASIBLE_SENTINEL
         
-    # 3. BLUEPRINTAI
-    # The agent asks the question, user reveals the hidden fact, agent adapts.
-    # The adapted architecture is the NO branch, which matches the oracle structure in this test.
     bp_arch = copy.deepcopy(scenario.oracle_architecture)
     bp_score, bp_feasible = score_architecture(bp_arch, scenario, real_constraints)
     
@@ -72,7 +60,6 @@ def run_benchmark_scenario(scenario_path: Path):
     print(f"Baseline Feasible:         {'YES' if real_baseline_feasible else 'NO'}")
     print(f"BlueprintAI Feasible:      {'YES' if bp_feasible else 'NO'}")
     
-    # METRICS
     delta_s = bp_score - baseline_score
     
     regret_baseline = oracle_score - baseline_score
@@ -81,7 +68,6 @@ def run_benchmark_scenario(scenario_path: Path):
     
     print(f"\n--- Benchmark Results ---")
     
-    # Check if sentinel dominated
     is_sentinel_dominated = (baseline_score <= benchmark_evaluator.INFEASIBLE_SENTINEL) or (bp_score <= benchmark_evaluator.INFEASIBLE_SENTINEL)
     asterisk = "*" if is_sentinel_dominated else ""
     

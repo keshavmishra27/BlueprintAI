@@ -1,41 +1,82 @@
 services:
+
   - type: web
+
     name: group-maker-api
+
     runtime: python
+
     region: oregon
+
     plan: free
+
     rootDir: .
+
     buildCommand: pip install -r requirements.txt
+
     startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+
     envVars:
+
       - key: DATABASE_URL
+
         sync: false
+
       - key: OPENROUTER_API_KEY
+
         sync: false
+
       - key: OPENROUTER_MODEL
+
         value: google/gemini-2.0-flash-001
+
       - key: OLLAMA_BASE_URL
+
         sync: false
+
       - key: OLLAMA_MODEL
+
         value: qwen2.5:3b
+
       - key: API_KEY
+
         sync: false
+
       - key: CORS_ORIGINS
+
         value: https://group-maker-ui.onrender.com
+
       - key: GOOGLE_API_KEY
+
         sync: false
+
       - key: GITHUB_TOKEN
+
         sync: false
+
   - type: web
+
     name: group-maker-ui
+
     runtime: python
+
     region: oregon
+
     plan: free
+
     rootDir: .
+
     buildCommand: pip install -r requirements.txt
+
     startCommand: solara run solara_app/app.py --host 0.0.0.0 --port $PORT
+
     envVars:
+
       - key: API_URL
+
         value: https://group-maker-api.onrender.com
+
       - key: API_KEY
+
         sync: false
+

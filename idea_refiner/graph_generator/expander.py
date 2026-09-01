@@ -44,7 +44,6 @@ class GraphGenerator:
         expanded_hypotheses = []
         seen_signatures = set()
         
-        # Add seeds first
         for i, seed in enumerate(seeds):
             seed.id = f"seed_{i}"
             sig = seed.get_signature()
@@ -52,7 +51,6 @@ class GraphGenerator:
                 seen_signatures.add(sig)
                 expanded_hypotheses.append(seed)
                 
-        # Ask LLM for variations
         for seed in seeds:
             prompt = f"""
             Analyze the following architectural seed approach. 
@@ -68,7 +66,6 @@ class GraphGenerator:
             response = self.provider.generate_structured(prompt, self._get_expansion_schema())
             
             for j, item in enumerate(response.get("variations", [])):
-                # Strip authority fields to prevent injection
                 for forbidden_key in ["status", "feasibility", "confidence", "candidate_status"]:
                     item.pop(forbidden_key, None)
                     
@@ -96,7 +93,6 @@ class GraphGenerator:
                     }
                 )
                 
-                # Duplicate suppression
                 var_sig = variation.get_signature()
                 if var_sig not in seen_signatures:
                     seen_signatures.add(var_sig)

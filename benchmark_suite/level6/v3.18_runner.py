@@ -19,7 +19,6 @@ from decision_engine.governance.resolution import (
 )
 import decision_engine.input_layer.ontology as ontology_module
 
-# Freeze ontology to V3.12 semantics
 ontology_module.ONTOLOGY_VERSION = "v3.12"
 
 def create_mock_arch(dependencies):
@@ -113,26 +112,23 @@ def run_v318_experiment():
     )
     req_Security_Constraint = ResolutionRequest(
         id="policy_D", dependency=target_dependency, original_provenance=base_provenance,
-        requested_operational_property={}, # Adds no conflicting property
+        requested_operational_property={},
         required_constraints=["security_gateway_approved"], evidence=["Sec Gateway Doc"],
         resolver_identity="security_office", curator_approved=True, confidence=0.9
     )
 
-    # Test 1: Agreement
     print_test_header(1, "Agreement (Control)")
     reg1 = build_registry([req_IT, req_IT_duplicate])
     node1 = evaluate_and_create_node("Cand1", [target_dependency], ["staffing_api_authorized"], 90.0, reg1)
     print(f"Status: {node1.status}")
     print(f"Provenance: {node1.epistemic_provenance}")
     
-    # Test 2: Direct Contradiction
     print_test_header(2, "Direct Contradiction")
     reg2 = build_registry([req_IT, req_Security_Prohibited])
     node2 = evaluate_and_create_node("Cand2", [target_dependency], ["staffing_api_authorized"], 90.0, reg2)
     print(f"Status: {node2.status}")
     print(f"Provenance Reason: {node2.epistemic_provenance.get('reason')}")
     
-    # Test 3 & 4: Order Attack
     print_test_header(3, "Ordering Attack")
     reg3a = build_registry([req_IT, req_Security_Prohibited])
     reg3b = build_registry([req_Security_Prohibited, req_IT])
@@ -140,7 +136,6 @@ def run_v318_experiment():
     n3b = evaluate_and_create_node("Cand3B", [target_dependency], [], 90.0, reg3b)
     print(f"A->B == B->A ? -> {n3a.status == n3b.status and n3a.epistemic_provenance == n3b.epistemic_provenance}")
     
-    # Test 5: Confidence Manipulation
     print_test_header(5, "Confidence Manipulation")
     r5a = copy.deepcopy(req_IT); r5a.confidence = 0.999999
     r5b = copy.deepcopy(req_Security_Prohibited); r5b.confidence = 0.000001
@@ -153,34 +148,27 @@ def run_v318_experiment():
     print(f"HighA == HighB ? -> {n5a.status == n5b.status and n5a.epistemic_provenance == n5b.epistemic_provenance}")
     print(f"Status remains: {n5a.status}")
 
-    # Test 6: Complementary Policies
     print_test_header(6, "Complementary Policies")
     reg6 = build_registry([req_IT, req_Security_Constraint])
     n6 = evaluate_and_create_node("Cand6", [target_dependency], ["staffing_api_authorized", "security_gateway_approved"], 90.0, reg6)
     print(f"Status (composed): {n6.status}")
 
-    # Test 7: Security Constraint Absent
     print_test_header(7, "Security Constraint Absent")
-    n7 = evaluate_and_create_node("Cand7", [target_dependency], ["staffing_api_authorized"], 90.0, reg6) # Missing gateway
+    n7 = evaluate_and_create_node("Cand7", [target_dependency], ["staffing_api_authorized"], 90.0, reg6)
     print(f"Status: {n7.status} | Reasons: {n7.reject_reasons}")
     
-    # Test 8: Security Constraint Present
     print_test_header(8, "Security Constraint Present")
-    print(f"Status: {n6.status} | Reasons: {n6.reject_reasons}") # n6 has both
+    print(f"Status: {n6.status} | Reasons: {n6.reject_reasons}")
     
-    # Test 9: Conflicted Winner
     print_test_header(9, "Conflicted Winner")
-    # Candidate A: Known (no unknown dependencies)
     cand_a = evaluate_and_create_node("CandA", ["requires_emr_database_integration"], ["emr_direct_access_authorized"], 90.0, reg2)
-    # Candidate B: Score 150, Contested
     cand_b = evaluate_and_create_node("CandB", [target_dependency], ["staffing_api_authorized"], 150.0, reg2)
-    opt_9 = optimize_tree([cand_a, cand_b], {"epistemic_lambda": 0.0}) # Even with lambda 0
+    opt_9 = optimize_tree([cand_a, cand_b], {"epistemic_lambda": 0.0})
     resp_9 = generate_recommendation(opt_9.model_dump_json())
     print(f"Winner ID: {opt_9.best_path_id} | Raw: {cand_b.path_score} | Eff: {opt_9.effective_score}")
     print(f"Winner Status: {opt_9.status}")
     print(f"API Action: {resp_9.action}")
     
-    # Test 10 & 11: Curator Arbitration & Replay
     print_test_header(10, "Curator Arbitration")
     conflict_info = reg2.get_conflict_info(target_dependency)
     res_req = ConflictResolution(
@@ -194,20 +182,17 @@ def run_v318_experiment():
     )
     reg2.resolve_conflict(res_req)
     
-    # Replay CandB after arbitration
     cand_b_replayed = evaluate_and_create_node("CandB", [target_dependency], ["staffing_api_authorized"], 150.0, reg2)
     print(f"Replayed Candidate B Status: {cand_b_replayed.status}")
     opt_11 = optimize_tree([cand_a, cand_b_replayed], {"epistemic_lambda": 0.0})
     resp_11 = generate_recommendation(opt_11.model_dump_json())
     print(f"New Winner Action: {resp_11.action}")
 
-    # Test 12: Last Curator Wins Attack
     print_test_header(12, "Last Curator Wins Attack")
     reg12 = PromotedPolicyRegistry()
     req_L1 = copy.deepcopy(req_IT)
     req_L2 = copy.deepcopy(req_Security_Prohibited)
     
-    # Sequentially added, both approved
     reg12.add_policy(process_resolution(req_L1))
     reg12.add_policy(process_resolution(req_L2))
     

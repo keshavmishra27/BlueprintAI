@@ -10,7 +10,6 @@ client = TestClient(app)
 def test_ideas_analyze_contract(MockService):
     mock_service_instance = MockService.return_value
     
-    # Mocking the returned Decision
     mock_decision = Decision(
         id="test-123",
         version=1,
@@ -40,8 +39,6 @@ def test_ideas_analyze_contract(MockService):
     
     assert response.status_code == 200
     
-    # Test that the response parses perfectly back into the Pydantic model
-    # which acts as the contract boundary verification
     data = response.json()
     validated = Decision(**data)
     assert validated.id == "test-123"

@@ -14,11 +14,9 @@ class GapEngine:
         
         def norm(s): return s.lower().strip()
         
-        # Sort keys to ensure deterministic matching
         exp_norm_map = {norm(c): c for c in sorted(list(expected_comps))}
         act_norm_map = {norm(c): c for c in sorted(list(actual_comps))}
         
-        # Keep track of which actuals have been used as mismatches
         used_mismatches = set()
         
         for e_norm, e_raw in exp_norm_map.items():
@@ -32,7 +30,7 @@ class GapEngine:
                 ))
             else:
                 is_db = e_raw in expected.databases
-                is_framework = not is_db # Simplified for M6: if it's not a DB, assume it's a framework or other component
+                is_framework = not is_db
                 
                 mismatched_db = None
                 

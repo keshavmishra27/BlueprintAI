@@ -14,7 +14,7 @@ const RepositoryChecker = () => {
     setStatus('loading');
     setErrorMessage('');
     try {
-      // Hardcoded decisionId for demo purposes
+
       const result = await analyzeRepository('1c854183-05a8-4e60-9903-8ed73ea8dad7', repoPath);
       setReport(result);
       setStatus('success');
@@ -120,7 +120,7 @@ const RepositoryChecker = () => {
                   </div>
                 </div>
 
-                {/* Find evidence for this finding if any */}
+                {}
                 {report.evidence.length > 0 && finding.category !== 'MATCH' && finding.category !== 'UNKNOWN' && (
                   <div className="mt-2 pt-2" style={{ borderTop: '1px solid var(--border-color)' }}>
                     <div className="metric-label">Evidence in <strong>{report.evidence[0].file}</strong>:line {report.evidence[0].line}</div>

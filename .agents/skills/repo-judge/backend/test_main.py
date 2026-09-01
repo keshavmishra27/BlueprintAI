@@ -130,47 +130,42 @@ def test_overall_score_calculated_correctly():
     response = client.post("/api/analysis", json=payload)
     assert response.status_code == 200
     data = response.json()
-    # Weights: arch(0.25), code(0.20), sec(0.20), test(0.15), maint(0.15), doc(0.05)
-    # Expected: 90*0.25 + 80*0.2 + 100*0.2 + 50*0.15 + 70*0.15 + 60*0.05
-    # 22.5 + 16 + 20 + 7.5 + 10.5 + 3 = 79.5 -> rounds to 80
     assert data["semantic"]["report"]["overall"]["score"] == 80
 
 def test_invalid_category_score_rejected():
     payload = generate_valid_payload()
     payload["categories"]["architecture"]["score"] = 150
     response = client.post("/api/analysis", json=payload)
-    assert response.status_code == 422 # Unprocessable Entity (Pydantic validation error)
+    assert response.status_code == 422
 
 def test_missing_evidence_reference_rejected():
     payload = generate_valid_payload()
-    payload["findings"][0]["evidence_ids"].append("E-999") # Doesn't exist
+    payload["findings"][0]["evidence_ids"].append("E-999")
     response = client.post("/api/analysis", json=payload)
     assert response.status_code == 422
     assert "references unknown evidence ID" in response.text
 
 def test_duplicate_evidence_id_rejected():
     payload = generate_valid_payload()
-    payload["evidence"].append(payload["evidence"][0]) # Duplicate E-001
+    payload["evidence"].append(payload["evidence"][0])
     response = client.post("/api/analysis", json=payload)
     assert response.status_code == 422
     assert "Duplicate evidence IDs found" in response.text
 
 def test_missing_related_finding_id_rejected():
     payload = generate_valid_payload()
-    payload["priorities"][0]["related_finding_ids"].append("F-999") # Doesn't exist
+    payload["priorities"][0]["related_finding_ids"].append("F-999")
     response = client.post("/api/analysis", json=payload)
     assert response.status_code == 422
     assert "references unknown finding ID" in response.text
 
 def test_credential_leak_rejected_safely():
     payload = generate_valid_payload()
-    # Add a fake OpenAI key
     payload["evidence"][0]["description"] = "Found key: sk-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijkl"
     
     response = client.post("/api/analysis", json=payload)
     assert response.status_code == 400
     assert "Sensitive credential-like content was detected" in response.json()["detail"]
-    # Ensure the secret is NOT echoed back
     assert "sk-abcdefghijklmnopqrstuvwxyz" not in response.text
 
 def test_store_and_retrieve_analysis():
@@ -189,8 +184,6 @@ def test_unknown_analysis_returns_404():
     assert response.status_code == 404
 
 def test_identity_propagation_boundary(mock_product_api):
-    # This boundary test verifies that the decision_id and decision_fingerprint
-    # propagate securely from the Product API to the RepoJudgeResult's AnalysisMetadata.
     payload = generate_valid_payload()
     payload["decision_id"] = "test-decision-999"
     

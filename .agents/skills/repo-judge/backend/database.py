@@ -66,5 +66,4 @@ def list_analyses() -> List[Dict[str, Any]]:
         for row in rows
     ]
 
-# Initialize db file on import
 init_db()

@@ -5,12 +5,10 @@ from sqlalchemy.orm import sessionmaker
 
 def test_api_abstraction(client):
     """Test 1: API abstraction. Assert that API responses contain product schemas."""
-    # Analyze idea
     response = client.post("/api/v1/ideas/analyze", json={"idea": "Test idea"})
     assert response.status_code == 200
     data = response.json()
     
-    # Verify it looks like our product schema, not an engine artifact
     assert "id" in data
     assert "architecture" in data
     assert "components" in data["architecture"]
@@ -19,7 +17,6 @@ def test_api_abstraction(client):
     assert "decision_fingerprint" in data
     assert "graph_fingerprint" in data
     
-    # Verify no engine-specific leaking
     assert "pareto_frontier" not in data
     assert "winning_path_id" not in data
 
@@ -37,14 +34,9 @@ def test_d0_persistence(client):
 
 def test_gap_persistence(client, monkeypatch):
     """Test 3: Gap persistence. Persist and retrieve Gap0 without changing alignment/evidence."""
-    # Note: We need a valid decision ID first
     post_res = client.post("/api/v1/ideas/analyze", json={"idea": "Gap test"})
     d0 = post_res.json()
     
-    # Mock GapEngine/RepoExtractor so we don't depend on real repo paths
-    # For this test, we just call the API which uses the mock logic in ProductService for now
-    # Wait, the current ProductService actually tries to use RepoExtractor.
-    # We should mock it to avoid file system dependency.
     class MockRepoArtifact:
         components = {"Mock": "Component"}
     
@@ -92,11 +84,9 @@ def test_gap_persistence(client, monkeypatch):
 
 def test_refinement_lineage_and_history(client, monkeypatch):
     """Test 4 & 5: Refinement lineage and history reconstruction."""
-    # D0
     res_d0 = client.post("/api/v1/ideas/analyze", json={"idea": "History test"})
     d0 = res_d0.json()
     
-    # Apply refinement to get D1
     res_d1 = client.post("/api/v1/refinements/apply", json={
         "decision_id": d0["id"],
         "applied_exploration": "Enforce Target",
@@ -105,11 +95,8 @@ def test_refinement_lineage_and_history(client, monkeypatch):
     })
     d1 = res_d1.json()
     
-    # Assert D1 parent logic isn't explicitly in the returned JSON (it's internal), 
-    # but the fingerprint must change
     assert d1["decision_fingerprint"] != d0["decision_fingerprint"]
     
-    # Apply another refinement for D2
     res_d2 = client.post("/api/v1/refinements/apply", json={
         "decision_id": d1["id"],
         "applied_exploration": "Switch DB",
@@ -118,7 +105,6 @@ def test_refinement_lineage_and_history(client, monkeypatch):
     })
     d2 = res_d2.json()
     
-    # Test history reconstruction from D2
     hist_res = client.get(f"/api/v1/decisions/{d2['id']}/history")
     history = hist_res.json()
     
@@ -141,7 +127,6 @@ def test_repository_identity(client, monkeypatch):
             
     class MockGapEngine:
         def evaluate(self, *args, **kwargs):
-            # Calculate what ProductService expects to avoid Provenance violation
             expected = args[0]
             expected_comps = set(expected.databases)
             for c in expected.components:
@@ -168,7 +153,6 @@ def test_repository_identity(client, monkeypatch):
 
 def test_restart_persistence(monkeypatch):
     """Test 7: Restart persistence. Terminate app, restart, retrieve D0."""
-    # We simulate this by creating a real sqlite DB on disk, writing, creating a new engine/session, and reading
     from product.api.main import app
     from fastapi.testclient import TestClient
     from product.db.session import Base, get_db
@@ -187,12 +171,14 @@ def test_restart_persistence(monkeypatch):
             
     app.dependency_overrides[get_db] = override_get_db
 
-    # Mock Orchestrator
     class MockArtifact:
-        components = ["FastAPI", "PostgreSQL"]
-        decisions = {"db": "PostgreSQL"}
-        scores = {"performance": 0.9}
-        governance = {"action": "RECOMMEND", "severity": "INFO"}
+        components = ["API", "DB"]
+        decisions = {"framework": "fastapi"}
+        governance = {}
+        winner_id = "mock-winner"
+        candidates_evaluated = []
+        pareto_frontier_ids = []
+        explanation = "mock explanation"
         
     class MockOrchestrator:
         def __init__(self, *args, **kwargs): pass
@@ -203,11 +189,9 @@ def test_restart_persistence(monkeypatch):
 
     client = TestClient(app)
     
-    # Create D0
     post_res = client.post("/api/v1/ideas/analyze", json={"idea": "Restart persistence test"})
     d0_id = post_res.json()["id"]
     
-    # "Restart" app - clear overrides, create new client with new session on same DB
     app.dependency_overrides.clear()
     
     PersistentSessionLocal2 = sessionmaker(autocommit=False, autoflush=False, bind=persistent_engine)
@@ -221,12 +205,10 @@ def test_restart_persistence(monkeypatch):
     app.dependency_overrides[get_db] = override_get_db_2
     client2 = TestClient(app)
     
-    # Retrieve D0
     get_res = client2.get(f"/api/v1/decisions/{d0_id}")
     assert get_res.status_code == 200
     assert get_res.json()["id"] == d0_id
     
-    # Cleanup
     app.dependency_overrides.clear()
     import os
     persistent_engine.dispose()

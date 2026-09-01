@@ -16,7 +16,6 @@ def run_experiment():
     print(" LEVEL 6 EXPERIMENT: TRUE ANTIGRAVITY PROTOCOL")
     print("==================================================")
     
-    # Setup
     idea = UserIdea(
         what="Predict patient wait times",
         why="Hospitals are overcrowded",
@@ -32,14 +31,12 @@ def run_experiment():
         current_requirements=requirements
     )
     
-    # 1. Simulator generates initial architecture
     simulator = AutomatedProtocolSimulator()
     initial_arch = simulator.generate_initial_architecture(project_state)
     uncertainties = simulator.find_uncertainties(initial_arch, project_state)
     
     session_id = str(uuid.uuid4())
     
-    # 2. Start Journey (Python deterministic engine evaluates)
     print("\n--- Starting Journey ---")
     req = JourneyStartRequest(
         session_id=session_id,
@@ -54,8 +51,6 @@ def run_experiment():
         print(f"Engine selected uncertainty: {start_resp.selected_uncertainty_text}")
         print(f"Selection reason: {start_resp.selection_reason}")
         
-    # We will simulate that the user chose "YES" to whatever the first question is.
-    # To truly exhaust the space, we must explore both YES and NO.
     
     iteration = 0
     ans_resp = start_resp
@@ -66,7 +61,6 @@ def run_experiment():
             print("Safety break: too many iterations")
             break
             
-        # 3. Check State for UNEXPLORED_HYPOTHESIS
         state_resp = get_journey_state(session_id)
         decision_graph = state_resp.decision_graph
         unexplored_nodes = [n for n in decision_graph if n.status == "UNEXPLORED_HYPOTHESIS"]
@@ -75,7 +69,6 @@ def run_experiment():
             print("\nNo unexplored hypotheses remaining. Search is exhausted.")
             break
             
-        # Take the first unexplored node
         node_to_explore = unexplored_nodes[0]
         question_text = node_to_explore.question_that_produced_it
         answer_branch = node_to_explore.user_answer
@@ -85,16 +78,14 @@ def run_experiment():
         print(f"Question: {question_text}")
         print(f"Branch: {answer_branch}")
         
-        # 4. Agent Generates Alternative Architecture
         adaptation_reason = f"User theoretically answered {answer_branch} to: {question_text}"
         adapted_arch = simulator.generate_adapted_architecture(
             project_state, 
-            initial_arch, # For simplicity, using initial_arch as baseline to adapt from
+            initial_arch,
             adaptation_reason
         )
         new_uncertainties = simulator.find_uncertainties(adapted_arch, project_state)
         
-        # 5. Submit to Python Engine
         ans_req = JourneyAnswerRequest(
             session_id=session_id,
             parent_node_id=parent_id,
@@ -112,12 +103,9 @@ def run_experiment():
     print(" EXPERIMENT RESULTS LOG")
     print("==================================================")
     
-    # Do one final optimization pass by triggering start_journey / answer_journey is not needed
-    # Wait, answer_journey already called optimize_tree and returned BEST_ARCHITECTURE_FOUND if no unexplored left.
     final_state = get_journey_state(session_id)
     graph = final_state.decision_graph
     
-    # Metrics
     terminals = [n for n in graph if n.status == "TERMINAL"]
     rejected = [n for n in graph if n.status == "REJECTED"]
     

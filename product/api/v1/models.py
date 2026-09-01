@@ -16,6 +16,19 @@ class Architecture(BaseModel):
     components: List[Component]
     decisions: List[Dict[str, Any]]
 
+class DecisionMetrics(BaseModel):
+    performance: float
+    cost: float
+    robustness: float
+    complexity: float
+    epistemic_risk: int
+
+class CandidateEvaluation(BaseModel):
+    candidate_id: str
+    architecture_components: List[str]
+    metrics: Optional[DecisionMetrics] = None
+    status: Optional[str] = None
+
 class Alternative(BaseModel):
     description: str
     architecture: Architecture
@@ -26,6 +39,12 @@ class Decision(BaseModel):
     architecture: Architecture
     governance: Governance
     alternatives: List[Alternative]
+    
+    winner_id: str = ""
+    candidates_evaluated: List[CandidateEvaluation] = Field(default_factory=list)
+    pareto_frontier_ids: List[str] = Field(default_factory=list)
+    explanation: str = ""
+    
     alignment: Optional[float] = None
     
     decision_fingerprint: str

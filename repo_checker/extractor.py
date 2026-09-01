@@ -15,7 +15,6 @@ class RepoExtractor:
         frameworks = set()
         manifests_found = []
         
-        # 1. requirements.txt
         req_file = self.repo_path / "requirements.txt"
         if req_file.exists():
             manifests_found.append("requirements.txt")
@@ -90,7 +89,6 @@ class RepoExtractor:
                             confidence=1.0
                         ))
                         
-        # 2. Package.json
         pkg_file = self.repo_path / "package.json"
         if pkg_file.exists():
             manifests_found.append("package.json")
@@ -122,7 +120,6 @@ class RepoExtractor:
             except Exception:
                 pass
                 
-        # 3. Dockerfile
         docker_file = self.repo_path / "Dockerfile"
         if docker_file.exists():
             with open(docker_file, 'r', encoding='utf-8') as f:
@@ -138,7 +135,6 @@ class RepoExtractor:
                             confidence=1.0
                         ))
                         
-        # 4. AST Parsing for Python files
         for py_file in self.repo_path.rglob("*.py"):
             if "venv" in py_file.parts or ".env" in py_file.parts:
                 continue

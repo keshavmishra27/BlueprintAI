@@ -9,7 +9,6 @@ class RecommendationResponse(BaseModel):
     recommended_path_id: Optional[str] = None
     epistemic_warnings: Optional[Dict[str, Any]] = None
     
-    # V3.24 Diagnostic Fields
     severity: str = "INFO"
     violations: List[str] = []
     graph_state: str = "VALID"
@@ -24,7 +23,6 @@ def generate_recommendation(
     current_graph: List[PathNode],
     current_graph_version: str = "v1"
 ) -> RecommendationResponse:
-    # 1. Deserialize the OptimizationResult
     try:
         opt = OptimizationResult.model_validate_json(serialized_optimization_result)
     except Exception as e:
@@ -42,7 +40,6 @@ def generate_recommendation(
     context_state = "VALID"
     epistemic_state = "VALID"
     
-    # 2. Check Decision Integrity (Payload Authenticity)
     decision_data = {
         "best_path_id": opt.best_path_id,
         "status": opt.status,
@@ -57,13 +54,11 @@ def generate_recommendation(
         violations.append("COMPROMISED_DECISION_INTEGRITY")
         integrity_state = "COMPROMISED"
         
-    # 3. Check Graph Version
     if opt.graph_version != current_graph_version:
         if "INVALIDATED_DECISION_ARTIFACT" not in violations:
             violations.append("INVALIDATED_DECISION_ARTIFACT")
         integrity_state = "COMPROMISED"
         
-    # 4. Check Graph Integrity (Drift Check)
     live_graph_fingerprint = compute_graph_fingerprint(current_graph)
     if opt.graph_fingerprint != live_graph_fingerprint:
         graph_state = "DRIFTED"
@@ -76,17 +71,14 @@ def generate_recommendation(
             if "STALE_DECISION_GRAPH" not in violations:
                 violations.append("STALE_DECISION_GRAPH")
 
-    # 5. Check Context Integrity (Temporal Validity)
     if opt.context_fingerprint != current_context.get_fingerprint():
         violations.append("STALE_DECISION_CONTEXT")
         context_state = "DRIFTED"
         
-    # 6. Check Epistemic State
     if opt.status == "UNRESOLVED":
         violations.append("UNRESOLVED_DEPENDENCY")
         epistemic_state = "UNRESOLVED"
         
-    # 7. Action & Severity Aggregation
     if "COMPROMISED_DECISION_INTEGRITY" in violations or "INVALIDATED_DECISION_ARTIFACT" in violations:
         action = "REJECT"
         severity = "FATAL"
@@ -102,7 +94,6 @@ def generate_recommendation(
             action = "HOLD_FOR_REVIEW"
         severity = "INFO"
         
-    # 8. Deterministic Violation Ordering
     VIOLATION_ORDER = {
         "COMPROMISED_DECISION_INTEGRITY": 10,
         "INVALIDATED_DECISION_ARTIFACT": 20,
@@ -114,7 +105,6 @@ def generate_recommendation(
     }
     violations.sort(key=lambda x: VIOLATION_ORDER.get(x, 100))
     
-    # 9. Legacy Compatibility
     warnings = {"reason": violations[0]} if violations else None
     
     return RecommendationResponse(

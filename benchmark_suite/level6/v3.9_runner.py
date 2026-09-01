@@ -20,11 +20,9 @@ def create_mock_node(node_id: str, score: float, cost: float, dependencies: list
         architectural_decisions={}
     )
     
-    # Run the deterministic evaluator
     res = evaluate_ontology(arch, env_constraints, env_requirements=[])
     b_feasible = len(res.constraint_failures) == 0 and len(res.requirement_failures) == 0
     
-    # We simplify evaluate_node_state for the test: if not feasible, REJECTED; else TERMINAL (assuming leaf and no uncertainties)
     status = "TERMINAL" if b_feasible else "REJECTED"
     
     return PathNode(
@@ -46,14 +44,11 @@ def create_mock_node(node_id: str, score: float, cost: float, dependencies: list
 def run_v39_experiment():
     print("--- V3.9: Gap Promotion & Identical-Input Replay ---")
     
-    env_constraints = ["budget_less_than_500_per_month"] # Notice missing 'rfid_infrastructure_available'
+    env_constraints = ["budget_less_than_500_per_month"]
     
     def generate_frozen_payload():
-        # Represents the identical frozen input
         return [
-            # Candidate A: Safe, known. Score 89
             create_mock_node("Node-A-Safe", score=89, cost=100, dependencies=[], env_constraints=env_constraints),
-            # Candidate B: Risky, unknown. Score 90
             create_mock_node("Node-B-Risky", score=90, cost=100, dependencies=["requires_advanced_patient_tracking"], env_constraints=env_constraints)
         ]
         
@@ -82,7 +77,7 @@ def run_v39_experiment():
     
     print("\n--- PHASE 3: POST-PROMOTION REPLAY ---")
     ontology_module.ONTOLOGY_VERSION = "v3.9"
-    nodes_v39 = generate_frozen_payload() # Identical input function execution
+    nodes_v39 = generate_frozen_payload()
     
     print(f"Candidate B Status: {nodes_v39[1].status}")
     if nodes_v39[1].status == 'REJECTED':
@@ -90,10 +85,8 @@ def run_v39_experiment():
     
     assert nodes_v39[1].status == "REJECTED", "Candidate B should be rejected due to missing RFID infrastructure."
     
-    # 1. Counterfactual Invariant (Optimizer without audit)
     opt_v39_only = optimize_tree(nodes_v39, {})
     
-    # 2. Optimizer -> Audit
     opt_v39_then = optimize_tree(nodes_v39, {})
     winner_v39 = opt_v39_then.best_architecture
     winner_id_v39 = opt_v39_then.best_path_id

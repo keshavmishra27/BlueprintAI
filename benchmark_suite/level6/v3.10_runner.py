@@ -20,11 +20,9 @@ def create_mock_node(node_id: str, score: float, dependencies: list, env_constra
         architectural_decisions={}
     )
     
-    # Run the deterministic evaluator
     res = evaluate_ontology(arch, env_constraints, env_requirements=[])
     b_feasible = len(res.constraint_failures) == 0 and len(res.requirement_failures) == 0
     
-    # Simplified node state
     status = "TERMINAL" if b_feasible else "REJECTED"
     
     return PathNode(
@@ -53,7 +51,6 @@ def generate_frozen_payload(env_constraints):
     ]
 
 def assert_optimizer_invariant(nodes):
-    # Optimizer unmodified, preferences unchanged, audit doesn't affect winner
     opt_only = optimize_tree(nodes, {})
     opt_audit = optimize_tree(nodes, {})
     assert opt_only.best_path_id == opt_audit.best_path_id
@@ -62,14 +59,12 @@ def assert_optimizer_invariant(nodes):
 def run_v310_experiment():
     print("--- V3.10: The Messy Multi-Candidate Iterative Feedback Loop ---")
     
-    env_constraints = ["standard_hospital_env"] # No neural link, no staffing feed
+    env_constraints = ["standard_hospital_env"]
     
-    # PHASE 1
     print("\n--- Phase 1: Total Ignorance (v3.10.0) ---")
     ontology_module.ONTOLOGY_VERSION = "v3.10.0"
     nodes_p1 = generate_frozen_payload(env_constraints)
     
-    # Assert initial states
     status_map_p1 = {n.id: n.status for n in nodes_p1}
     assert all(s == "TERMINAL" for s in status_map_p1.values()), "All should be terminal initially"
     
@@ -81,8 +76,6 @@ def run_v310_experiment():
     print(f"Gaps: {audit_p1.ontology_gaps_in_winning_architecture}")
     assert set(audit_p1.ontology_gaps_in_winning_architecture) == {"requires_brain_computer_interface", "requires_staffing_feed"}
 
-
-    # PHASE 2
     print("\n--- Phase 2: Promote Gap 1 (v3.10.1) ---")
     ontology_module.ONTOLOGY_VERSION = "v3.10.1"
     nodes_p2 = generate_frozen_payload(env_constraints)
@@ -91,7 +84,6 @@ def run_v310_experiment():
     print(f"Node-B Status: {status_map_p2['Node-B-Risky']} (Reason: {next(n.reject_reasons for n in nodes_p2 if n.id=='Node-B-Risky')})")
     print(f"Node-D Status: {status_map_p2['Node-D-Highest']}")
     
-    # Invariant: Unrelated candidates unaffected
     assert status_map_p2["Node-B-Risky"] == "REJECTED"
     assert status_map_p2["Node-D-Highest"] == "REJECTED"
     assert status_map_p2["Node-A-Safe"] == "TERMINAL"
@@ -107,7 +99,6 @@ def run_v310_experiment():
     assert set(audit_p2.ontology_gaps_in_winning_architecture) == {"requires_staffing_feed"}
     
 
-    # PHASE 3
     print("\n--- Phase 3: Promote Gap 2 (v3.10.2) ---")
     ontology_module.ONTOLOGY_VERSION = "v3.10.2"
     nodes_p3 = generate_frozen_payload(env_constraints)
@@ -115,7 +106,6 @@ def run_v310_experiment():
     
     print(f"Node-E Status: {status_map_p3['Node-E-Mid']}")
     
-    # Invariant: Unrelated candidates unaffected
     assert status_map_p3["Node-E-Mid"] == "REJECTED"
     assert status_map_p3["Node-B-Risky"] == "REJECTED"
     assert status_map_p3["Node-D-Highest"] == "REJECTED"
@@ -131,7 +121,6 @@ def run_v310_experiment():
     assert set(audit_p3.ontology_gaps_in_winning_architecture) == {"requires_irrelevant_magic"}
     
 
-    # PHASE 4
     print("\n--- Phase 4: Promote Gap 3 as Safe (v3.10.3) ---")
     ontology_module.ONTOLOGY_VERSION = "v3.10.3"
     nodes_p4 = generate_frozen_payload(env_constraints)
@@ -139,7 +128,6 @@ def run_v310_experiment():
     
     print(f"Node-C Status: {status_map_p4['Node-C-Strong']}")
     
-    # Invariant: Unrelated candidates unaffected
     assert status_map_p4["Node-C-Strong"] == "TERMINAL"
     assert status_map_p4["Node-A-Safe"] == "TERMINAL"
     assert status_map_p4["Node-E-Mid"] == "REJECTED"

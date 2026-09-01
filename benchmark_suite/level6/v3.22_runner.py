@@ -35,7 +35,6 @@ def run_v322_experiment():
     print(" V3.22: MULTI-OBJECTIVE GOVERNANCE & PARETO")
     print("==================================================")
     
-    # Scenarios for robustness dimension
     base_env = [
         "emr_direct_access_authorized",
         "staffing_feed_v3_available",
@@ -70,28 +69,22 @@ def run_v322_experiment():
         future_scenarios=scenarios
     )
     
-    # Base Candidates for Trade-off
-    # Perf(max), Cost(min), Comp(min), Risk(min), Rob(max)
     
-    # A: High Perf, Low Rob (Fails S1 and S2)
     cand_a = PathNode(
         id="Cand_A_HighPerf", parent_id="root",
         architecture=create_mock_arch(["requires_emr_database_integration", "requires_staffing_feed_v3"]),
         status="TERMINAL", path_score=100.0, path_cost=50.0, operational_complexity=5.0
     )
-    # B: Mod Perf, High Rob (Survives S1, S2)
     cand_b = PathNode(
         id="Cand_B_HighRob", parent_id="root",
         architecture=create_mock_arch([]),
         status="TERMINAL", path_score=80.0, path_cost=50.0, operational_complexity=5.0
     )
-    # C: Low Cost, Mod Perf (Survives S1, S2)
     cand_c = PathNode(
         id="Cand_C_LowCost", parent_id="root",
         architecture=create_mock_arch([]),
         status="TERMINAL", path_score=70.0, path_cost=10.0, operational_complexity=5.0
     )
-    # D: Strictly worse than C (Cost=15 > 10, equal everywhere else)
     cand_d = PathNode(
         id="Cand_D_Dominated", parent_id="root",
         architecture=create_mock_arch([]),
@@ -103,7 +96,6 @@ def run_v322_experiment():
     print_test_header("TEST 1 & 2: Pareto Dominance and True Trade-off")
     res_base = optimize_tree(candidates, ctx)
     
-    # Expected Pareto Frontier: A, B, C. D is dominated by C.
     print(f"Pareto Frontier: {res_base.pareto_frontier}")
     assert "Cand_D_Dominated" not in res_base.pareto_frontier, "Dominated candidate MUST NOT be on the Pareto frontier."
     assert "Cand_A_HighPerf" in res_base.pareto_frontier, "Trade-off candidate A must be on the frontier."
@@ -111,8 +103,7 @@ def run_v322_experiment():
     assert "Cand_C_LowCost" in res_base.pareto_frontier, "Trade-off candidate C must be on the frontier."
     
     print_test_header("TEST 3 & 4: Weight Sensitivity & Pareto Invariance")
-    # Sweep weights and observe governed winner changes, but pareto stays exact same.
-    ctx.optimizer_preferences["cost_lambda"] = 100.0 # Make cost hyper-important
+    ctx.optimizer_preferences["cost_lambda"] = 100.0
     res_sweep1 = optimize_tree(candidates, ctx)
     print(f"High Cost Lambda -> Winner: {res_sweep1.best_path_id} (Score: {res_sweep1.effective_score})")
     assert res_sweep1.best_path_id == "Cand_C_LowCost"
@@ -120,7 +111,7 @@ def run_v322_experiment():
     assert res_sweep1.pareto_frontier == res_base.pareto_frontier, "Pareto frontier MUST remain invariant under weight changes!"
     
     ctx.optimizer_preferences["cost_lambda"] = 0.0
-    ctx.optimizer_preferences["robustness_lambda"] = 100.0 # Make robustness hyper-important
+    ctx.optimizer_preferences["robustness_lambda"] = 100.0
     res_sweep2 = optimize_tree(candidates, ctx)
     print(f"High Robustness Lambda -> Winner: {res_sweep2.best_path_id} (Score: {res_sweep2.effective_score})")
     assert res_sweep2.best_path_id == "Cand_B_HighRob"
@@ -128,20 +119,15 @@ def run_v322_experiment():
     assert res_sweep2.pareto_frontier == res_base.pareto_frontier, "Pareto frontier MUST remain invariant under weight changes!"
     
     print_test_header("TEST 5, 7, 8: Nasty All-Objective Unresolved Attack")
-    # Candidate Nasty dominates everyone on ALL quantitative dimensions, but is UNRESOLVED.
-    # To make it the sole pareto winner, we must compare it against another unresolved candidate
-    # OR we just test it against a set of strictly dominated candidates.
     cand_nasty = PathNode(
         id="Cand_Nasty_Unresolved", parent_id="root",
         architecture=create_mock_arch([], unresolved=True),
-        status="UNRESOLVED", # UNRESOLVED status due to unknown dependencies
-        path_score=200.0, # Best perf
-        path_cost=0.0, # Best cost
-        operational_complexity=0.0 # Best comp
+        status="UNRESOLVED",
+        path_score=200.0,
+        path_cost=0.0,
+        operational_complexity=0.0
     )
     
-    # Cand_Clean_Governed has inferior performance, worse cost, worse complexity, 
-    # and worse robustness (it requires EMR so it fails S1). But it is fully governed (TERMINAL).
     cand_clean = PathNode(
         id="Cand_Clean_Governed", parent_id="root",
         architecture=create_mock_arch(["requires_emr_database_integration"]),
@@ -167,10 +153,7 @@ def run_v322_experiment():
     print(f"Action: {recom.action}")
     assert recom.action == "HOLD_FOR_REVIEW", "Action must be HOLD_FOR_REVIEW despite Pareto dominance"
     
-    # Test 6: Robustness Duplication
     print_test_header("TEST 6: Robustness Duplication Resistance")
-    # Duplicate S1 to try and manipulate Pareto dominance (which relies on raw survival).
-    # Since raw survival is evaluated after deduplication, it should not change.
     dup_scenarios = copy.deepcopy(scenarios)
     dup_s1 = copy.deepcopy(dup_scenarios[0])
     dup_s1["id"] = "S1_Dup"

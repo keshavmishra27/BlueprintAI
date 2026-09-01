@@ -9,7 +9,6 @@ from decision_engine.input_layer.schemas import UserIdea
 from decision_engine.input_layer.profiler import profile_user_idea
 from decision_engine.input_layer.player_b import generate_player_b_response
 
-# We need to import retrieval logic from the KB
 from knowledge_base.sih.retrieval import retrieve_projects, retrieve_patterns, load_json_files
 
 def main():
@@ -17,17 +16,14 @@ def main():
     print("    WHAT -> WHY -> HOW Input Layer Experiment     ")
     print("==================================================\n")
     
-    # 1. Capture User Idea
     idea = UserIdea(
         what="Reduce hospital waiting time",
         why="Patients spend too long waiting because resources aren't coordinated.",
         how="Maintain a queue and use an LLM to predict appointment timing."
     )
     
-    # 2. Profile Idea
     profile = profile_user_idea(idea)
     
-    # 3. Retrieve KB Evidence
     kb_dir = base_dir / "knowledge_base" / "sih"
     all_projects = load_json_files(kb_dir / "normalized")
     all_patterns = load_json_files(kb_dir / "patterns")
@@ -38,11 +34,9 @@ def main():
     relevant_patterns = retrieve_patterns(project_ids, all_patterns)
     print(f"Retrieved {len(top_projects)} projects and {len(relevant_patterns)} patterns.")
     
-    # 4. Generate Player B Response
     print("\n")
     response = generate_player_b_response(idea, [p["project"] for p in top_projects], relevant_patterns)
     
-    # 5. Output Final Results
     print("\n==================================================")
     print("                 BATTLE RESULTS                   ")
     print("==================================================")

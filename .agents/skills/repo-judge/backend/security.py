@@ -9,24 +9,19 @@ def detect_credential_leaks(text: str) -> bool:
     if not text:
         return False
         
-    # Basic heuristic patterns for common secrets.
-    # We do not want to be overly aggressive and block valid JSON, 
-    # but we want to catch raw tokens if the LLM pastes them in 'description' or 'explanation'.
     
     patterns = [
-        r'ghp_[a-zA-Z0-9]{36}',                # GitHub Personal Access Token
-        r'AKIA[0-9A-Z]{16}',                   # AWS Access Key ID
-        r'xox[baprs]-[0-9a-zA-Z]{10,48}',      # Slack Token
-        r'eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+' # JWT (often contains secrets)
+        r'ghp_[a-zA-Z0-9]{36}',
+        r'AKIA[0-9A-Z]{16}',
+        r'xox[baprs]-[0-9a-zA-Z]{10,48}',
+        r'eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+'
     ]
     
     for pattern in patterns:
         if re.search(pattern, text):
             return True
             
-    # We can also check for explicit assignments in text like api_key="sk-..."
-    # A generic high-entropy checker or specific service prefix checker works best.
-    if re.search(r'sk-[a-zA-Z0-9]{48}', text): # OpenAI Key pattern
+    if re.search(r'sk-[a-zA-Z0-9]{48}', text):
         return True
         
     return False

@@ -12,7 +12,7 @@ class ResolutionRequest(BaseModel):
     evidence: List[str]
     resolver_identity: str
     curator_approved: bool
-    confidence: float = 1.0  # Used as adversarial metadata, explicitly ignored in arbitration
+    confidence: float = 1.0
     status: Literal["PENDING", "APPROVED", "REJECTED", "REVOKED"] = "PENDING"
 
 class ConflictResolution(BaseModel):
@@ -53,7 +53,6 @@ class PromotedPolicyRegistry:
         if req.dependency not in self._policy_sets:
             self._policy_sets[req.dependency] = []
             
-        # Add or replace by ID
         existing = [p for p in self._policy_sets[req.dependency] if p.id == req.id]
         if existing:
             self._policy_sets[req.dependency].remove(existing[0])
@@ -65,7 +64,6 @@ class PromotedPolicyRegistry:
         if not resolution.curator_authorized:
             raise ValueError("ConflictResolution must be curator authorized")
             
-        # Find the dependency this applies to
         target_dep = None
         for dep, conflict_info in self._conflicts.items():
             if conflict_info["conflict_id"] == resolution.conflict_id:
@@ -75,7 +73,6 @@ class PromotedPolicyRegistry:
         if not target_dep:
             return
             
-        # Remove rejected policies from the pool
         filtered_policies = [
             p for p in self._policy_sets[target_dep] 
             if p.id not in resolution.rejected_policy_ids
@@ -85,18 +82,14 @@ class PromotedPolicyRegistry:
             
     def _arbitrate(self, dependency: str):
         proposals = self._policy_sets[dependency]
-        # Sort by deterministic property (id) to guarantee order independence
-        # Explicitly ignoring 'confidence'
         proposals = sorted(proposals, key=lambda x: x.id)
         
         merged_props = {}
         merged_constraints = set()
         
         for p in proposals:
-            # Check for contradiction in properties
             for k, v in p.requested_operational_property.items():
                 if k in merged_props and merged_props[k] != v:
-                    # CONTRADICTION
                     self._conflicts[dependency] = {
                         "conflict_id": f"conflict_{dependency}",
                         "reason": "POLICY_CONFLICT",
@@ -112,7 +105,6 @@ class PromotedPolicyRegistry:
             for c in p.required_constraints:
                 merged_constraints.add(c)
                 
-        # If we reach here, it's composable or identical
         if dependency in self._conflicts:
             del self._conflicts[dependency]
             
@@ -122,7 +114,6 @@ class PromotedPolicyRegistry:
         }
             
     def revoke_policy(self, dependency: str):
-        # We simulate revocation by setting status to REVOKED for all policies under this dep and re-arbitrating
         if dependency in self._policy_sets:
             for p in self._policy_sets[dependency]:
                 p.status = "REVOKED"
@@ -141,7 +132,6 @@ class PromotedPolicyRegistry:
         failures = []
         for dep in arch.semantic_dependencies:
             if dep in self._arbitrated:
-                # First check if any policy is revoked
                 is_revoked = any(p.status == "REVOKED" for p in self._policy_sets[dep])
                 if is_revoked:
                     failures.append(f"{dep}_authorization_revoked")

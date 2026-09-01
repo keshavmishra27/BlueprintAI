@@ -66,7 +66,7 @@ def create_payload():
                     "capabilities": ["predict_patient_waiting_times"],
                     "data_required": ["historical queue data"],
                     "resources_required": ["existing hospital computer"],
-                    "constraints": [], # NO authorization
+                    "constraints": [],
                     "evidence_provenance": [],
                     "historical_decisions": [],
                     "semantic_dependencies": [
@@ -98,7 +98,7 @@ def create_payload():
                     "capabilities": ["predict_patient_waiting_times"],
                     "data_required": ["historical queue data"],
                     "resources_required": ["existing hospital computer"],
-                    "constraints": ["emr_direct_access_authorized"], # HAS authorization
+                    "constraints": ["emr_direct_access_authorized"],
                     "evidence_provenance": [],
                     "historical_decisions": [],
                     "semantic_dependencies": [
@@ -162,7 +162,7 @@ def create_payload():
                     "capabilities": ["predict_patient_waiting_times"],
                     "data_required": ["historical queue data"],
                     "resources_required": ["existing hospital computer"],
-                    "constraints": [], # NO authorization
+                    "constraints": [],
                     "evidence_provenance": [],
                     "historical_decisions": [],
                     "semantic_dependencies": [

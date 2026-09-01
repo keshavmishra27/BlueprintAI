@@ -7,7 +7,7 @@ base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 
 from decision_engine.input_layer.schemas import ArchitectureNode, Requirement, UserIdea, ArchitectureComparison
-
+from idea_refiner.schema import RequirementArtifact
 class ArchitectureState(BaseModel):
     architecture: ArchitectureNode
     generation: int
@@ -25,6 +25,7 @@ class StateMutation(BaseModel):
 class AnswerOption(BaseModel):
     mutation: StateMutation
     candidate_architecture: Optional[ArchitectureNode] = None
+    epistemic_resolutions: Dict[str, str] = {}
 
 class BranchOutcome(BaseModel):
     b_feasible: bool
@@ -82,10 +83,14 @@ class PathNode(BaseModel):
     path_timeline: Optional[float] = None
     path_score: Optional[float] = None
     operational_complexity: Optional[float] = None
-    status: Literal["ACTIVE", "ALTERNATIVE", "REJECTED", "NEEDS_INFORMATION", "TERMINAL", "UNEXPLORED_HYPOTHESIS", "UNRESOLVED"]
+    status: Literal["ACTIVE", "ALTERNATIVE", "REJECTED", "NEEDS_INFORMATION", "TERMINAL", "UNEXPLORED_HYPOTHESIS", "UNRESOLVED", "INVALID_CANDIDATE", "MAX_TURNS_REACHED"]
     reject_reasons: Optional[List[str]] = None
     selected_by_user: bool = False
     epistemic_provenance: Optional[Dict[str, Any]] = None
+    epistemic_status: Optional[str] = None
+    epistemic_evidence: Dict[str, str] = {}
+    loop_identity_hash: Optional[str] = None
+    uncertainty_target: Optional[str] = None
 
 class TreeState(BaseModel):
     current_state_id: str
@@ -95,6 +100,7 @@ class TreeState(BaseModel):
     battle_history: List[ArchitectureComparison]
     decision_graph: List[PathNode] = []
     optimization_preferences: Optional[Dict[str, Any]] = None
+    epistemic_requirements: Optional[RequirementArtifact] = None
 
 class DecisionTraceEntry(BaseModel):
     question_text: str

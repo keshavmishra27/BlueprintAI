@@ -16,27 +16,27 @@ class DecisionRecord(Base):
     idea_text = Column(String, nullable=False)
     parent_id = Column(String, ForeignKey("decisions.id"), nullable=True)
     
-    # Store the core data as JSON blobs
     architecture_json = Column(JSON, nullable=False)
     governance_json = Column(JSON, nullable=False)
     alternatives_json = Column(JSON, nullable=True)
     
-    # Fingerprints for identity tracking
+    winner_id = Column(String, nullable=True)
+    candidates_json = Column(JSON, nullable=True)
+    pareto_frontier_json = Column(JSON, nullable=True)
+    explanation = Column(String, nullable=True)
+    
     decision_fingerprint = Column(String, nullable=False)
     graph_fingerprint = Column(String, nullable=False)
     context_fingerprint = Column(String, nullable=False)
     requirement_set_fingerprint = Column(String, nullable=False)
     
-    # Lifecycle status (ACTIVE, SUPERSEDED, REVOKED)
     status = Column(String, nullable=False, default="ACTIVE")
     
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    # Relationships
     parent = relationship("DecisionRecord", remote_side=[id], backref="children")
     gap_reports = relationship("GapReportRecord", back_populates="decision")
     
-    # Note: For refinements, source_decision_id and target_decision_id link to DecisionRecord
 
 @event.listens_for(DecisionRecord, 'before_update')
 def receive_before_update(mapper, connection, target):
@@ -56,7 +56,6 @@ class GapReportRecord(Base):
     requirement_set_fingerprint = Column(String, nullable=False)
     repository_fingerprint = Column(String, nullable=False)
     
-    # Details of the gap
     expected_architecture_json = Column(JSON, nullable=False)
     actual_architecture_json = Column(JSON, nullable=False)
     findings_json = Column(JSON, nullable=False)
@@ -65,7 +64,6 @@ class GapReportRecord(Base):
     
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     decision = relationship("DecisionRecord", back_populates="gap_reports")
     refinements = relationship("RefinementRecord", back_populates="gap_report")
 
@@ -83,7 +81,6 @@ class RefinementRecord(Base):
     
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     source_decision = relationship("DecisionRecord", foreign_keys=[source_decision_id])
     target_decision = relationship("DecisionRecord", foreign_keys=[target_decision_id])
     gap_report = relationship("GapReportRecord", back_populates="refinements")

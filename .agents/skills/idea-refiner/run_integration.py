@@ -234,7 +234,6 @@ def main():
         ans = user_profile.get(q_text, "NO")
         prnt(f"**User Profile Answers:** {ans}\n")
         
-        # ------------------ Level 1 ------------------
         prnt(f"### Level 1: Evaluating post-answer '{ans}'\n")
         
         ans_payload = {
@@ -276,7 +275,6 @@ def main():
         ans2 = user_profile.get(q_text2, "NO")
         prnt(f"**User Profile Answers:** {ans2}\n")
         
-        # ------------------ Level 2 ------------------
         prnt(f"### Level 2: Evaluating post-answer '{ans2}'\n")
         
         ans_payload2 = {
@@ -318,7 +316,6 @@ def main():
         ans3 = user_profile.get(q_text3, "YES")
         prnt(f"**User Profile Answers:** {ans3}\n")
         
-        # ------------------ Level 3 ------------------
         prnt(f"### Level 3: Evaluating post-answer '{ans3}'\n")
         
         ans_payload3 = {
@@ -377,11 +374,9 @@ def main():
         prnt("\n## Rejected Branches\n")
         prnt("The following branches were simulated but rejected due to feasibility/requirement failures or suboptimal impact:\n")
         
-        # We can reconstruct rejected branches based on the uncertainties not chosen
         prnt("- **Cloud Privacy (YES branch)**: Rejected because user profile answered NO.")
         prnt("- **Hardware Constraint (YES branch)**: Rejected because user profile answered NO.")
         prnt("- **Prototype Timeline (NO branch)**: Rejected because user profile answered YES.")
-
 
 if __name__ == "__main__":
     main()

@@ -8,7 +8,6 @@ class RefinementArtifact(BaseModel):
     gap_report_fingerprint: str
     requirement_set_fingerprint: str
     
-    # Constraints for LLM/Expander (NOT feasibility claims)
     preserved_decisions: List[str] = Field(description="Decisions that must be preserved due to MATCH")
     requested_changes: List[str] = Field(description="Targets for exploration due to MISSING/MISMATCH")
     unresolved_questions: List[str] = Field(description="Questions requiring investigation due to UNKNOWN")

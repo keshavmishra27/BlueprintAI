@@ -16,11 +16,9 @@ def print_result(step, status, details=""):
 def main():
     print("Starting Runtime Integration Verification...\n")
     
-    # Define ports
     PRODUCT_API_PORT = 8000
     REPO_JUDGE_PORT = 8088
     
-    # 1. Start Product API
     print("1. Starting Product API on port 8000...")
     
     env = os.environ.copy()
@@ -31,7 +29,6 @@ def main():
         env=env
     )
     
-    # Wait for Product API to boot
     for _ in range(25):
         try:
             urllib.request.urlopen(f"http://127.0.0.1:{PRODUCT_API_PORT}/api/v1/decisions")
@@ -45,7 +42,6 @@ def main():
 
     print_result("Start Product API", "PASS", "Product API is responding.")
     
-    # 2. Start Repo Judge Backend
     print("2. Starting Repo Judge Backend on port 8088...")
     repo_judge_proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "main:app", "--port", str(REPO_JUDGE_PORT)],
@@ -53,7 +49,6 @@ def main():
         env=env
     )
     
-    # Wait for Repo Judge API to boot
     for _ in range(15):
         try:
             urllib.request.urlopen(f"http://127.0.0.1:{REPO_JUDGE_PORT}/health")
@@ -69,7 +64,6 @@ def main():
     print_result("Start Repo Judge API", "PASS", "Repo Judge API is responding.")
 
     try:
-        # 3. Create a real canonical Decision via Product API
         print("3. Creating a Decision via Product API...")
         req = urllib.request.Request(
             f"http://127.0.0.1:{PRODUCT_API_PORT}/api/v1/ideas/analyze",
@@ -83,7 +77,6 @@ def main():
                 decision_fingerprint = decision_data['decision_fingerprint']
                 print_result("Create Decision", "PASS", f"Created Decision ID: {decision_id}, Fingerprint: {decision_fingerprint}")
                 
-                # Check Idea Refiner UI payload fields
                 if 'architecture' in decision_data and 'governance' in decision_data:
                     print_result("Idea Refiner Payload Verification", "PASS", "Product API returns expected Decision structure (architecture, governance).")
                 else:
@@ -92,7 +85,6 @@ def main():
             print_result("Create Decision", "FAIL", f"Failed to create decision: {e}")
             raise e
 
-        # 4. Produce a Repo Judge Evaluation
         print("4. Evaluating repository via Repo Judge Backend...")
         mock_repo_payload = {
             "decision_id": decision_id,

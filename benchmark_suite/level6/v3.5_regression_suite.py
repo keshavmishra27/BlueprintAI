@@ -90,10 +90,6 @@ def main():
     test_normal_architecture_terminal()
     test_unknown_dependencies_no_reject_reasons()
     
-    # Run the previous scripts. We assume the backend is NOT running, so we'll only run scripts that don't need the backend
-    # OR we need to make sure the backend is running.
-    # Actually, v3.4 and v3.5 runners need the backend. Let's just start the backend here using subprocess and kill it after.
-    # But I can also just import their run functions and patch the URL, or start uvicorn.
     print("\nAll internal integration tests PASSED.")
     
 if __name__ == "__main__":

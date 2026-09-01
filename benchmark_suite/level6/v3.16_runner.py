@@ -13,7 +13,6 @@ from decision_engine.optimizer.epistemic_audit import run_epistemic_audit
 from decision_engine.api.recommendation import generate_recommendation
 import decision_engine.input_layer.ontology as ontology_module
 
-# Freeze ontology to V3.12 semantics
 ontology_module.ONTOLOGY_VERSION = "v3.12"
 
 def create_mock_arch(dependencies):
@@ -80,14 +79,12 @@ def run_test_1():
     
     opt = optimize_tree([cand_c], {"epistemic_lambda": 0.5})
     
-    # Mathematical assertion
     raw_score = 110.0
     epistemic_risk = 10.0
     expected_effective = raw_score - (0.5 * epistemic_risk)
     
     print(f"Mathematical Assert: {opt.effective_score} == {raw_score} - (0.5 * {epistemic_risk}) -> {opt.effective_score == expected_effective}")
     
-    # Serialization Attack
     serialized_json = opt.model_dump_json()
     deserialized_opt = OptimizationResult.model_validate_json(serialized_json)
     
@@ -95,8 +92,6 @@ def run_test_1():
     print(f"Post-Serialization Status: {deserialized_opt.status}")
     print(f"Post-Serialization Effective Score: {deserialized_opt.effective_score}")
     
-    # Prove provenance survived by manually extracting it from the best_architecture if needed,
-    # or rely on the status and score surviving natively on OptimizationResult.
 
 def run_test_2():
     print("\n==================================================")
@@ -121,7 +116,6 @@ def run_test_2():
     print(f"Candidate A (Raw=90, Eff=90, TERMINAL) -> Action: {resp_a.action}")
     print(f"Candidate C (Raw=110, Eff=105, UNRESOLVED) -> Action: {resp_c.action}")
     
-    # Adversarial Mutation
     print("\n--- Adversarial API Attack ---")
     hacked_opt = OptimizationResult(
         status="UNRESOLVED",
@@ -141,12 +135,10 @@ def run_test_3():
     unknown_deps = ["unknown_1"]
     cand = evaluate_and_create_node("Candidate_B", unknown_deps, constraints, 95.0)
     
-    # Path 1: With Audit
     opt_1 = optimize_tree([cand], {"epistemic_lambda": 0.5})
     audit_res = run_epistemic_audit(opt_1.best_architecture)
     resp_1 = generate_recommendation(opt_1.model_dump_json())
     
-    # Path 2: Without Audit
     opt_2 = optimize_tree([cand], {"epistemic_lambda": 0.5})
     resp_2 = generate_recommendation(opt_2.model_dump_json())
     

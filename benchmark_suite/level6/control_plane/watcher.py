@@ -44,12 +44,21 @@ class HardenedWatcher:
 
     def default_agent_command(self, packet: PromptPacket) -> List[str]:
         """Constructs the standard CLI invocation command for Antigravity."""
-        prompt_instruction = (
-            f"Read the file './{HUMAN_PROMPT_FILE}' in the current working directory using a simple file read. Do NOT perform a system search. "
-            f"Based on its instructions, generate the requested JSON payload "
-            f"and write it to the target file(s): {', '.join(packet.target_artifacts)}. "
-            "Do not use markdown blocks around the JSON in the file, just valid raw JSON."
-        )
+        if packet.instruction_type in (InstructionType.IMPLEMENT, InstructionType.FIX_GAPS):
+            prompt_instruction = (
+                f"Read the file './{HUMAN_PROMPT_FILE}' in the current working directory. "
+                "You are in a bounded code-editing turn. Implement the requested repository changes. "
+                f"When finished, you MUST generate a structured completion/status JSON packet "
+                f"and write it to the target file(s): {', '.join(packet.target_artifacts)}. "
+                "The response packet must be valid raw JSON, not enclosed in markdown."
+            )
+        else:
+            prompt_instruction = (
+                f"Read the file './{HUMAN_PROMPT_FILE}' in the current working directory using a simple file read. Do NOT perform a system search. "
+                f"Based on its instructions, generate the requested JSON payload "
+                f"and write it to the target file(s): {', '.join(packet.target_artifacts)}. "
+                "Do not use markdown blocks around the JSON in the file, just valid raw JSON."
+            )
         return ["agy", "--print", prompt_instruction, "--dangerously-skip-permissions"]
 
     def process_pending_packet(self) -> Optional[ResponsePacket]:
@@ -69,32 +78,27 @@ class HardenedWatcher:
             print(f"[Watcher] Warning: Corrupted prompt packet on disk: {e}", file=sys.stderr)
             return None
 
-        # 1. Identity Gate: Verify Run ID
         if packet.run_id != self.active_run_id:
             print(f"[Watcher] Ignoring stale prompt packet: packet run_id='{packet.run_id}' != active_run_id='{self.active_run_id}'", flush=True)
             return None
 
-        # 2. Sequence Gate: Verify Invocation ID and Step ID
         if packet.invocation_id == self.last_consumed_invocation_id:
             return None
 
         print(f"[{time.strftime('%X')}] [Watcher] Accepted valid PromptPacket: "
               f"scenario='{packet.scenario_id}', step={packet.step_id}, inv='{packet.invocation_id[:8]}'", flush=True)
 
-        # 3. Write human-readable projection
         human_prompt_path = self.workspace_dir / HUMAN_PROMPT_FILE
         with open(human_prompt_path, "w", encoding="utf-8") as f:
             f.write(f"# RUN: {packet.run_id} | SCENARIO: {packet.scenario_id} | STEP: {packet.step_id}\n")
             f.write(f"# INVOCATION: {packet.invocation_id}\n\n")
             f.write(packet.prompt_text)
 
-        # 4. Determine command
         if self.custom_command_builder:
             cmd = self.custom_command_builder(packet)
         else:
             cmd = self.default_agent_command(packet)
 
-        # 5. Execute with bounded timeout
         self.total_invocations += 1
         log_prefix = f"{packet.scenario_id}_step_{packet.step_id}_{packet.invocation_id[:8]}"
         is_shell = isinstance(cmd, str)
@@ -107,7 +111,6 @@ class HardenedWatcher:
             shell=is_shell,
         )
 
-        # 6. Verify Artifacts & JSON Integrity
         artifacts_produced = []
         status = inv_result.status
         bom_normalized = False
@@ -135,7 +138,6 @@ class HardenedWatcher:
                     inv_result.error_message = f"Artifact '{art_name}' contains invalid JSON: {je}"
                     break
 
-        # 7. Construct ResponsePacket
         response = create_response_packet(
             prompt=packet,
             status=status,
@@ -148,17 +150,14 @@ class HardenedWatcher:
             bom_normalized=bom_normalized,
         )
 
-        # 8. Write atomic response packet
         resp_path = self.workspace_dir / RESPONSE_PACKET_FILE
         with open(resp_path, "w", encoding="utf-8") as rf:
             rf.write(response.model_dump_json(indent=2))
 
-        # Backward compatibility ready token
         ready_path = self.workspace_dir / READY_FILE
         with open(ready_path, "w", encoding="utf-8") as tf:
             tf.write(f"READY {packet.invocation_id}")
 
-        # Update watcher state and remove consumed prompt packet
         self.last_consumed_step_id = packet.step_id
         self.last_consumed_invocation_id = packet.invocation_id
         

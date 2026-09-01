@@ -17,7 +17,6 @@ from decision_engine.tree.tree_schemas import ProjectState
 def test_evaluator_parity():
     print("Running Evaluator Parity Test...\n")
     
-    # 1. Setup identical scenario and architecture
     idea = UserIdea(
         what="Predict patient waiting times",
         why="Hospitals need earlier intervention",
@@ -56,47 +55,37 @@ def test_evaluator_parity():
         }
     )
     
-    # 2. Run Baseline (/api/journey/evaluate)
     req_eval = EvaluateRequest(
         project_state=project_state,
         architecture=arch
     )
     
-    # Check session count before
     sessions_before = len(sessions)
     
     resp_eval = evaluate_architecture(req_eval)
     
-    # Assert no mutation
     assert len(sessions) == sessions_before, "Baseline /evaluate mutated the global sessions store!"
     print("[OK] /api/journey/evaluate is pure and does not mutate journey state.")
     
-    # 3. Run BlueprintAI (/api/journey/start)
     session_id = str(uuid.uuid4())
     req_start = JourneyStartRequest(
         session_id=session_id,
         project_state=project_state,
         initial_architecture=arch,
-        candidate_uncertainties=[] # Empty to force immediate evaluation and completion
+        candidate_uncertainties=[]
     )
     
     resp_start = start_journey(req_start)
     
-    # Get the state to check the evaluation of the initial architecture
     state_resp = get_journey_state(session_id)
     
-    # The root node in the tree corresponds to the initial architecture
     root_node = next((n for n in state_resp.decision_graph if n.parent_id is None), None)
     assert root_node is not None, "BlueprintAI tree missing root node"
     
-    # 4. Compare Results
-    # Evaluate endpoint feasible flag
     eval_feasible = resp_eval.feasible
     eval_req_met = resp_eval.requirements_met
     eval_cost = resp_eval.metrics.get('estimated_cost')
     
-    # BlueprintAI tree node feasible flag
-    # In journey.py, battle_history[0] is the root battle
     battle_result = state_resp.battle_history[0]
     bp_feasible = battle_result.b_feasible
     bp_req_met = sum(1 for r in battle_result.requirement_evaluations if r.player_b_satisfies)

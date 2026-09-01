@@ -10,10 +10,13 @@ def create_product_response(idea: str, opt_result: OptimizationResult, gov_repor
     into the product-facing payload.
     """
     human_readable = ""
+    candidates = []
     if decision_graph:
         from idea_refiner.explanations.explainer import ArchitectureExplainer
         explainer = ArchitectureExplainer()
-        human_readable = explainer.explain_decision(opt_result, gov_report, decision_graph)
+        facts = explainer.extract_facts(opt_result, gov_report, decision_graph)
+        human_readable = explainer.render_prose(facts)
+        candidates = facts.candidates_evaluated
         
     arch = opt_result.best_architecture
     
@@ -32,8 +35,11 @@ def create_product_response(idea: str, opt_result: OptimizationResult, gov_repor
         interfaces.extend(arch.output or [])
         
     return ArchitectureDecisionArtifact(
+        decision_id=opt_result.best_path_id or "",
         idea=idea,
-        winning_path_id=opt_result.best_path_id or "",
+        winner_id=opt_result.best_path_id or "",
+        candidates_evaluated=candidates,
+        pareto_frontier_ids=opt_result.pareto_frontier,
         components=components,
         technologies=components,
         databases=databases,
@@ -42,7 +48,6 @@ def create_product_response(idea: str, opt_result: OptimizationResult, gov_repor
         decisions=arch.architectural_decisions if arch else {},
         constraints=arch.constraints if arch else [],
         dependencies=arch.semantic_dependencies if arch else [],
-        pareto_frontier=opt_result.pareto_frontier,
         governance={
             "action": gov_report.action,
             "severity": gov_report.severity,

@@ -8,8 +8,6 @@ def generate_player_b_response(idea: UserIdea, retrieved_projects: List[Dict], r
     """
     print("--- PLAYER B: ANALYZING EVIDENCE AND GENERATING CANDIDATES ---")
     
-    # In a real system, an LLM would construct this dynamically based on the retrieved_projects
-    # Here we mock the precise output requested by the user's experiment constraints.
     
     candidate_1 = CandidateApproach(
         name="Predictive Bottleneck Detection",
@@ -56,7 +54,6 @@ def generate_player_b_response(idea: UserIdea, retrieved_projects: List[Dict], r
         for ev in c.evidence:
             print(f"  Evidence: SIH project {ev.source_project}")
             
-    # Player B selects and combines
     selected_architecture = "Demand prediction + proactive resource routing + dynamic queue optimization."
     architectural_difference = "Where Player B gained an advantage: You predict individual appointment times using an LLM, but don't address the upstream resource bottlenecks. Player B addresses the root cause by forecasting resource shortages and routing proactively."
     
@@ -70,7 +67,6 @@ def generate_player_b_response(idea: UserIdea, retrieved_projects: List[Dict], r
         "More complex data integration than a simple LLM wrapper."
     ]
     
-    # Consolidate all evidence used in the final selection
     final_evidence = []
     for c in candidates:
         final_evidence.extend(c.evidence)

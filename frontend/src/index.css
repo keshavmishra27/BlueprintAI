@@ -29,7 +29,6 @@ body {
   box-sizing: border-box;
 }
 
-/* Layout */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -79,7 +78,6 @@ body {
   width: 100%;
 }
 
-/* Components */
 .card {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -141,7 +139,6 @@ body {
   border-color: var(--accent-color);
 }
 
-/* Grids and Lists */
 .grid {
   display: grid;
   gap: 1.5rem;
@@ -170,7 +167,6 @@ body {
 .badge.warning { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; }
 .badge.info { background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; }
 
-/* Dashboard Specifics */
 .metric-box {
   background-color: var(--bg-primary);
   padding: 1rem;
@@ -189,7 +185,6 @@ body {
   color: var(--text-secondary);
 }
 
-/* Architecture Page */
 .component-item {
   display: flex;
   justify-content: space-between;
@@ -202,7 +197,6 @@ body {
 .component-name { font-weight: 600; }
 .component-type { color: var(--text-secondary); font-size: 0.875rem; }
 
-/* Gap Report */
 .gap-item {
   padding: 1rem;
   border: 1px solid var(--border-color);
@@ -219,7 +213,6 @@ body {
   margin: 0.5rem 0 0 0;
 }
 
-/* Flex utilities */
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
 .items-center { align-items: center; }

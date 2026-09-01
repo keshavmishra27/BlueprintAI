@@ -18,14 +18,10 @@ class SimulatedUser:
         self.constraint_profile = constraint_profile
         
     def answer_question(self, question: QuestionNode) -> str:
-        # Match options against the user's secret profile
         for option_key, mutation in question.options.items():
-            # If the mutation adds constraints that the user has in their profile, that's the answer.
-            # Simplified matching for this mocked V1
             for constraint in mutation.add_constraints:
                 if constraint in self.constraint_profile:
                     return option_key
-        # Default fallback
         return "NO"
 
 def main():
@@ -33,7 +29,6 @@ def main():
     print("    ADAPTIVE TREE DECISION RUNNER                 ")
     print("==================================================\n")
     
-    # The user's actual constraints (unknown to the engine initially)
     user_secret_profile = ["no historical data", "no gpu instance", "cloud infrastructure available"]
     simulated_user = SimulatedUser(user_secret_profile)
     
@@ -58,7 +53,6 @@ def main():
         Requirement(name="Handle resource bottlenecks", required=True)
     ]
     
-    # Engine starts with no known constraints (or we can inject one to show skipping)
     p_state = ProjectState(
         user_idea=idea,
         current_constraints=["cloud infrastructure available"], 
@@ -73,7 +67,6 @@ def main():
     
     b_arch_state = simulate_player_b_generation(1, p_state)
     
-    # Run Battle 0
     print(">>> LEVEL 0: Initial State")
     print(f"Constraints: {p_state.current_constraints}")
     result_0 = evaluate_battle(user_arch_state.architecture, b_arch_state.architecture, p_state.current_constraints, p_state.current_requirements)
@@ -113,31 +106,27 @@ def main():
             
         print(f"\n>>> QUESTION NODE: {q_node.question_text}")
         
-        # Simulated User answers
         user_answer = simulated_user.answer_question(q_node)
         print(f"\nUser selects: {user_answer}")
         
         mutation = q_node.options[user_answer]
         
-        # Check for same_state_detected
         new_constraints = [c for c in mutation.add_constraints if c not in tree_state.project_state.current_constraints]
         if not new_constraints:
             print("\n[STOP] State mutation produces no state change.")
             break
             
-        # Build Trace Entry
         trace_entry = DecisionTraceEntry(
             question_text=q_node.question_text,
             why_selected=f"YES -> {q_node.uncertainty.yes_outcome.architecture_name} ({q_node.uncertainty.yes_outcome.winner}), NO -> {q_node.uncertainty.no_outcome.architecture_name} ({q_node.uncertainty.no_outcome.winner}). Impact={q_node.uncertainty.decision_impact_score}",
             user_answer=user_answer,
             state_mutation=mutation.add_constraints,
             architecture_before=" -> ".join(tree_state.player_b_architecture.architecture.processing),
-            architecture_after="", # Will fill after adaptation
+            architecture_after="",
             battle_before=tree_state.battle_history[-1].winner.value,
-            battle_after="" # Will fill after evaluation
+            battle_after=""
         )
         
-        # Mutate State
         tree_state.project_state.current_constraints.extend(new_constraints)
         
         print("\n[Player B Adapting...]")
@@ -150,7 +139,6 @@ def main():
             
         trace_entry.architecture_after = " -> ".join(tree_state.player_b_architecture.architecture.processing)
             
-        # Evaluate New Battle
         new_result = evaluate_battle(
             tree_state.user_architecture.architecture, 
             tree_state.player_b_architecture.architecture, 
@@ -177,10 +165,7 @@ def main():
     print(f"Final Winner: {tree_state.battle_history[-1].winner.value.upper()}")
     
     print("\n--- OPTIMIZATION RESULTS ---")
-    # For simulation, just create a mock graph out of the trace to prove integration.
-    # In a real system, the tree expansion would populate decision_graph directly.
     mock_graph = []
-    # Add a mock terminal node to represent the final chosen architecture
     mock_graph.append(PathNode(
         id="final_chosen",
         parent_id="root",
@@ -191,7 +176,6 @@ def main():
         path_value=90.0
     ))
     
-    # Add a mock alternative unselected terminal node that is actually better
     from decision_engine.input_layer.schemas import ArchitectureNode
     alt_arch = ArchitectureNode(
         inputs=[], processing=["Unselected Fast Path"], decision=[], output=[], capabilities=[], data_required=[], resources_required=[], constraints=[]

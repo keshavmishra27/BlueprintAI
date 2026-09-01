@@ -6,7 +6,6 @@ import json
 def Page():
     solara.Title("BlueprintAI - Decisions Dashboard")
     
-    # State for decisions
     decisions, set_decisions = solara.use_state([])
     error, set_error = solara.use_state(None)
     
@@ -37,7 +36,6 @@ def Page():
         for d in decisions:
             with solara.Card(title=f"Decision {d.get('id')}", elevation=2, margin=2):
                 with solara.Columns([1, 1, 1]):
-                    # Core IDs
                     with solara.Column():
                         solara.Markdown("### Identity")
                         solara.Markdown(f"**Decision ID:** `{d.get('id')}`")
@@ -45,7 +43,6 @@ def Page():
                         solara.Markdown(f"**Decision Fingerprint:** `{d.get('decision_fingerprint')}`")
                         solara.Markdown(f"**Graph Fingerprint:** `{d.get('graph_fingerprint')}`")
                     
-                    # Governance
                     with solara.Column():
                         gov = d.get("governance", {})
                         action = gov.get("action", "UNKNOWN")
@@ -53,7 +50,6 @@ def Page():
                         
                         solara.Markdown("### Governance State")
                         
-                        # Color coding based on action
                         color = "info"
                         if action in ["REJECTED", "BLOCK"]: color = "error"
                         elif action in ["UNRESOLVED", "REVIEW"]: color = "warning"
@@ -69,7 +65,6 @@ def Page():
                         else:
                             solara.Markdown("*No additional epistemic metadata/scores recorded.*")
                             
-                    # Architecture
                     with solara.Column():
                         arch = d.get("architecture", {})
                         components = arch.get("components", [])
@@ -81,7 +76,6 @@ def Page():
                         else:
                             solara.Markdown("*No components registered.*")
                 
-                # Show raw decisions context if any
                 arch_decisions = d.get("architecture", {}).get("decisions", [])
                 if arch_decisions:
                     with solara.Details("Architecture Decisions (Raw)"):

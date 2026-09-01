@@ -11,7 +11,6 @@ from backend.app.services.llm_factory import invoke_hybrid_llm, extract_json_fro
 from decision_engine.input_layer.schemas import ArchitectureNode, UserIdea
 from decision_engine.tree.tree_schemas import AgentUncertainty, ProjectState, StateMutation
 
-# Ensure we have our structured output schemas
 class PlayerBResponse(BaseModel):
     architecture: ArchitectureNode
     based_on: str
@@ -56,7 +55,6 @@ def llm_baseline(idea: UserIdea, constraints: List[str]) -> ArchitectureNode:
     response = invoke_hybrid_llm(prompt, temperature=0.3)
     data = extract_json_from_text(response.content)
     
-    # Coerce strings to lists for Pydantic validation
     for field in ["inputs", "processing", "decision", "output", "capabilities", "data_required", "resources_required", "constraints", "evidence_provenance"]:
         if field in data and isinstance(data[field], str):
             data[field] = [data[field]]
@@ -127,7 +125,6 @@ def llm_generate_player_b(
     response = invoke_hybrid_llm(prompt, temperature=0.3)
     data = extract_json_from_text(response.content)
     
-    # Simple repair if empty
     if not data:
         raise ValueError(f"Failed to parse JSON from LLM: {response.content}")
         
@@ -203,7 +200,6 @@ def llm_find_uncertainties(architecture: ArchitectureNode, project_state: Projec
     for unc in data["uncertainties"]:
         unc["id"] = str(uuid.uuid4())
         
-        # Coerce strings to lists in candidate architectures
         for arch_key in ["yes_candidate_architecture", "no_candidate_architecture"]:
             if arch_key in unc:
                 arch_data = unc[arch_key]

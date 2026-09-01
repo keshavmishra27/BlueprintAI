@@ -3,7 +3,6 @@ import json
 from pathlib import Path
 import sys
 
-# Ensure the module can be run directly from the pipeline directory
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from pipeline.ingest import ingest_raw_data
@@ -18,7 +17,6 @@ def main():
     
     print("--- Starting SIH Knowledge Base Pipeline ---")
     
-    # 1. Ingest
     print(f"Ingesting raw data from {raw_dir}...")
     raw_records = ingest_raw_data(raw_dir)
     print(f"Ingested {len(raw_records)} raw records.")
@@ -27,7 +25,6 @@ def main():
         print("No raw records found. Exiting.")
         return
         
-    # 2. Normalize and Validate
     print("Normalizing and validating records...")
     validated, errors = normalize_records(raw_records)
     print(f"Successfully validated {len(validated)} records.")
@@ -36,16 +33,13 @@ def main():
         for err in errors:
             print(f"  - Record {err['record_id']}: {err['error']}")
             
-    # 3. Deduplicate
     print("Deduplicating records...")
     unique, duplicates = deduplicate_records(validated)
     print(f"Found {len(unique)} unique records, {len(duplicates)} duplicates.")
     
-    # 4. Store Normalized
     print(f"Saving normalized records to {normalized_dir}...")
     normalized_dir.mkdir(exist_ok=True)
     
-    # Save individually for easier version control and readability
     for record in unique:
         output_file = normalized_dir / f"{record.id}.json"
         with open(output_file, "w", encoding="utf-8") as f:
@@ -53,11 +47,9 @@ def main():
             
     print(f"Saved {len(unique)} files to {normalized_dir}.")
     
-    # 5. Generate Statistics
     stats = generate_statistics(unique)
     print_statistics(stats)
     
-    # Save statistics to a file for easy viewing
     stats_file = base_dir / "statistics.json"
     with open(stats_file, "w", encoding="utf-8") as f:
         json.dump(stats, f, indent=2)

@@ -38,7 +38,6 @@ def run_blueprintai_protocol():
         current_requirements=requirements
     )
     
-    # 1. Baseline / Initial Architecture
     initial_arch = ArchitectureNode(
         inputs=["local hospital database (historical queue, appointments, staffing)"],
         processing=["Local cron job extracting data hourly", "Lightweight XGBoost model trained on historical data"],
@@ -108,12 +107,8 @@ def run_blueprintai_protocol():
     print(f"Engine selected uncertainty: {resp.selected_uncertainty_text}")
     print("User answered: NO")
     
-    # User answered NO to the database question.
-    # The agent adapts the architecture.
     agent_adapted_arch_for_no = copy.deepcopy(no_arch_db)
-    # The agent also generates new uncertainties (or none, for simplicity let's assume we have none for now)
     
-    # We need to find the parent node id for the question
     state = get_journey_state(session_id)
     root_node = next(n for n in state.decision_graph if n.parent_id is None)
     
@@ -129,15 +124,12 @@ def run_blueprintai_protocol():
     ans_resp = answer_journey(ans_req)
     print(f"Status after NO answer: {ans_resp.status}")
     
-    # Exhaustion logic
     state = get_journey_state(session_id)
     unexplored = [n for n in state.decision_graph if n.status == "UNEXPLORED_HYPOTHESIS"]
     print(f"Unexplored hypotheses remaining: {len(unexplored)}")
     for n in unexplored:
         print(f" -> Exploring branch: '{n.user_answer}' for '{n.question_that_produced_it}'")
         
-        # Agent generates architecture for the YES branch
-        # Since YES means direct database query is allowed, the agent proposes the initial_arch
         agent_adapted_arch_for_yes = copy.deepcopy(initial_arch)
         
         yes_req = JourneyAnswerRequest(
@@ -151,7 +143,6 @@ def run_blueprintai_protocol():
         yes_resp = answer_journey(yes_req)
         print(f"Status after {n.user_answer} answer: {yes_resp.status}")
 
-    # Final Evaluation
     state = get_journey_state(session_id)
     terminals = [n for n in state.decision_graph if n.status in ["TERMINAL", "REJECTED", "ACTIVE"] and n.user_answer is not None]
     

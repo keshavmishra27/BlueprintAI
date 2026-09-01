@@ -3,7 +3,7 @@ import { CheckCircle2, XCircle, Slash } from 'lucide-react';
 
 export default function Checks({ checks }: { checks: RepoJudgeCheck[] }) {
   if (!checks || checks.length === 0) return null;
-  
+
   const getIcon = (status: string) => {
     switch(status) {
       case 'completed': return <CheckCircle2 size={18} className="text-success" style={{ color: 'var(--color-success)' }}/>;

@@ -9,7 +9,6 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
 
-# Add project root to sys.path
 root_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(root_dir))
 
@@ -26,7 +25,6 @@ from benchmark_suite.level6.control_plane.handshake import (
     HUMAN_PROMPT_FILE,
 )
 
-# Scenarios directory
 scenarios_dir = Path("benchmark_suite/scenarios/v3_core")
 scenarios = sorted(glob.glob(str(scenarios_dir / "*.json")))
 
@@ -41,7 +39,6 @@ base_results_dir = Path(f"benchmark_suite/level6/results/{RUN_ID}")
 os.makedirs(base_results_dir, exist_ok=True)
 os.makedirs(base_results_dir / "raw", exist_ok=True)
 
-# Write manifest
 with open(base_results_dir / "manifest.txt", "w") as f:
     f.write(f"Run ID: {RUN_ID}\n")
     f.write(f"Timestamp: {datetime.now().isoformat()}\n")
@@ -90,7 +87,6 @@ def dispatch_and_wait(
         timeout_seconds=timeout_seconds,
     )
     
-    # 1. Clean prior transient response files
     resp_file = Path(RESPONSE_PACKET_FILE)
     if resp_file.exists():
         try: os.remove(resp_file)
@@ -101,12 +97,10 @@ def dispatch_and_wait(
         try: os.remove(ready_file)
         except Exception: pass
 
-    # 2. Write prompt packet
     prompt_file = Path(PROMPT_PACKET_FILE)
     with open(prompt_file, "w", encoding="utf-8") as f:
         f.write(prompt.model_dump_json(indent=2))
 
-    # 3. Bounded wait loop
     max_wait = timeout_seconds + safety_margin_seconds
     start_t = time.time()
     
@@ -117,7 +111,6 @@ def dispatch_and_wait(
                     resp_data = json.load(f)
                 response = ResponsePacket(**resp_data)
                 
-                # Check identity match
                 id_res = validate_identity(prompt, response)
                 if id_res["valid"]:
                     return response
@@ -136,7 +129,6 @@ for scenario_path in scenarios:
         
     name = Path(scenario_path).stem
     
-    # Preflight Assertions
     metric_profile = scenario.get("metric_profile", {})
     hidden_facts = scenario.get("hidden_facts_to_reveal", {})
     expected_branches = scenario.get("expected_relevant_branches", 0)
@@ -154,7 +146,6 @@ for scenario_path in scenarios:
     print(f"STARTING SCENARIO: {name}")
     print(f"======================================")
     
-    # Step 0: Initial Public Prompt
     prompt_text = (
         f"# SCENARIO: {name}\n"
         f"Problem: {scenario.get('problem_what')}\n"
@@ -186,17 +177,14 @@ for scenario_path in scenarios:
     if os.path.exists("baseline.json"): shutil.copy("baseline.json", raw_dir / "baseline.json")
     if os.path.exists("blueprint.json"): shutil.copy("blueprint.json", raw_dir / "blueprint_initial.json")
     
-    # 2. Evaluate Baseline Public & Real
     with open("baseline.json", "r", encoding="utf-8-sig") as f:
         baseline_payload = json.load(f)
         
-    # Public Eval
     pub_payload = dict(baseline_payload)
     pub_payload["private_context"] = scenario
     pub_res = requests.post("http://127.0.0.1:8000/api/journey/evaluate", json=pub_payload).json()
     base_pub_f = pub_res.get("feasible", False)
     
-    # Real Eval
     real_payload = dict(baseline_payload)
     hidden_facts_list = list(scenario.get("hidden_facts_to_reveal", {}).values())
     real_payload["project_state"]["current_constraints"].extend(hidden_facts_list)
@@ -207,7 +195,6 @@ for scenario_path in scenarios:
     print(f"Baseline Public Feasibility: {base_pub_f}")
     print(f"Baseline Real Feasibility: {base_real_f}")
     
-    # 3. Start BlueprintAI Journey
     with open("blueprint.json", "r") as f:
         blueprint_payload = json.load(f)
         
@@ -242,7 +229,6 @@ for scenario_path in scenarios:
         qtext = start_res.get("selected_uncertainty_text")
         
         if not qtext:
-            # Resolving UNEXPLORED_HYPOTHESIS
             branch_prompt = (
                 f"# EXPLORE BRANCH\n"
                 f"The engine requires you to resolve an unexplored hypothesis branch.\n"
@@ -290,7 +276,6 @@ for scenario_path in scenarios:
         questions_asked += 1
         print(f"Engine asked: {qtext}")
         
-        # Determine Oracle Answer
         answer = "I don't have a specific policy on that. Proceed with your best judgment."
         matched = False
         for fact_key, fact_val in hidden_facts.items():
@@ -344,7 +329,6 @@ for scenario_path in scenarios:
             f.write(f"{RUN_ID},{requested_session_id},{actual_session_id},{name},{base_pub_f},{base_real_f},False,0,0,0,0,{questions_asked},{irr_q},0,False,False,RUNTIME_FAILURE\n")
         continue
 
-    # Log any trace from the final call if it ended
     append_trace(RUN_ID, requested_session_id, actual_session_id, name, start_res)
     print("Journey Complete.")
     final_status = start_res.get("status")
@@ -353,7 +337,6 @@ for scenario_path in scenarios:
     state = requests.get(f"http://127.0.0.1:8000/api/journey/{requested_session_id}/state").json()
     terminals = [n for n in state["decision_graph"] if n["status"] == "TERMINAL"]
     
-    # Calculate BP Feasibility & Unselected Winner
     bp_f = False
     oracle_hit = False
     unselected_winner = False
@@ -377,7 +360,6 @@ for scenario_path in scenarios:
             
     delta_f = 1 if (bp_f and not base_real_f) else 0
     
-    # HER and UAR logic based on metric_profile
     expected_branches = scenario.get("expected_relevant_branches", 0)
     
     if metric_profile.get("information_acquisition"):
@@ -391,7 +373,6 @@ for scenario_path in scenarios:
     else:
         her = "N/A"
         
-    # BGR_processable: Syntactic & Schema processability reliability
     bgr_processable = valid_processable_branches / total_branches_generated if total_branches_generated > 0 else 0.0
     
     print(f"Results for {name}:")

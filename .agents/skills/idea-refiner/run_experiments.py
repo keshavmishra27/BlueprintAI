@@ -77,10 +77,8 @@ def run_test(test_name, payload, answer_sequence=None):
     print(f"**Impact Score:** {resp.get('decision_impact', q_node['uncertainty']['decision_impact_score'])}\n")
     print("---\n")
     
-    # If we have an answer sequence, let's explore it
     if answer_sequence:
         for ans_info in answer_sequence:
-            # Start a fresh journey to test this branch independently
             r_fresh = httpx.post(f"{base_url}/api/journey/start", json=payload, timeout=10.0)
             if r_fresh.status_code != 200:
                 print(f"**API ERROR {r_fresh.status_code}:** {r_fresh.text}\n")
@@ -130,7 +128,6 @@ def run_test(test_name, payload, answer_sequence=None):
 def run_all():
     print("# Decision Engine Validation Tests\n")
     
-    # Test A: Attendance
     test_a = {
         "what": "Automatically mark classroom attendance.",
         "why": "Manual attendance takes too much class time.",
@@ -191,7 +188,6 @@ def run_all():
         ]
     }
     
-    # Test B: Waste Collection
     test_b = {
         "what": "Reduce unnecessary garbage-collection trips.",
         "why": "Trucks visit bins that aren't full.",
@@ -228,7 +224,6 @@ def run_all():
         "uncertainties": []
     }
     
-    # Test C: Student Learning
     test_c = {
         "what": "Help students identify topics they are weak in.",
         "why": "Students don't know what to practice.",
@@ -265,7 +260,6 @@ def run_all():
         "uncertainties": []
     }
 
-    # Test D: The Impossible Case
     test_d = {
         "what": "Provide AI-powered real-time video analysis.",
         "why": "Detect objects immediately.",
@@ -311,7 +305,7 @@ def run_all():
                 "yes_candidate_architecture": build_arch_node(
                     processing=["Radar Sensor Data", "Edge ML Processing", "Dashboard"],
                     capabilities=["object detection"],
-                    semantic_deps=["requires_gpu"], # Fails "no_gpu"
+                    semantic_deps=["requires_gpu"],
                     data=["radar signatures"],
                     resources=["Radar modules", "Local Edge GPU"]
                 ),
@@ -335,7 +329,7 @@ def run_all():
             "new_player_b_architecture": build_arch_node(
                     processing=["Radar Sensor Data", "Edge ML Processing", "Dashboard"],
                     capabilities=["object detection"],
-                    semantic_deps=["requires_gpu"], # Fails "no_gpu"
+                    semantic_deps=["requires_gpu"],
                     data=["radar signatures"],
                     resources=["Radar modules", "Local Edge GPU"]
                 ),
@@ -346,8 +340,8 @@ def run_all():
             "new_player_b_architecture": build_arch_node(
                     processing=["Local Video File Parsing", "CPU-based YOLOv4-tiny", "Local Report"],
                     capabilities=["object detection", "computer vision"],
-                    semantic_deps=[], # Does not require camera, passes feasibility
-                    data=["prerecorded video file"], # But prerecorded fails real-time requirements
+                    semantic_deps=[],
+                    data=["prerecorded video file"],
                     resources=["CPU"]
                 ),
             "new_uncertainties": []

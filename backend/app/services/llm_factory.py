@@ -42,6 +42,8 @@ def check_llm_availability():
         )
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "gpt-4o-mini")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 OPENROUTER_FALLBACK_MODEL = os.getenv("OPENROUTER_FALLBACK_MODEL", "gpt-4o-mini")
 OPENROUTER_CREW_MODEL = os.getenv("OPENROUTER_CREW_MODEL", OPENROUTER_FALLBACK_MODEL)
 OPENROUTER_FALLBACK_MAX_TOKENS = int(os.getenv("OPENROUTER_FALLBACK_MAX_TOKENS", "4096"))
@@ -156,6 +158,22 @@ def get_hybrid_llm(temperature=0.7):
                 logger.error(f"Failed to initialize OpenRouter fallback model {OPENROUTER_FALLBACK_MODEL}: {e}")
     else:
         logger.warning(f"Skipping OpenRouter: OPENROUTER_API_KEY is missing or invalid.")
+
+    if GROQ_API_KEY:
+        try:
+            logger.info(f"Initializing Groq with model {GROQ_MODEL}")
+            groq_llm = ChatOpenAI(
+                model=GROQ_MODEL,
+                openai_api_key=GROQ_API_KEY,
+                openai_api_base="https://api.groq.com/openai/v1",
+                temperature=temperature,
+                max_tokens=LLM_MAX_TOKENS,
+            )
+            llms.append(groq_llm)
+            logger.info("Groq model added to LLM list")
+        except Exception as e:
+            logger.warning(f"Groq model failed to initialize: {e}")
+
     logger.info(f"Adding Ollama ({OLLAMA_MODEL}) to LLM list")
     ollama = ChatOllama(
         model=OLLAMA_MODEL,

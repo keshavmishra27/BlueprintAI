@@ -15,9 +15,7 @@ def mock_branch_simulation(uncertainty: ArchitecturalUncertainty, base_arch: Arc
     """
     print(f"\nEvaluating Uncertainty: {uncertainty.unknown_fact}")
     
-    # Define the hypothetical YES/NO adaptations
     if "historical data" in uncertainty.unknown_fact.lower():
-        # High Impact
         yes_arch = ArchitectureNode(
             inputs=[], processing=["ML Prediction"], decision=[], output=[], capabilities=[], 
             data_required=["historical_data"], resources_required=["GPU"], constraints=[]
@@ -27,12 +25,10 @@ def mock_branch_simulation(uncertainty: ArchitecturalUncertainty, base_arch: Arc
             data_required=["live_data"], resources_required=["CPU"], constraints=[]
         )
         
-        # We assume the YES branch has a constraint "no_historical_data" = False (implicitly)
         yes_battle = evaluate_battle(base_arch, yes_arch, constraints, requirements)
         no_battle = evaluate_battle(base_arch, no_arch, constraints + ["no_historical_data"], requirements)
         
     elif "gpu" in uncertainty.unknown_fact.lower():
-        # Low Impact
         yes_arch = ArchitectureNode(
             inputs=[], processing=["GPU Inference"], decision=[], output=[], capabilities=[], 
             data_required=["live_data"], resources_required=["GPU"], constraints=[]
@@ -45,7 +41,6 @@ def mock_branch_simulation(uncertainty: ArchitecturalUncertainty, base_arch: Arc
         yes_battle = evaluate_battle(base_arch, yes_arch, constraints, requirements)
         no_battle = evaluate_battle(base_arch, no_arch, constraints + ["no_gpu"], requirements)
         
-    # Calculate Impact
     f_change = yes_battle.b_feasible != no_battle.b_feasible
     w_change = yes_battle.winner != no_battle.winner
     a_change = yes_arch.processing != no_arch.processing

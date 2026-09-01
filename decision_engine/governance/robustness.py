@@ -28,10 +28,8 @@ def evaluate_robustness(candidate, scenarios: List[FutureScenario], known_depend
             fragility_reasons={}
         )
         
-    # Sort scenarios by ID to guarantee order independence (determinism)
     sorted_scenarios = sorted(scenarios, key=lambda s: s.id)
     
-    # 1. Deduplicate by environment_constraints and aggregate probability mass
     unique_scenarios = {}
     for sc in sorted_scenarios:
         key = frozenset(sc.environment_constraints)
@@ -43,17 +41,14 @@ def evaluate_robustness(candidate, scenarios: List[FutureScenario], known_depend
                 "family_id": sc.family_id
             }
         else:
-            # Aggregate probability mass, take max impact, and assume family_id of the first encountered
             unique_scenarios[key]["probability_mass"] += sc.probability
             unique_scenarios[key]["max_impact"] = max(unique_scenarios[key]["max_impact"], sc.impact)
 
-    # Normalize probabilities to sum to 1.0
     total_prob = sum(item["probability_mass"] for item in unique_scenarios.values())
     if total_prob > 0:
         for item in unique_scenarios.values():
             item["probability_mass"] /= total_prob
             
-    # For raw_survival_rate, we compute it on ALL provided scenarios (as per V3.20 baseline)
     total_raw = len(sorted_scenarios)
     failed_raw = 0
     failed_raw_ids = []
@@ -73,7 +68,6 @@ def evaluate_robustness(candidate, scenarios: List[FutureScenario], known_depend
             
     raw_survival_rate = (total_raw - failed_raw) / total_raw if total_raw > 0 else 1.0
 
-    # Evaluate unique scenarios for family and expected loss metrics
     failed_unique_keys = set()
     failed_families = set()
     all_families = set(item["family_id"] for item in unique_scenarios.values())

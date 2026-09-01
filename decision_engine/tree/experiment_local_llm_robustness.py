@@ -26,7 +26,6 @@ def canonicalize_architecture(arch: ArchitectureNode) -> str:
     """
     decisions = arch.architectural_decisions
     if not decisions:
-        # Fallback for older nodes or if LLM failed to generate it
         sorted_caps = sorted(arch.capabilities)
         sorted_res = sorted(arch.resources_required)
         return f"CAPS:{','.join(sorted_caps)}|RES:{','.join(sorted_res)}"
@@ -39,7 +38,6 @@ def run_generative_diversity_experiment(domain_index: int = 1, N: int = 3):
     domain = DOMAINS[domain_index]
     all_projects, all_patterns = load_kb()
     
-    # Baseline
     print("==================================================")
     print(f"RUNNING BASELINE FOR: {domain['name']}")
     print("==================================================")
@@ -47,8 +45,7 @@ def run_generative_diversity_experiment(domain_index: int = 1, N: int = 3):
     baseline_arch = llm_baseline(domain['idea'], baseline_constraints)
     baseline_battle = evaluate_battle(baseline_arch, baseline_arch, baseline_constraints, domain['requirements'])
     
-    # Assign mock cost/value to baseline for scoring
-    baseline_cost = 100.0 # mock
+    baseline_cost = 100.0
     baseline_value = 80.0 if baseline_battle.b_feasible else 0.0
     baseline_score = baseline_value - (baseline_cost / 100.0 * 100 * 0.5)
     
@@ -56,13 +53,12 @@ def run_generative_diversity_experiment(domain_index: int = 1, N: int = 3):
     print(f"Baseline Score: {baseline_score}")
     print(f"Baseline Canonical: {canonicalize_architecture(baseline_arch)}\n")
     
-    # Preparation for Adaptive Runs
     top_projects = retrieve_projects(domain['profile'], all_projects, top_k=3)
     project_ids = [sp['project']['id'] for sp in top_projects]
     relevant_patterns = retrieve_patterns(project_ids, all_patterns)
     kb_evidence_text = format_kb_evidence(top_projects, relevant_patterns)
     
-    global_f_union = {} # dict of arch_id -> canonical_str
+    global_f_union = {}
     global_canonical_patterns = set()
     
     run_metrics = []
@@ -92,7 +88,7 @@ def run_generative_diversity_experiment(domain_index: int = 1, N: int = 3):
         )
         
         depth = 0
-        MAX_DEPTH = 2 # Keeping depth small to reduce API calls for N runs
+        MAX_DEPTH = 2
         questions_asked = 0
         
         root_node = PathNode(
@@ -115,19 +111,17 @@ def run_generative_diversity_experiment(domain_index: int = 1, N: int = 3):
                 break
                 
             eval_uncs = []
-            for unc in uncertainties[:1]: # Limit to 1 uncertainty to save LLM cost in this experiment
+            for unc in uncertainties[:1]:
                 from decision_engine.tree.tree_schemas import StateMutation, BranchOutcome
                 
                 yes_mut = StateMutation(add_constraints=[unc.question_target + " available"], remove_constraints=[])
                 no_mut = StateMutation(add_constraints=["no " + unc.question_target], remove_constraints=[])
                 
-                # Mock YES branch
                 mock_state_yes = copy.deepcopy(tree_state.project_state)
                 mock_state_yes.current_constraints.extend(yes_mut.add_constraints)
                 yes_arch = llm_generate_player_b(mock_state_yes, kb_evidence_text, tree_state.player_b_architecture.architecture, f"Constraint added: {yes_mut.add_constraints}")
                 yes_battle = evaluate_battle(tree_state.user_architecture.architecture, yes_arch.architecture, mock_state_yes.current_constraints, mock_state_yes.current_requirements)
                 
-                # Mock NO branch
                 mock_state_no = copy.deepcopy(tree_state.project_state)
                 mock_state_no.current_constraints.extend(no_mut.add_constraints)
                 no_arch = llm_generate_player_b(mock_state_no, kb_evidence_text, tree_state.player_b_architecture.architecture, f"Constraint added: {no_mut.add_constraints}")
@@ -218,7 +212,7 @@ def run_generative_diversity_experiment(domain_index: int = 1, N: int = 3):
             "blueprint_score": blueprint_score,
             "blueprint_feasible": "TERMINAL" in best_node.status if res.best_path_id else False,
             "delta_score": blueprint_score - baseline_score,
-            "f_i": list(set(f_i_dict.values())) # store unique canonical patterns
+            "f_i": list(set(f_i_dict.values()))
         }
         run_metrics.append(metrics)
         

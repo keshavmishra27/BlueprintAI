@@ -127,8 +127,6 @@ class LiveAgentBenchmark:
                 sys_inst = config.system_instruction if hasattr(config, "system_instruction") else ""
                 content_str = str(contents) + " " + str(sys_inst)
                 
-                # We simulate Gemini's behavior for test_hidden_assumption.json
-                # Baseline generates an architecture with DB connection
                 if "best architecture" in content_str and "New Constraint" not in content_str:
                     arch = {
                         "architecture": {
@@ -153,7 +151,6 @@ class LiveAgentBenchmark:
                     }
                     return MockResponse(json.dumps(arch))
                 
-                # BlueprintAI branch with new constraint
                 if "BlueprintAI protocol" in content_str and "New Constraint: NO" in content_str:
                     arch = {
                         "architecture": {
@@ -178,7 +175,6 @@ class LiveAgentBenchmark:
                     }
                     return MockResponse(json.dumps(arch))
 
-                # BlueprintAI root prompt
                 if "BlueprintAI protocol" in content_str:
                     arch = {
                         "architecture": {
@@ -278,7 +274,7 @@ class LiveAgentBenchmark:
                 contents=prompt,
                 config=config,
             )
-            time.sleep(1) # simulate latency
+            time.sleep(1)
             latency = (time.time() - start_time) * 1000
             
             in_tokens = response.usage_metadata.prompt_token_count if response.usage_metadata else 0
@@ -313,7 +309,6 @@ class LiveAgentBenchmark:
             )
             self.logger.write_generation_log(gen_log)
             
-            # Use Pydantic to parse structured output provided by the API
             parsed = schema.model_validate_json(raw_text)
             return parsed
             
@@ -362,7 +357,6 @@ class LiveAgentBenchmark:
         
         parsed = self._call_gemini(sys_prompt, prompt, BaselineGeneration, "baseline", "gen_baseline_01")
         
-        # Simulating deployment reality
         real_constraints = self.scenario.constraints + list(self.scenario.hidden_facts_to_reveal.values())
         
         if parsed and parsed.architecture:
@@ -391,11 +385,9 @@ class LiveAgentBenchmark:
         
         if parsed and parsed.uncertainties:
             for unc in parsed.uncertainties:
-                # Match generated uncertainty against frozen user policy scenario hidden facts
                 for key, fact in self.scenario.hidden_facts_to_reveal.items():
                     if key.lower() in unc.question_text.lower() or key.lower() in unc.question_target.lower():
                         print(f"Engine selected uncertainty: {unc.question_text}")
-                        # User answers deterministically from policy
                         real_constraints.append(fact)
                         
                         branch_prompt = prompt + f"\nNew Constraint: {fact}"
@@ -412,7 +404,6 @@ class LiveAgentBenchmark:
                             })
                             return score, feasible
         
-        # Fallback if no uncertainties match or generation fails
         if parsed and parsed.architecture:
             score, feasible = self.score_architecture(parsed.architecture, self.scenario.constraints + list(self.scenario.hidden_facts_to_reveal.values()))
             self.logger.write_deterministic_eval({
@@ -427,7 +418,6 @@ class LiveAgentBenchmark:
         return benchmark_evaluator.INFEASIBLE_SENTINEL, False
 
     def evaluate_against_oracle(self, baseline_score, bp_score):
-        # Oracle is hidden entirely from generative steps, evaluated only deterministically
         oracle_score, _ = self.score_architecture(self.scenario.oracle_architecture, self.scenario.constraints + list(self.scenario.hidden_facts_to_reveal.values()))
         delta_f = 1 if bp_score > benchmark_evaluator.INFEASIBLE_SENTINEL and baseline_score <= benchmark_evaluator.INFEASIBLE_SENTINEL else 0
         

@@ -35,7 +35,7 @@ class ProductRepository:
             decision = self.get_decision(current_id)
             if not decision:
                 break
-            history.insert(0, decision) # prepend so older decisions are first
+            history.insert(0, decision)
             current_id = decision.parent_id
             
         return history
@@ -50,12 +50,8 @@ class ProductRepository:
         return self.db.query(DecisionRecord).filter(DecisionRecord.parent_id == decision_id).all()
 
     def get_decisions_by_root(self, root_decision_id: str, status: Optional[str] = None) -> List[DecisionRecord]:
-        # Simple iterative retrieval for the graph (can be optimized with CTEs later)
-        # Find all nodes connected to root
         all_nodes = {}
         
-        # We can just fetch all nodes and build the tree in memory if it's small, 
-        # or just traverse down from root
         to_process = [root_decision_id]
         
         while to_process:

@@ -4,7 +4,7 @@ const Dashboard = () => {
   return (
     <div>
       <h1 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Your Architecture Decisions</h1>
-      
+
       <div className="card">
         <h2 className="card-title">Hospital Overcrowding Predictor</h2>
         <div className="grid grid-cols-3 mb-4">

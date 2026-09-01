@@ -6,6 +6,8 @@ env/
 __pycache__/
 *.py[cod]
 *$py.class
+.ruff_cache/
+.pytest_cache/
 
 .env
 .env.*
@@ -14,29 +16,55 @@ __pycache__/
 .idea/
 *.swp
 *.swo
-
-
 .DS_Store
 Thumbs.db
 
-*.log
+tests/
+*_test.py
+test_*.py
+run_m8_*.py
+run_tests_*.py
+m13_*.py
+hash_script.py
 
+*.log
+*.out
+out.txt
+ready.txt
+*out*.txt
+full_pytest_out.txt
+pytest_out*.txt
+tests_out*.txt
+test_out.txt
+torch_out.txt
+pytest_boundary.log
+agy_test.log
+
+*.sqlite
 *.sqlite3
 *.db
+blueprint.db
+test_blueprint.db
+group_maker.db
 
-.coverage
-htmlcov/
-.pytest_cache/
+trace_artifact.json
+hospital_decision.json
+response_packet.json
+branch.json
+baseline.json
+blueprint.json
 
-
+workspace/
+m8_8_debug_ws/
+m8_9_debug_ws/
 scratch/
 tmp/
 
-# Node/Frontend
 node_modules/
 dist/
 npm-debug.log*
-
-# Untracked/Unnecessary Projects
 demo/
 next-app/
+
+.coverage
+htmlcov/

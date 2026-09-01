@@ -140,7 +140,7 @@ def simulate_user_answer(question_text: str, profile: dict) -> str:
     for key, val in profile.items():
         if key.replace("_", " ") in question_lower:
             return val
-    return "NO" # Default pessimistic
+    return "NO"
 
 def evaluate_run(arch: ArchitectureNode, project_state: ProjectState, requirements: list[Requirement]):
     from decision_engine.input_layer.evaluator import evaluate_battle
@@ -158,7 +158,6 @@ def run_level_5():
     for i, scenario in enumerate(MESSY_SCENARIOS):
         print(f"\n--- Scenario {scenario['name']} ---")
         
-        # 1. BASELINE
         print("Running Baseline...")
         try:
             base_arch = llm_baseline(scenario['idea'], scenario['initial_constraints'])
@@ -168,7 +167,6 @@ def run_level_5():
             base_f, base_r, total_r = False, 0, len(scenario['requirements'])
             base_arch = None
             
-        # 2. BLUEPRINT AI
         print("Running BlueprintAI...")
         session_id = str(uuid.uuid4())
         p_state = ProjectState(
@@ -178,7 +176,6 @@ def run_level_5():
         )
         
         try:
-            # Gen v1
             v1_resp = llm_generate_player_b(p_state, "No previous evidence")
             uncs = llm_find_uncertainties(v1_resp.architecture, p_state)
             
@@ -199,22 +196,12 @@ def run_level_5():
                 ans = simulate_user_answer(q_text, scenario['simulated_user_profile'])
                 print(f"  Simulated user answers: {ans}")
                 
-                # Fetch tree state
                 tree = sessions[session_id]
                 
-                # Agent generates candidate based on the new constraints from this branch
-                # The question mutation should be added to constraints
-                # Actually journey.py already appended the hypotheses nodes! Let's just generate the new architecture
-                # To simulate Agent, we just use the API, which doesn't know the exact mutation unless we pass it.
-                # In real Mode B, the agent tracks state. Let's look up the hypothesis architecture from the tree.
-                # Actually, journey.py expects us to provide `generated_architecture`. Let's just pass the hypothesis architecture!
                 
-                # Find the hypothesis node in the tree to get its architecture
                 parent_node_id = next(n for n in tree.decision_graph if n.status == "NEEDS_INFORMATION").parent_id
                 
-                # We'll generate a proper one via LLM
                 new_state = copy.deepcopy(p_state)
-                # To be accurate, let's just generate without explicit mutation, but tell LLM the answer
                 ans_text = f"User answered {ans} to: {q_text}"
                 next_arch_resp = llm_generate_player_b(new_state, "No evidence", previous_arch=v1_resp.architecture, adaptation_reason=ans_text)
                 
@@ -229,7 +216,6 @@ def run_level_5():
                 )
                 api_res = answer_journey(ans_req)
                 
-            # Done
             tree = sessions[session_id]
             terminal_nodes = [n for n in tree.decision_graph if n.status == "TERMINAL"]
             rejected_nodes = [n for n in tree.decision_graph if n.status == "REJECTED"]
@@ -238,8 +224,7 @@ def run_level_5():
             blue_r = 0
             if api_res.status == "BEST_ARCHITECTURE_FOUND" and api_res.best_path_id:
                 best_node = next(n for n in tree.decision_graph if n.id == api_res.best_path_id)
-                blue_f = True # It passed hard gates
-                # Calculate reqs
+                blue_f = True
                 _, blue_r, _ = evaluate_run(best_node.architecture, tree.project_state, scenario['requirements'])
                 
             results.append({
@@ -251,7 +236,7 @@ def run_level_5():
                 "terminals": len(terminal_nodes),
                 "rejected": len(rejected_nodes),
                 "search_exhausted": loop_count < 3 or api_res.status == "BEST_ARCHITECTURE_FOUND",
-                "unselected_won": False # Hard to track automatically here without deep tree parsing, we'll mark N/A unless checked
+                "unselected_won": False
             })
             
         except Exception as e:
@@ -268,18 +253,15 @@ def run_level_5():
                 "unselected_won": False
             })
 
-    # Write Markdown Report
     md = "# Level 5 Experiment Results\n\n"
     md += "| Metric | Baseline | BlueprintAI |\n"
     md += "|--------|---------:|------------:|\n"
     
-    # Aggregates
     base_feas = sum(1 for r in results if r["base_f"])
     blue_feas = sum(1 for r in results if r["blue_f"])
     
     md += f"| Feasible | {base_feas}/10 | {blue_feas}/10 |\n"
     
-    # Write full table
     md += "\n## Per-Scenario Breakdown\n\n"
     md += "| Scenario | Base F | Base Reqs | Blue F | Blue Reqs | Terminals | Rejected | Exhausted |\n"
     md += "|----------|--------|-----------|--------|-----------|-----------|----------|-----------|\n"

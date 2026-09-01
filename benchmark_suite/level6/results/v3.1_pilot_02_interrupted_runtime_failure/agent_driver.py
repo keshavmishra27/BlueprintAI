@@ -7,7 +7,6 @@ import glob
 from pathlib import Path
 from datetime import datetime
 
-# Scenarios directory
 scenarios_dir = Path("benchmark_suite/scenarios/v3_core")
 scenarios = sorted(glob.glob(str(scenarios_dir / "*.json")))
 
@@ -16,7 +15,6 @@ base_results_dir = Path(f"benchmark_suite/level6/results/{RUN_ID}")
 os.makedirs(base_results_dir, exist_ok=True)
 os.makedirs(base_results_dir / "raw", exist_ok=True)
 
-# Write manifest
 with open(base_results_dir / "manifest.txt", "w") as f:
     f.write(f"Run ID: {RUN_ID}\n")
     f.write(f"Timestamp: {datetime.now().isoformat()}\n")
@@ -47,7 +45,6 @@ for scenario_path in scenarios:
         
     name = Path(scenario_path).stem
     
-    # Preflight Assertions
     metric_profile = scenario.get("metric_profile", {})
     hidden_facts = scenario.get("hidden_facts_to_reveal", {})
     expected_branches = scenario.get("expected_relevant_branches", 0)
@@ -65,7 +62,6 @@ for scenario_path in scenarios:
     print(f"STARTING SCENARIO: {name}")
     print(f"======================================")
     
-    # 1. Provide Public Info
     with open("current_prompt.md", "w") as f:
         f.write(f"# SCENARIO: {name}\n")
         f.write(f"Problem: {scenario.get('problem_what')}\n")
@@ -91,17 +87,14 @@ for scenario_path in scenarios:
     if os.path.exists("baseline.json"): shutil.copy("baseline.json", raw_dir / "baseline.json")
     if os.path.exists("blueprint.json"): shutil.copy("blueprint.json", raw_dir / "blueprint_initial.json")
     
-    # 2. Evaluate Baseline Public & Real
     with open("baseline.json", "r") as f:
         baseline_payload = json.load(f)
         
-    # Public Eval
     pub_payload = dict(baseline_payload)
     pub_payload["private_context"] = scenario
     pub_res = requests.post("http://127.0.0.1:8000/api/journey/evaluate", json=pub_payload).json()
     base_pub_f = pub_res.get("feasible", False)
     
-    # Real Eval
     real_payload = dict(baseline_payload)
     hidden_facts_list = list(scenario.get("hidden_facts_to_reveal", {}).values())
     real_payload["project_state"]["current_constraints"].extend(hidden_facts_list)
@@ -112,7 +105,6 @@ for scenario_path in scenarios:
     print(f"Baseline Public Feasibility: {base_pub_f}")
     print(f"Baseline Real Feasibility: {base_real_f}")
     
-    # 3. Start BlueprintAI Journey
     with open("blueprint.json", "r") as f:
         blueprint_payload = json.load(f)
         
@@ -146,7 +138,6 @@ for scenario_path in scenarios:
         qtext = start_res.get("selected_uncertainty_text")
         
         if not qtext:
-            # Resolving UNEXPLORED_HYPOTHESIS
             with open("current_prompt.md", "w") as f:
                 f.write(f"# EXPLORE BRANCH\n")
                 f.write(f"The engine requires you to resolve an unexplored hypothesis branch.\n")
@@ -182,7 +173,6 @@ for scenario_path in scenarios:
         questions_asked += 1
         print(f"Engine asked: {qtext}")
         
-        # Determine Oracle Answer
         answer = "I don't have a specific policy on that. Proceed with your best judgment."
         matched = False
         for fact_key, fact_val in hidden_facts.items():
@@ -219,7 +209,6 @@ for scenario_path in scenarios:
         start_res = requests.post("http://127.0.0.1:8000/api/journey/answer", json=branch_payload).json()
         interaction_step += 1
         
-    # Log any trace from the final call if it ended
     append_trace(RUN_ID, requested_session_id, actual_session_id, name, start_res)
     print("Journey Complete.")
     final_status = start_res.get("status")
@@ -228,7 +217,6 @@ for scenario_path in scenarios:
     state = requests.get(f"http://127.0.0.1:8000/api/journey/{requested_session_id}/state").json()
     terminals = [n for n in state["decision_graph"] if n["status"] == "TERMINAL"]
     
-    # Calculate BP Feasibility & Unselected Winner
     bp_f = False
     oracle_hit = False
     unselected_winner = False
@@ -252,7 +240,6 @@ for scenario_path in scenarios:
             
     delta_f = 1 if (bp_f and not base_real_f) else 0
     
-    # HER and UAR logic based on metric_profile
     expected_branches = scenario.get("expected_relevant_branches", 0)
     
     if metric_profile.get("information_acquisition"):
