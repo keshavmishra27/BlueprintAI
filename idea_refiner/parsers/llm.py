@@ -50,6 +50,7 @@ class LLMIdeaParser(BaseIdeaParser):
                 item.pop(forbidden_key, None)
                 
             hypothesis = UnvalidatedArchitectureHypothesis(
+                id=item.get("id", ""),
                 inputs=item.get("inputs", []),
                 processing=item.get("processing", []),
                 decision=item.get("decision", []),
@@ -60,6 +61,9 @@ class LLMIdeaParser(BaseIdeaParser):
                 resources_required=item.get("resources_required", []),
                 constraints=item.get("constraints", []),
                 architectural_decisions=item.get("architectural_decisions", {}),
+                path_cost=float(item.get("path_cost", 10.0)),
+                path_score=float(item.get("path_score", 50.0)),
+                operational_complexity=float(item.get("operational_complexity", 0.0)),
                 source="llm_generated",
                 hypothesis=True,
                 provenance={

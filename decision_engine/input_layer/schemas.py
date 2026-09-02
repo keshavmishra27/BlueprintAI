@@ -46,6 +46,9 @@ class UnvalidatedArchitectureHypothesis(BaseModel):
     This is intentionally NOT an ArchitectureNode, enforcing the semantic boundary 
     that it is unvalidated and lacks authority.
     """
+    class Config:
+        extra = "allow"
+        
     inputs: List[str] = []
     processing: List[str] = []
     decision: List[str] = []
@@ -63,6 +66,9 @@ class UnvalidatedArchitectureHypothesis(BaseModel):
     generation_reason: Optional[str] = None
     source: str = "llm_generated"
     hypothesis: bool = True
+    path_cost: float = 10.0
+    path_score: float = 50.0
+    operational_complexity: float = 0.0
     provenance: Dict[str, Any] = {}
 
     def get_signature(self) -> str:

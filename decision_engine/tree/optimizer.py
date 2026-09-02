@@ -55,6 +55,61 @@ def compute_graph_fingerprint(decision_graph: List[PathNode]) -> str:
     canonical_json = canonicalize_json(graph_representation)
     return hashlib.sha256(canonical_json.encode('utf-8')).hexdigest()
 
+def create_evaluated_path_node(
+    arch: ArchitectureNode, 
+    context: DecisionContext, 
+    node_id: str, 
+    parent_id: str,
+    provenance: Optional[Dict[str, Any]] = None,
+    operational_complexity: float = 0.0
+) -> PathNode:
+    """
+    Authoritative Decision Engine function for evaluating an architecture hypothesis.
+    This guarantees the LLM or Orchestrator cannot author feasibility, score, or status.
+    """
+    has_unknowns = len(arch.semantic_dependencies) > 0
+    passes_hard_gates = True
+    
+    # Engine independently evaluates constraints against semantic dependencies
+    if "requires_continuous_connectivity" in arch.semantic_dependencies and any("network: offline" in str(c) for c in getattr(context, 'environment_constraints', [])):
+        passes_hard_gates = False
+        
+    for c in arch.constraints:
+        if "impossible" in c.lower() or "rejected" in c.lower():
+            passes_hard_gates = False
+            
+    status = "TERMINAL"
+    if not passes_hard_gates:
+        status = "REJECTED"
+    elif has_unknowns:
+        status = "UNRESOLVED"
+        
+    # ENGINE COMPUTES NATIVE SCORES (Rejecting LLM claimed_score)
+    native_score = 50.0
+    native_cost = 10.0
+    
+    # Simple native evaluation model for the proof
+    if "Cloud RAG API" in arch.processing:
+        native_score = 90.0
+        native_cost = 40.0
+    elif "High-End Local SLM" in arch.processing:
+        native_score = 95.0
+        native_cost = 10.0
+    elif "Light Local SLM" in arch.processing:
+        native_score = 85.0
+        native_cost = 5.0
+        
+    return PathNode(
+        id=node_id,
+        parent_id=parent_id,
+        architecture=arch,
+        status=status,
+        path_cost=native_cost,
+        path_score=native_score,
+        operational_complexity=operational_complexity,
+        epistemic_provenance=provenance
+    )
+
 def optimize_tree(decision_graph: List[PathNode], context: DecisionContext, graph_version: str = "v1") -> OptimizationResult:
     """
     Finds the optimal terminal or unresolved candidate in the decision graph.

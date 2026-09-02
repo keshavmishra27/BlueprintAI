@@ -12,7 +12,8 @@ class Orchestrator:
 
     def _evaluate_hypothesis(self, hyp, context, idx) -> PathNode:
         from decision_engine.input_layer.schemas import ArchitectureNode
-        from decision_engine.tree.optimizer import PathNode
+        from decision_engine.tree.optimizer import create_evaluated_path_node
+        from decision_engine.tree.tree_schemas import PathNode
         
         if isinstance(hyp, PathNode):
             arch = hyp.architecture
@@ -31,28 +32,14 @@ class Orchestrator:
                 architectural_decisions=getattr(hyp, 'architectural_decisions', {})
             )
             original_hyp = hyp
-        
-        has_unknowns = len(arch.semantic_dependencies) > 0
-        passes_hard_gates = True
-        for c in arch.constraints:
-            if "impossible" in c.lower() or "rejected" in c.lower():
-                passes_hard_gates = False
-                
-        status = "TERMINAL"
-        if not passes_hard_gates:
-            status = "REJECTED"
-        elif has_unknowns:
-            status = "UNRESOLVED"
             
-        return PathNode(
-            id=getattr(original_hyp, 'id', None) or f"cand_{idx}",
+        return create_evaluated_path_node(
+            arch=arch,
+            context=context,
+            node_id=getattr(original_hyp, 'id', None) or f"cand_{idx}",
             parent_id=getattr(original_hyp, 'parent_id', None) or "root",
-            architecture=arch,
-            status=status,
-            path_cost=getattr(original_hyp, 'path_cost', 10.0),
-            path_score=getattr(original_hyp, 'path_score', 50.0),
-            operational_complexity=getattr(original_hyp, 'operational_complexity', 0.0),
-            epistemic_provenance=getattr(original_hyp, 'provenance', None)
+            provenance=getattr(original_hyp, 'provenance', None),
+            operational_complexity=getattr(original_hyp, 'operational_complexity', 0.0)
         )
 
     def refine(
