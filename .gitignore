@@ -6,13 +6,17 @@
 /*
 .*
 
-# Keep .gitignore, git, readme, dependencies, and CI workflows
+# Keep core configuration, documentation, dependencies, and CI workflows
 !.gitignore
 !.git/
 !.github/
 !requirements.txt
 !pytest.ini
+!alembic.ini
+!render.yaml
 !README.md
+!DESIGN.md
+!.env.example
 
 # ------------------------------------------------------------------------------
 # Whitelisted Application & Library Folders
@@ -56,6 +60,65 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# Runtime Workspaces & Test Dumps
+# ------------------------------------------------------------------------------
+# Workspaces, Temporary Dirs & Unnecessary Root Artifacts
+# ------------------------------------------------------------------------------
 workspace/
 product/workspace/
+scratch/
+tmp/
+m8_8_debug_ws/
+m8_9_debug_ws/
+m14b1_repos/
+resort/
+
+# Documents & Binaries
+*.pdf
+*.docx
+*.zip
+*.tar.gz
+
+# Test Outputs, Diffs & Logs
+*.txt
+!requirements.txt
+*.log
+*.diff
+*.patch
+
+# JSON Dumps & Local State
+baseline.json
+blueprint.json
+branch.json
+response_packet.json
+trace_artifact.json
+hospital_decision.json
+reference_architecture.json
+last_user_msg.json
+*.jsonl
+
+# Scratch, Runner & Patch Scripts
+blueprint_cli.py
+hash_script.py
+ide_agent_watcher.py
+idea_refiner_cli.py
+interactive_harness.py
+invoke_idea_refiner.py
+run_pilot_03.ps1
+run_smoke.ps1
+run_tests_patched.py
+test_start.py
+trace_optimizer.py
+verify_governance_proof.py
+verify_runtime.py
+fix_tests*.py
+refactor.py
+temp_*.py
+
+# Experiment Results & Manifests
+architecture_map.md
+current_prompt.md
+level5_results.md
+level6_results.md
+manifest_v3.1.txt
+manifest_v3.1_pilot_02.txt
+progress.txt
