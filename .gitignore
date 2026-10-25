@@ -1,24 +1,30 @@
 # ==============================================================================
 # BlueprintAI .gitignore
-# Only allow: frontend, demo, backend, idea_refiner, solara_app
 # ==============================================================================
 
 # Ignore all files and directories by default
 /*
 .*
 
-# Keep .gitignore and core repo configuration files if needed
+# Keep .gitignore, git, readme, dependencies, and CI workflows
 !.gitignore
 !.git/
+!.github/
+!requirements.txt
+!pytest.ini
+!README.md
 
 # ------------------------------------------------------------------------------
-# Whitelisted Folders (keep only these 5 requested folders)
+# Whitelisted Application & Library Folders
 # ------------------------------------------------------------------------------
 !frontend/
 !demo/
 !backend/
 !idea_refiner/
 !solara_app/
+!decision_engine/
+!product/
+!tests/
 
 # ------------------------------------------------------------------------------
 # Standard Build & Cache Artifacts inside Whitelisted Folders
@@ -49,3 +55,7 @@ yarn-error.log*
 *.out
 .DS_Store
 Thumbs.db
+
+# Runtime Workspaces & Test Dumps
+workspace/
+product/workspace/
