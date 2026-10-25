@@ -197,11 +197,10 @@ def evaluate_dimensions(arch: ArchitectureNode, env_constraints: List[str], env_
             dims.timeline = EvalStatus.UNKNOWN
             
     return dims, violations, req_results
-
-def evaluate_battle(
-    user_arch: ArchitectureNode, 
-    player_b_arch: ArchitectureNode, 
-    env_constraints: List[str], 
+def _evaluate_core(
+    user_arch: ArchitectureNode,
+    player_b_arch: ArchitectureNode,
+    env_constraints: List[str],
     env_requirements: List[Requirement]
 ) -> ArchitectureComparison:
     a_dims, a_violations, a_req_results = evaluate_dimensions(user_arch, env_constraints, env_requirements)
@@ -256,3 +255,33 @@ def evaluate_battle(
         winner=winner,
         reasoning=reasoning
     )
+
+def evaluate_battle(
+    user_pair: 'ValidatedBranchPair', 
+    player_b_pair: 'ValidatedBranchPair', 
+    env_constraints: List[str], 
+    env_requirements: List[Requirement]
+) -> ArchitectureComparison:
+    from decision_engine.tree.tree_schemas import ValidatedBranchPair
+    from decision_engine.tree.execution_capability import ExecutionCapability
+
+    if type(user_pair) is not ValidatedBranchPair:
+        raise TypeError("Requires ValidatedBranchPair for user_pair.")
+    if type(player_b_pair) is not ValidatedBranchPair:
+        raise TypeError("Requires ValidatedBranchPair for player_b_pair.")
+        
+    if type(user_pair.capability) is not ExecutionCapability:
+        raise TypeError("Requires exact ExecutionCapability instance for user_pair capability.")
+    if type(player_b_pair.capability) is not ExecutionCapability:
+        raise TypeError("Requires exact ExecutionCapability instance for player_b_pair capability.")
+
+    user_arch = user_pair.architecture
+    player_b_arch = player_b_pair.architecture
+
+    # Enforce authorization
+    user_pair.capability.consume(user_arch)
+    player_b_pair.capability.consume(player_b_arch)
+
+    return _evaluate_core(user_arch, player_b_arch, env_constraints, env_requirements)
+
+

@@ -6,8 +6,9 @@ from pathlib import Path
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 
-from decision_engine.input_layer.schemas import ArchitectureNode, Requirement, UserIdea, ArchitectureComparison
+from decision_engine.input_layer.schemas import ArchitectureNode, Requirement, UserIdea, ArchitectureComparison, UnvalidatedArchitectureHypothesis
 from idea_refiner.schema import RequirementArtifact
+from decision_engine.tree.evaluation_ledger import EvaluationReceipt
 class ArchitectureState(BaseModel):
     architecture: ArchitectureNode
     generation: int
@@ -24,7 +25,7 @@ class StateMutation(BaseModel):
 
 class AnswerOption(BaseModel):
     mutation: StateMutation
-    candidate_architecture: Optional[ArchitectureNode] = None
+    hypothesis: Optional[UnvalidatedArchitectureHypothesis] = None
     epistemic_resolutions: Dict[str, str] = {}
 
 class BranchOutcome(BaseModel):
@@ -60,8 +61,32 @@ class AgentUncertainty(BaseModel):
     importance: str
     yes_mutation: StateMutation
     no_mutation: StateMutation
-    yes_candidate_architecture: ArchitectureNode
-    no_candidate_architecture: ArchitectureNode
+    requirement_ids: List[str] = []
+    yes_hypothesis: UnvalidatedArchitectureHypothesis
+    no_hypothesis: UnvalidatedArchitectureHypothesis
+
+# --- M15.2 Domain Types ---
+
+class EpistemicUncertainty(BaseModel):
+    id: str
+    question_text: str
+    question_target: str
+    unknown_fact: str
+    importance: str
+    yes_mutation: StateMutation
+    no_mutation: StateMutation
+    source_requirement_ids: List[str] = []
+
+class ArchitectureBranchProposal(BaseModel):
+    epistemic_uncertainty_id: str
+    branch_direction: Literal["yes", "no"]
+    hypothesis: UnvalidatedArchitectureHypothesis
+
+class ValidatedBranchPair(BaseModel):
+    architecture: ArchitectureNode
+    capability: Any  # Typing as Any to avoid circular import with ExecutionCapability for now, but semantically represents ExecutionCapability
+
+# --------------------------
 
 class QuestionNode(BaseModel):
     id: str
@@ -91,6 +116,7 @@ class PathNode(BaseModel):
     epistemic_evidence: Dict[str, str] = {}
     loop_identity_hash: Optional[str] = None
     uncertainty_target: Optional[str] = None
+    evaluation_receipt: Optional[EvaluationReceipt] = None
 
 class TreeState(BaseModel):
     current_state_id: str

@@ -24,3 +24,22 @@ class DecisionContext(BaseModel):
         }
         canonical_str = canonicalize_json(data)
         return hashlib.sha256(canonical_str.encode('utf-8')).hexdigest()
+
+from dataclasses import dataclass
+from typing import Tuple
+
+@dataclass(frozen=True)
+class AuthenticatedConstraint:
+    claim_id: str
+    value: str
+    authority_trace: Tuple[str, ...]
+
+@dataclass(frozen=True)
+class AuthenticatedSemanticContext:
+    """
+    Cryptographically secure snapshot of constraints validated by the verifier.
+    """
+    context_id: str
+    relied_upon_receipts: Tuple[str, ...]
+    functional_properties: Tuple[AuthenticatedConstraint, ...]
+    constraints: Tuple[AuthenticatedConstraint, ...]

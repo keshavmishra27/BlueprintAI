@@ -18,6 +18,16 @@ from decision_engine.input_layer.evaluator import evaluate_battle, EvalStatus
 def serialize_pydantic_obj(obj):
     return obj.model_dump() if obj else None
 
+def _create_validated_pair(arch: ArchitectureNode):
+    from decision_engine.input_layer.authority_verifier import AuthorityVerifier
+    from decision_engine.input_layer.semantic_ontology import SemanticOntologyRegistry
+    from decision_engine.tree.tree_schemas import ValidatedBranchPair
+    
+    registry = SemanticOntologyRegistry()
+    verifier = AuthorityVerifier(registry)
+    cap = verifier.authorize_execution(arch)
+    return ValidatedBranchPair(architecture=arch, capability=cap)
+
 class JourneyService:
     def __init__(self):
         pass
@@ -31,7 +41,9 @@ class JourneyService:
         mock_state.current_constraints.extend(mutation.add_constraints)
         mock_state.current_constraints = [c for c in mock_state.current_constraints if c not in mutation.remove_constraints]
         
-        battle = evaluate_battle(user_arch, candidate_arch, mock_state.current_constraints, mock_state.current_requirements)
+        user_pair = _create_validated_pair(user_arch)
+        candidate_pair = _create_validated_pair(candidate_arch)
+        battle = evaluate_battle(user_pair, candidate_pair, mock_state.current_constraints, mock_state.current_requirements)
         
         return BranchOutcome(
             b_feasible=battle.b_feasible,
@@ -182,7 +194,9 @@ class JourneyService:
             based_on="User input"
         )
         
-        battle = evaluate_battle(user_arch.architecture, b_arch_state.architecture, p_state.current_constraints, p_state.current_requirements)
+        user_pair = _create_validated_pair(user_arch.architecture)
+        candidate_pair = _create_validated_pair(b_arch_state.architecture)
+        battle = evaluate_battle(user_pair, candidate_pair, p_state.current_constraints, p_state.current_requirements)
         
         root_id = str(uuid.uuid4())
         
@@ -251,7 +265,9 @@ class JourneyService:
             based_on="Gemini adaptation"
         )
         
-        new_battle = evaluate_battle(tree_state.user_architecture.architecture, tree_state.player_b_architecture.architecture, tree_state.project_state.current_constraints, tree_state.project_state.current_requirements)
+        user_pair = _create_validated_pair(tree_state.user_architecture.architecture)
+        candidate_pair = _create_validated_pair(tree_state.player_b_architecture.architecture)
+        new_battle = evaluate_battle(user_pair, candidate_pair, tree_state.project_state.current_constraints, tree_state.project_state.current_requirements)
         
         battle_before = tree_state.battle_history[-1].winner.value
         tree_state.battle_history.append(new_battle)

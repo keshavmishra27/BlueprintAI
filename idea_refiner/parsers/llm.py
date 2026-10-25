@@ -2,7 +2,7 @@ import hashlib
 from typing import List, Dict, Any
 from .base import BaseIdeaParser
 from .providers.base import BaseLLMProvider
-from decision_engine.input_layer.schemas import UnvalidatedArchitectureHypothesis
+from decision_engine.input_layer.schemas import UnvalidatedArchitectureHypothesis, CapabilityProposal
 
 class LLMIdeaParser(BaseIdeaParser):
     def __init__(self, provider: BaseLLMProvider):
@@ -22,7 +22,20 @@ class LLMIdeaParser(BaseIdeaParser):
                             "processing": {"type": "array", "items": {"type": "string"}},
                             "decision": {"type": "array", "items": {"type": "string"}},
                             "output": {"type": "array", "items": {"type": "string"}},
-                            "capabilities": {"type": "array", "items": {"type": "string"}},
+                            "capabilities": {
+                                "type": "array", 
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "proposal_id": {"type": "string", "description": "A unique identifier for this capability proposal"},
+                                        "name": {"type": "string"},
+                                        "proposed_functional_properties": {"type": "array", "items": {"type": "string"}},
+                                        "proposed_constraints": {"type": "array", "items": {"type": "string"}},
+                                        "proposed_implementation": {"type": "string"}
+                                    },
+                                    "required": ["proposal_id", "name", "proposed_implementation"]
+                                }
+                            },
                             "semantic_dependencies": {"type": "array", "items": {"type": "string"}},
                             "data_required": {"type": "array", "items": {"type": "string"}},
                             "resources_required": {"type": "array", "items": {"type": "string"}},
@@ -55,7 +68,7 @@ class LLMIdeaParser(BaseIdeaParser):
                 processing=item.get("processing", []),
                 decision=item.get("decision", []),
                 output=item.get("output", []),
-                capabilities=item.get("capabilities", []),
+                capabilities=[CapabilityProposal(**c) for c in item.get("capabilities", [])],
                 semantic_dependencies=item.get("semantic_dependencies", []),
                 data_required=item.get("data_required", []),
                 resources_required=item.get("resources_required", []),

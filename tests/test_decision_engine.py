@@ -30,14 +30,29 @@ def create_mock_context(prefs: dict = None) -> DecisionContext:
         optimizer_preferences=prefs
     )
 
+from unittest.mock import MagicMock
+from decision_engine.tree.execution_capability import ExecutionCapability
+from decision_engine.tree.context import AuthenticatedSemanticContext
+
+def create_mock_capability(context_id="test_ctx"):
+    from decision_engine.tree.context import AuthenticatedSemanticContext
+    from decision_engine.tree.execution_capability import ExecutionCapability
+    cap = ExecutionCapability(capability_id="mock", context=AuthenticatedSemanticContext(context_id, (), (), ()))
+    cap.consume = MagicMock(return_value=cap._context)
+    return cap
+
 class TestDecisionEngine:
     def test_a_hard_gates(self):
-        assert evaluate_node_state(None, is_leaf=True, has_unknowns=False, passes_hard_gates=False) == "REJECTED"
-        assert evaluate_node_state(None, is_leaf=True, has_unknowns=False, passes_hard_gates=True) == "TERMINAL"
+        cap = create_mock_capability("test_ctx")
+        arch = create_mock_arch("test")
+        assert evaluate_node_state(arch, cap, is_leaf=True, has_unknowns=False, passes_hard_gates=False) == "REJECTED"
+        assert evaluate_node_state(arch, cap, is_leaf=True, has_unknowns=False, passes_hard_gates=True) == "TERMINAL"
 
     def test_b_unknowns_to_needs_info(self):
-        assert evaluate_node_state(None, is_leaf=True, has_unknowns=True, passes_hard_gates=True) == "UNRESOLVED"
-        assert evaluate_node_state(None, is_leaf=False, has_unknowns=True, passes_hard_gates=True) == "UNRESOLVED"
+        cap = create_mock_capability("test_ctx")
+        arch = create_mock_arch("test")
+        assert evaluate_node_state(arch, cap, is_leaf=True, has_unknowns=True, passes_hard_gates=True) == "UNRESOLVED"
+        assert evaluate_node_state(arch, cap, is_leaf=False, has_unknowns=True, passes_hard_gates=True) == "UNRESOLVED"
 
     def test_c_three_feasible_leaves_optimize(self):
         graph = [

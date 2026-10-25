@@ -2,6 +2,7 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 from decision_engine.tree.tree_schemas import PathNode
 from decision_engine.input_layer.schemas import ArchitectureNode
+from decision_engine.tree.context import AuthenticatedSemanticContext
 
 class OptimizationResult(BaseModel):
     status: str
@@ -22,12 +23,23 @@ class OptimizationResult(BaseModel):
 from decision_engine.input_layer.ontology import get_known_dependencies
 from decision_engine.tree.context import DecisionContext, canonicalize_json
 from decision_engine.governance.robustness import evaluate_robustness, FutureScenario
+from decision_engine.tree.evaluation_ledger import get_ledger
 import hashlib
 
-def evaluate_node_state(node: PathNode, is_leaf: bool, has_unknowns: bool, passes_hard_gates: bool) -> str:
+from decision_engine.tree.execution_capability import ExecutionCapability
+
+def evaluate_node_state(arch: ArchitectureNode, auth_capability: ExecutionCapability, is_leaf: bool, has_unknowns: bool, passes_hard_gates: bool) -> str:
     """
     Determines the state of a node in the decision tree based on evaluation rules.
     """
+    if auth_capability.__class__.__name__ != 'ExecutionCapability':
+        raise TypeError("Optimizer strictly requires an exact ExecutionCapability")
+        
+    auth_context = auth_capability.consume(arch)
+    for c in auth_context.constraints:
+        if "impossible" in c.value.lower() or "rejected" in c.value.lower():
+            passes_hard_gates = False
+            
     if not passes_hard_gates:
         return "REJECTED"
     if has_unknowns:
@@ -60,6 +72,7 @@ def create_evaluated_path_node(
     context: DecisionContext, 
     node_id: str, 
     parent_id: str,
+    auth_capability: ExecutionCapability,
     provenance: Optional[Dict[str, Any]] = None,
     operational_complexity: float = 0.0
 ) -> PathNode:
@@ -67,37 +80,63 @@ def create_evaluated_path_node(
     Authoritative Decision Engine function for evaluating an architecture hypothesis.
     This guarantees the LLM or Orchestrator cannot author feasibility, score, or status.
     """
-    has_unknowns = len(arch.semantic_dependencies) > 0
+    # M14-G: Strict Data Flow for Semantic Dependencies
+    # The Optimizer must NOT consult arch.semantic_dependencies or unauthenticated raw context.
+    # The requirement is derived exclusively from the policy layer, and the truth value
+    # is evaluated exclusively against the verifier-authenticated semantic state.
+    
     passes_hard_gates = True
     
-    # Engine independently evaluates constraints against semantic dependencies
-    if "requires_continuous_connectivity" in arch.semantic_dependencies and any("network: offline" in str(c) for c in getattr(context, 'environment_constraints', [])):
-        passes_hard_gates = False
+    if type(auth_capability) is not ExecutionCapability:
+        raise TypeError("Optimizer strictly requires an exact ExecutionCapability")
         
-    for c in arch.constraints:
-        if "impossible" in c.lower() or "rejected" in c.lower():
+    auth_context = auth_capability.consume(arch)
+    
+    # Engine independently evaluates constraints against authenticated capabilities
+    for c in auth_context.constraints:
+        if "impossible" in c.value.lower() or "rejected" in c.value.lower():
             passes_hard_gates = False
             
-    status = "TERMINAL"
+    # M14-F: The Optimizer strictly consumes the typed evaluation from the policy layer
+    from decision_engine.input_layer.processing_heuristics import evaluate_processing_authorization
+    from decision_engine.input_layer.schemas import EvalStatus
+    
+    eval_status, native_score, native_cost, heuristic_used, satisfied_claims = evaluate_processing_authorization(arch.processing, auth_context)
+    
+    if eval_status == EvalStatus.UNKNOWN:
+        status = "UNRESOLVED"
+    elif eval_status == EvalStatus.FAIL:
+        status = "REJECTED"
+    elif eval_status == EvalStatus.PASS:
+        status = "TERMINAL"
+    else:
+        status = "UNRESOLVED" # Failsafe
+        
+    # Apply baseline architectural hard gates
     if not passes_hard_gates:
         status = "REJECTED"
-    elif has_unknowns:
-        status = "UNRESOLVED"
         
-    # ENGINE COMPUTES NATIVE SCORES (Rejecting LLM claimed_score)
-    native_score = 50.0
-    native_cost = 10.0
+    from decision_engine.tree.evaluation_ledger import AuthenticatedDecisionEvidence
     
-    # Simple native evaluation model for the proof
-    if "Cloud RAG API" in arch.processing:
-        native_score = 90.0
-        native_cost = 40.0
-    elif "High-End Local SLM" in arch.processing:
-        native_score = 95.0
-        native_cost = 10.0
-    elif "Light Local SLM" in arch.processing:
-        native_score = 85.0
-        native_cost = 5.0
+    evidence = None
+    if status == "TERMINAL" and heuristic_used:
+        evidence = AuthenticatedDecisionEvidence(
+            architecture_fingerprint=arch.get_authority_fingerprint(),
+            authorized_predicates=[heuristic_used.required_predicate_id],
+            satisfied_predicates=satisfied_claims,
+            policy_version="v1",
+            policy_hash=heuristic_used.definition_hash
+        )
+        
+    ledger = get_ledger()
+    receipt = ledger.record_evaluation_event(
+        path_id=node_id,
+        architecture_fingerprint=arch.get_fingerprint(),
+        context_fingerprint=context.get_fingerprint(),
+        result=status,
+        arch_snapshot=arch,
+        evidence=evidence
+    )
         
     return PathNode(
         id=node_id,
@@ -107,7 +146,8 @@ def create_evaluated_path_node(
         path_cost=native_cost,
         path_score=native_score,
         operational_complexity=operational_complexity,
-        epistemic_provenance=provenance
+        epistemic_provenance=provenance,
+        evaluation_receipt=receipt
     )
 
 def optimize_tree(decision_graph: List[PathNode], context: DecisionContext, graph_version: str = "v1") -> OptimizationResult:

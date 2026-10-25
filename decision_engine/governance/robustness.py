@@ -1,3 +1,4 @@
+from decision_engine.tree.context import AuthenticatedSemanticContext
 from pydantic import BaseModel
 from typing import List, Dict
 from decision_engine.input_layer.ontology import evaluate_ontology

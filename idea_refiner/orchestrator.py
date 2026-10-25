@@ -32,12 +32,19 @@ class Orchestrator:
                 architectural_decisions=getattr(hyp, 'architectural_decisions', {})
             )
             original_hyp = hyp
+        from decision_engine.input_layer.authority_verifier import AuthorityVerifier
+        from decision_engine.input_layer.semantic_ontology import SemanticOntologyRegistry
+        
+        registry = SemanticOntologyRegistry()
+        verifier = AuthorityVerifier(registry)
+        auth_capability = verifier.authorize_execution(arch)
             
         return create_evaluated_path_node(
             arch=arch,
             context=context,
             node_id=getattr(original_hyp, 'id', None) or f"cand_{idx}",
             parent_id=getattr(original_hyp, 'parent_id', None) or "root",
+            auth_capability=auth_capability,
             provenance=getattr(original_hyp, 'provenance', None),
             operational_complexity=getattr(original_hyp, 'operational_complexity', 0.0)
         )

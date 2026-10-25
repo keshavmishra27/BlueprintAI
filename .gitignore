@@ -1,70 +1,51 @@
-venv/
-env/
-.venv/
-.virtualenv/
+# ==============================================================================
+# BlueprintAI .gitignore
+# Only allow: frontend, demo, backend, idea_refiner, solara_app
+# ==============================================================================
 
+# Ignore all files and directories by default
+/*
+.*
+
+# Keep .gitignore and core repo configuration files if needed
+!.gitignore
+!.git/
+
+# ------------------------------------------------------------------------------
+# Whitelisted Folders (keep only these 5 requested folders)
+# ------------------------------------------------------------------------------
+!frontend/
+!demo/
+!backend/
+!idea_refiner/
+!solara_app/
+
+# ------------------------------------------------------------------------------
+# Standard Build & Cache Artifacts inside Whitelisted Folders
+# ------------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
-.ruff_cache/
 .pytest_cache/
-
-.env
-.env.*
-
-.vscode/
-.idea/
-*.swp
-*.swo
-.DS_Store
-Thumbs.db
-
-tests/
-*_test.py
-test_*.py
-run_m8_*.py
-run_tests_*.py
-m13_*.py
-hash_script.py
-
-*.log
-*.out
-out.txt
-ready.txt
-*out*.txt
-full_pytest_out.txt
-pytest_out*.txt
-tests_out*.txt
-test_out.txt
-torch_out.txt
-pytest_boundary.log
-agy_test.log
-
-*.sqlite
-*.sqlite3
-*.db
-blueprint.db
-test_blueprint.db
-group_maker.db
-
-trace_artifact.json
-hospital_decision.json
-response_packet.json
-branch.json
-baseline.json
-blueprint.json
-
-workspace/
-m8_8_debug_ws/
-m8_9_debug_ws/
-scratch/
-tmp/
+.ruff_cache/
+.mypy_cache/
 
 node_modules/
 dist/
+build/
+.next/
+out/
 npm-debug.log*
-demo/
-next-app/
+yarn-debug.log*
+yarn-error.log*
 
-.coverage
-htmlcov/
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite3
+*.db
+*.log
+*.out
+.DS_Store
+Thumbs.db

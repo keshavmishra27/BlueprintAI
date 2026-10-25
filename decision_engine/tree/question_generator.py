@@ -14,12 +14,12 @@ from decision_engine.tree.tree_schemas import (
     AgentUncertainty,
     AnswerOption
 )
-from decision_engine.input_layer.evaluator import evaluate_battle
+from decision_engine.input_layer.evaluator import _evaluate_core
 
 def _evaluate_branch_hypothesis(
     project_state: ProjectState, 
     user_arch_state: ArchitectureState, 
-    candidate_architecture: ArchitectureNode, 
+    candidate_hypothesis, # can be UnvalidatedArchitectureHypothesis
     mutation: StateMutation
 ) -> BranchOutcome:
     """
@@ -29,7 +29,17 @@ def _evaluate_branch_hypothesis(
     mock_state.current_constraints.extend(mutation.add_constraints)
     mock_state.current_constraints = [c for c in mock_state.current_constraints if c not in mutation.remove_constraints]
     
-    battle_result = evaluate_battle(
+    # Convert UnvalidatedArchitectureHypothesis to ArchitectureNode for evaluation
+    if hasattr(candidate_hypothesis, "model_dump"):
+        candidate_dict = candidate_hypothesis.model_dump(exclude={"id", "parent_id", "generation_reason", "source", "hypothesis", "path_cost", "path_score", "operational_complexity", "provenance"})
+        # Filter out fields that don't belong to ArchitectureNode
+        arch_fields = ArchitectureNode.model_fields.keys()
+        filtered_dict = {k: v for k, v in candidate_dict.items() if k in arch_fields}
+        candidate_architecture = ArchitectureNode(**filtered_dict)
+    else:
+        candidate_architecture = candidate_hypothesis
+
+    battle_result = _evaluate_core(
         user_arch_state.architecture, 
         candidate_architecture, 
         mock_state.current_constraints, 
@@ -40,7 +50,7 @@ def _evaluate_branch_hypothesis(
         b_feasible=battle_result.b_feasible,
         winner=battle_result.winner.value,
         architecture_name=" -> ".join(candidate_architecture.processing),
-        architecture_capabilities=candidate_architecture.capabilities
+        architecture_capabilities=[cap.name for cap in candidate_architecture.capabilities] if candidate_architecture.capabilities else []
     )
 
 def evaluate_provided_uncertainties(
@@ -64,8 +74,8 @@ def evaluate_provided_uncertainties(
             importance=agent_unc.importance
         )
         
-        yes_outcome = _evaluate_branch_hypothesis(project_state, user_arch_state, agent_unc.yes_candidate_architecture, agent_unc.yes_mutation)
-        no_outcome = _evaluate_branch_hypothesis(project_state, user_arch_state, agent_unc.no_candidate_architecture, agent_unc.no_mutation)
+        yes_outcome = _evaluate_branch_hypothesis(project_state, user_arch_state, agent_unc.yes_hypothesis, agent_unc.yes_mutation)
+        no_outcome = _evaluate_branch_hypothesis(project_state, user_arch_state, agent_unc.no_hypothesis, agent_unc.no_mutation)
         
         feasibility_changed = yes_outcome.b_feasible != no_outcome.b_feasible
         winner_changed = yes_outcome.winner != no_outcome.winner
@@ -114,8 +124,8 @@ def select_best_question(
         return None
         
     options = {
-        "YES": AnswerOption(mutation=agent_unc.yes_mutation, candidate_architecture=agent_unc.yes_candidate_architecture),
-        "NO": AnswerOption(mutation=agent_unc.no_mutation, candidate_architecture=agent_unc.no_candidate_architecture)
+        "YES": AnswerOption(mutation=agent_unc.yes_mutation, hypothesis=agent_unc.yes_hypothesis),
+        "NO": AnswerOption(mutation=agent_unc.no_mutation, hypothesis=agent_unc.no_hypothesis)
     }
         
     return QuestionNode(
