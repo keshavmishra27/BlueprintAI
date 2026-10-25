@@ -63,14 +63,13 @@ Thumbs.db
 # ------------------------------------------------------------------------------
 # Workspaces, Temporary Dirs & Unnecessary Root Artifacts
 # ------------------------------------------------------------------------------
-workspace/
-product/workspace/
-scratch/
-tmp/
-m8_8_debug_ws/
-m8_9_debug_ws/
-m14b1_repos/
-resort/
+/workspace/
+/scratch/
+/tmp/
+/m8_8_debug_ws/
+/m8_9_debug_ws/
+/m14b1_repos/
+/resort/
 
 # Documents & Binaries
 *.pdf
